@@ -15,12 +15,12 @@
     <div class="profile-card">
       <div class="profile-header">
         <div class="avatar-large">
-          <span>林</span>
+          <span>{{ profileName.slice(0, 1) }}</span>
         </div>
         <div class="profile-info">
-          <h2 class="profile-name">林若安</h2>
-          <p class="profile-id">ID: 20250520</p>
-          <p class="profile-streak">✅ 坚持记录 58 天</p>
+          <h2 class="profile-name">{{ profileName }}</h2>
+          <p class="profile-id">ID: {{ profileId }}</p>
+          <p class="profile-streak">✅ 已记录 {{ recordDays }} 天</p>
         </div>
         <button class="edit-btn">
           <van-icon name="edit" />
@@ -30,17 +30,17 @@
       <div class="weight-progress">
         <div class="progress-label">
           <span>减脂计划进度</span>
-          <span class="progress-value">64%</span>
+          <span class="progress-value">{{ progressPercent }}%</span>
         </div>
         <div class="progress-bar">
-          <div class="progress-fill" style="width: 64%"></div>
+          <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
         </div>
         <div class="progress-info">
           <span>当前体重</span>
-          <span class="highlight">63.2 公斤</span>
+          <span class="highlight">{{ currentWeight }} 公斤</span>
           <span class="divider">|</span>
           <span>距离目标</span>
-          <span class="highlight">还需 3.2 公斤</span>
+          <span class="highlight">{{ weightDiff }} 公斤</span>
         </div>
       </div>
     </div>
@@ -53,21 +53,21 @@
           <van-icon name="fire-o" />
           <span>每日热量目标</span>
         </div>
-        <div class="item-value">2,000 千卡 →</div>
+        <div class="item-value">{{ Number(form.dailyCalorieGoal).toLocaleString() }} 千卡 →</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
           <van-icon name="balance-o" />
           <span>体重目标</span>
         </div>
-        <div class="item-value">60.0 公斤 →</div>
+        <div class="item-value">{{ targetWeight }} 公斤 →</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
           <van-icon name="chart-trending-o" />
           <span>营养比例</span>
         </div>
-        <div class="item-value">碳水 52% · 蛋白质 28% · 脂肪 20% →</div>
+        <div class="item-value">{{ macroSummary }} →</div>
       </div>
     </section>
 
@@ -195,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Field, Button, Popup, Picker, Switch, showConfirmDialog, showToast, Icon } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -235,8 +235,27 @@ const form = reactive({
   weightGoal: 60
 })
 
+const profileName = computed(() => authStore.user?.username || '用户')
+const profileId = computed(() => authStore.user?.id ?? '----')
+const recordDays = computed(() => Math.max(weightStore.records.length, mealStore.meals.length, 0))
+const currentWeight = computed(() => Number(form.weight).toFixed(1))
+const targetWeight = computed(() => Number(form.weightGoal).toFixed(1))
+const weightDiff = computed(() => Math.abs(Number(form.weight) - Number(form.weightGoal)).toFixed(1))
+const progressPercent = computed(() => {
+  const diff = Math.abs(Number(form.weight) - Number(form.weightGoal))
+  return Math.max(0, Math.min(100, Math.round(100 - diff * 10)))
+})
+const macroSummary = computed(
+  () => `碳水 ${form.carbsRatio}% · 蛋白质 ${form.proteinRatio}% · 脂肪 ${form.fatRatio}%`
+)
+
 onMounted(async () => {
-  await settingsStore.loadSettings()
+  await Promise.all([
+    settingsStore.loadSettings(),
+    mealStore.loadMeals().catch(() => undefined),
+    weightStore.loadRecords().catch(() => undefined),
+    authStore.fetchMe().catch(() => undefined)
+  ])
   const s = settingsStore.settings
   Object.assign(form, s)
   apiKeyInput.value = settingsStore.apiKey
@@ -263,8 +282,8 @@ async function saveProfile() {
   showToast('已保存')
 }
 
-function saveApiKey() {
-  settingsStore.setApiKey(apiKeyInput.value)
+async function saveApiKey() {
+  await settingsStore.setApiKey(apiKeyInput.value)
   showToast('API Key 已保存')
 }
 

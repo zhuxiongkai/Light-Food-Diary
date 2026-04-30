@@ -9,6 +9,12 @@ export const config = {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'calorie_tracker',
+    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '20', 10),
+    maxIdle: parseInt(process.env.DB_MAX_IDLE || '10', 10),
+    idleTimeout: parseInt(process.env.DB_IDLE_TIMEOUT_MS || '60000', 10),
+    queueLimit: parseInt(process.env.DB_QUEUE_LIMIT || '50', 10),
+    enableKeepAlive: (process.env.DB_ENABLE_KEEPALIVE || 'true') !== 'false',
+    keepAliveInitialDelay: parseInt(process.env.DB_KEEPALIVE_INITIAL_DELAY || '10000', 10),
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-secret-change-me',

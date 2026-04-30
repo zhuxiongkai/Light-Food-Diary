@@ -17,6 +17,12 @@ const router = createRouter({
       meta: { title: '注册', guest: true },
     },
     {
+      path: '/guest',
+      name: 'guest',
+      component: () => import('@/views/GuestExperience.vue'),
+      meta: { title: '游客体验', guest: true },
+    },
+    {
       path: '/',
       name: 'dashboard',
       component: () => import('@/views/Dashboard.vue'),

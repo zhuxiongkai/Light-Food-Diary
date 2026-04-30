@@ -8,6 +8,11 @@ export const pool = mysql.createPool({
   password: config.db.password,
   database: config.db.database,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: config.db.connectionLimit,
+  maxIdle: config.db.maxIdle,
+  idleTimeout: config.db.idleTimeout,
+  queueLimit: config.db.queueLimit,
+  enableKeepAlive: config.db.enableKeepAlive,
+  keepAliveInitialDelay: config.db.keepAliveInitialDelay,
   charset: 'utf8mb4',
 })

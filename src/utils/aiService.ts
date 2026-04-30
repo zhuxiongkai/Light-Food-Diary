@@ -9,6 +9,7 @@ export async function analyzeFoodImage(
   const res = await api<AiRecognitionResult[]>('/ai/recognize', {
     method: 'POST',
     body: JSON.stringify({ imageBase64, mediaType }),
+    timeoutMs: 45000,
   })
   return res.data
 }

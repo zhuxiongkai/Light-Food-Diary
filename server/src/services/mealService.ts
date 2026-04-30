@@ -122,6 +122,10 @@ export async function updateMeal(userId: number, mealId: number, data: Partial<M
   if (data.fat !== undefined) updateData.fat = data.fat
   if (data.carbs !== undefined) updateData.carbs = data.carbs
 
+  if (Object.keys(updateData).length === 0) {
+    return existing
+  }
+
   await db.update(mealRecords).set(updateData).where(eq(mealRecords.id, mealId))
 
   return { ...existing, ...data }

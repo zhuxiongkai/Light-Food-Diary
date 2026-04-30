@@ -15,7 +15,8 @@ declare global {
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new AppError('未登录，请先登录', 401)
+    next(new AppError('未登录，请先登录', 401))
+    return
   }
 
   const token = authHeader.slice(7)
@@ -26,6 +27,6 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
     req.username = payload.username
     next()
   } catch {
-    throw new AppError('登录已过期，请重新登录', 401)
+    next(new AppError('登录已过期，请重新登录', 401))
   }
 }

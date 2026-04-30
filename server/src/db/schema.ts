@@ -21,7 +21,7 @@ export const users = mysqlTable('users', {
 
 export const userSettings = mysqlTable('user_settings', {
   id: int('id').autoincrement().primaryKey(),
-  userId: int('user_id').notNull().unique(),
+  userId: int('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
   dailyCalorieGoal: int('daily_calorie_goal').notNull().default(2000),
   proteinRatio: float('protein_ratio').notNull().default(20),
   fatRatio: float('fat_ratio').notNull().default(25),
@@ -36,7 +36,7 @@ export const userSettings = mysqlTable('user_settings', {
 
 export const foods = mysqlTable('foods', {
   id: int('id').autoincrement().primaryKey(),
-  userId: int('user_id'),
+  userId: int('user_id').references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   category: mysqlEnum('category', [
     'staple', 'meat', 'vegetable', 'fruit', 'snack', 'drink', 'custom',
@@ -49,7 +49,7 @@ export const foods = mysqlTable('foods', {
 
 export const mealRecords = mysqlTable('meal_records', {
   id: int('id').autoincrement().primaryKey(),
-  userId: int('user_id').notNull(),
+  userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   date: date('date').notNull(),
   mealType: mysqlEnum('meal_type', [
     'breakfast', 'lunch', 'dinner', 'snack',
@@ -68,7 +68,7 @@ export const mealRecords = mysqlTable('meal_records', {
 
 export const weightRecords = mysqlTable('weight_records', {
   id: int('id').autoincrement().primaryKey(),
-  userId: int('user_id').notNull(),
+  userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   date: date('date').notNull(),
   weight: float('weight').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -78,7 +78,7 @@ export const weightRecords = mysqlTable('weight_records', {
 
 export const refreshTokens = mysqlTable('refresh_tokens', {
   id: int('id').autoincrement().primaryKey(),
-  userId: int('user_id').notNull(),
+  userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   token: varchar('token', { length: 500 }).notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

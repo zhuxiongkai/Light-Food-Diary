@@ -16,38 +16,38 @@ const USER_SELECT = {
 } as const
 
 export async function register(username: string, password: string, email?: string) {
-  const [existing] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.username, username))
-    .limit(1)
-
-  if (existing) {
-    throw new AppError('用户名已存在', 409)
-  }
-
   const passwordHash = await hashPassword(password)
+  try {
+    return await db.transaction(async (tx) => {
+      const result = await tx.insert(users).values({
+        username,
+        email: email || null,
+        passwordHash,
+      })
+      const userId = Number(result[0].insertId)
 
-  const result = await db.insert(users).values({
-    username,
-    email: email || null,
-    passwordHash,
-  })
-  const userId = Number(result[0].insertId)
+      await tx.insert(userSettings).values({ userId } as any)
 
-  // Create default settings for new user
-  await db.insert(userSettings).values({ userId } as any)
+      const tokenPayload = { userId, username }
+      const accessToken = signAccessToken(tokenPayload)
+      const refreshToken = signRefreshToken(tokenPayload)
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-  const tokenPayload = { userId, username }
-  const accessToken = signAccessToken(tokenPayload)
-  const refreshToken = signRefreshToken(tokenPayload)
+      await tx.insert(refreshTokens).values({ userId, token: refreshToken, expiresAt } as any)
 
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  await db.insert(refreshTokens).values({ userId, token: refreshToken, expiresAt } as any)
-
-  const user = { id: userId, username, email: email || null }
-
-  return { user, accessToken, refreshToken }
+      return {
+        user: { id: userId, username, email: email || null },
+        accessToken,
+        refreshToken,
+      }
+    })
+  } catch (error: any) {
+    const message = String(error?.message || '')
+    if (message.includes('Duplicate entry') || message.includes('for key') || error?.code === 'ER_DUP_ENTRY') {
+      throw new AppError('用户名已存在', 409)
+    }
+    throw error
+  }
 }
 
 export async function login(username: string, password: string) {
@@ -104,14 +104,15 @@ export async function refreshAccessToken(token: string) {
     throw new AppError('Token无效或已过期', 401)
   }
 
-  await db.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
-
   const tokenPayload = { userId: payload.userId, username: payload.username }
   const newAccessToken = signAccessToken(tokenPayload)
   const newRefreshToken = signRefreshToken(tokenPayload)
 
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  await db.insert(refreshTokens).values({ userId: payload.userId, token: newRefreshToken, expiresAt } as any)
+  await db.transaction(async (tx) => {
+    await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored.id))
+    await tx.insert(refreshTokens).values({ userId: payload.userId, token: newRefreshToken, expiresAt } as any)
+  })
 
   return { accessToken: newAccessToken, refreshToken: newRefreshToken }
 }

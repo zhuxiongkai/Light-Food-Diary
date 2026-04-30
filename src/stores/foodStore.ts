@@ -16,7 +16,7 @@ export interface ApiFood {
 
 function toFoodItem(f: ApiFood): FoodItem {
   return {
-    id: String(f.id),
+    id: f.id,
     name: f.name,
     category: f.category as FoodCategory,
     caloriesPer100g: f.caloriesPer100g,
@@ -36,9 +36,16 @@ export const useFoodStore = defineStore('food', () => {
   const allFoods = computed(() => foodCache.value)
 
   async function loadAllFoods() {
-    const res = await api<ApiFood[]>('/foods')
-    foodCache.value = res.data.map(toFoodItem)
-    customFoods.value = foodCache.value.filter(f => f.category === 'custom' || !foodCache.value.includes(f))
+    loading.value = true
+    try {
+      const res = await api<ApiFood[]>('/foods')
+      foodCache.value = res.data.map(toFoodItem)
+      customFoods.value = res.data
+        .filter(f => !f.isBuiltin)
+        .map(toFoodItem)
+    } finally {
+      loading.value = false
+    }
   }
 
   function searchFoods(keyword: string, category?: FoodCategory): FoodItem[] {
@@ -64,13 +71,13 @@ export const useFoodStore = defineStore('food', () => {
     return newFood
   }
 
-  async function deleteCustomFood(id: string) {
+  async function deleteCustomFood(id: number | string) {
     await api(`/foods/custom/${id}`, { method: 'DELETE' })
     customFoods.value = customFoods.value.filter(f => f.id !== id)
     foodCache.value = foodCache.value.filter(f => f.id !== id)
   }
 
-  async function updateCustomFood(id: string, data: Partial<FoodItem>) {
+  async function updateCustomFood(id: number | string, data: Partial<FoodItem>) {
     const apiData: Record<string, any> = {}
     if (data.name !== undefined) apiData.name = data.name
     if (data.caloriesPer100g !== undefined) apiData.caloriesPer100g = data.caloriesPer100g

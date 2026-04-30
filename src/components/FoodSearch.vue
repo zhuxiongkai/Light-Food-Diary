@@ -5,7 +5,8 @@
       <van-tab v-for="cat in categories" :key="cat.value" :title="cat.label" />
     </van-tabs>
     <div class="food-list">
-      <div v-if="filtered.length === 0" class="empty-tip">暂无匹配的食物</div>
+      <div v-if="foodStore.loading" class="empty-tip">正在加载食物...</div>
+      <div v-else-if="filtered.length === 0" class="empty-tip">暂无匹配的食物</div>
       <div
         v-for="food in filtered"
         :key="food.id"
@@ -28,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Search, Tabs, Tab, Icon } from 'vant'
 import { FOOD_CATEGORY_LABELS, type FoodCategory, type FoodItem } from '@/types'
 import { useFoodStore } from '@/stores/foodStore'
@@ -44,7 +45,9 @@ defineEmits<{
 
 const foodStore = useFoodStore()
 const keyword = ref('')
+const debouncedKeyword = ref('')
 const activeCategory = ref(0)
+let keywordTimer: number | null = null
 
 const categories = computed(() => [
   { label: '全部', value: '' },
@@ -58,10 +61,34 @@ const currentCategory = computed(() => {
 
 const filtered = computed(() => {
   const cat = currentCategory.value || undefined
-  return foodStore.searchFoods(keyword.value, cat as FoodCategory | undefined)
+  return foodStore.searchFoods(debouncedKeyword.value, cat as FoodCategory | undefined)
 })
 
-function onSearch() {}
+onMounted(async () => {
+  if (foodStore.allFoods.length === 0) {
+    await foodStore.loadAllFoods()
+  }
+})
+
+watch(keyword, (value) => {
+  if (keywordTimer) {
+    window.clearTimeout(keywordTimer)
+  }
+  keywordTimer = window.setTimeout(() => {
+    debouncedKeyword.value = value
+  }, 250)
+})
+
+onBeforeUnmount(() => {
+  if (keywordTimer) {
+    window.clearTimeout(keywordTimer)
+    keywordTimer = null
+  }
+})
+
+function onSearch() {
+  // handled by debounced watcher
+}
 function onCategoryChange() {}
 </script>
 

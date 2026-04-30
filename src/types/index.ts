@@ -1,5 +1,5 @@
 export interface FoodItem {
-  id: string
+  id: number | string
   name: string
   category: 'staple' | 'meat' | 'vegetable' | 'fruit' | 'snack' | 'drink' | 'custom'
   caloriesPer100g: number
@@ -12,7 +12,7 @@ export interface MealRecord {
   id?: number
   date: string
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack'
-  foodId: string
+  foodId: number
   foodName: string
   weight: number
   calories: number

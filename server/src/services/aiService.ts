@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { pool } from '../db/connection.js'
 import { userSettings } from '../db/schema.js'
-import { decrypt } from '../utils/crypto.js'
+import { decodeStoredApiKey } from '../utils/apiKey.js'
 import { AppError } from '../middleware/errorHandler.js'
 
 const db = drizzle(pool)
@@ -20,6 +20,34 @@ interface ClaudeResponse {
   content: Array<{ type: string; text: string }>
 }
 
+function toAiResultArray(raw: unknown): AiRecognitionResult[] {
+  if (!Array.isArray(raw)) {
+    throw new AppError('AI返回格式异常，请重试', 500)
+  }
+
+  return raw
+    .map((item) => {
+      const record = item as Record<string, unknown>
+      return {
+        foodName: String(record.foodName || '').trim(),
+        estimatedWeight: Number(record.estimatedWeight),
+        estimatedCalories: Number(record.estimatedCalories),
+        confidence: Number(record.confidence),
+      }
+    })
+    .filter(
+      (item) =>
+        !!item.foodName &&
+        Number.isFinite(item.estimatedWeight) &&
+        item.estimatedWeight > 0 &&
+        Number.isFinite(item.estimatedCalories) &&
+        item.estimatedCalories >= 0 &&
+        Number.isFinite(item.confidence) &&
+        item.confidence >= 0 &&
+        item.confidence <= 1
+    )
+}
+
 export async function recognizeFood(
   userId: number,
   imageBase64: string,
@@ -32,7 +60,7 @@ export async function recognizeFood(
     .where(eq(userSettings.userId, userId))
     .limit(1)
 
-  const apiKey = settings?.aiApiKey ? decrypt(settings.aiApiKey) : ''
+  const apiKey = decodeStoredApiKey(settings?.aiApiKey)
 
   if (!apiKey) {
     throw new AppError('请先在设置中配置AI API Key', 400)
@@ -94,5 +122,17 @@ export async function recognizeFood(
     throw new AppError('AI返回格式异常，请重试', 500)
   }
 
-  return JSON.parse(jsonMatch[0])
+  try {
+    const parsed = JSON.parse(jsonMatch[0])
+    const normalized = toAiResultArray(parsed)
+    if (normalized.length === 0) {
+      throw new AppError('AI未识别到有效食物，请重试', 500)
+    }
+    return normalized
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error
+    }
+    throw new AppError('AI返回解析失败，请重试', 500)
+  }
 }

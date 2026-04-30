@@ -6,6 +6,10 @@ interface ApiResponse<T = any> {
   message: string
 }
 
+interface ApiRequestInit extends RequestInit {
+  timeoutMs?: number
+}
+
 function getTokens() {
   const accessToken = localStorage.getItem('access_token')
   const refreshToken = localStorage.getItem('refresh_token')
@@ -23,17 +27,18 @@ function clearTokens() {
 }
 
 let isRefreshing = false
-let refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = []
+let refreshPromise: Promise<string> | null = null
 
 async function refreshAccessToken(): Promise<string> {
   const { refreshToken } = getTokens()
   if (!refreshToken) throw new Error('No refresh token')
 
-  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+  const res = await fetchWithTimeout(`${BASE_URL}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
-  })
+    timeoutMs: 10000,
+  } as ApiRequestInit)
 
   const json: ApiResponse = await res.json()
   if (json.code !== 0) throw new Error(json.message)
@@ -42,53 +47,79 @@ async function refreshAccessToken(): Promise<string> {
   return json.data.accessToken
 }
 
-export async function api<T = any>(
-  path: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  const { accessToken } = getTokens()
+async function getFreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null
+    })
+  }
+  return refreshPromise
+}
+
+function buildHeaders(options: RequestInit, token?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   }
 
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
   }
 
-  let res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+  return headers
+}
 
-  // Handle 401 - try to refresh token
+async function fetchWithTimeout(url: string, options: ApiRequestInit = {}) {
+  const { timeoutMs = 15000, ...rest } = options
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...rest, signal: controller.signal })
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error('请求超时，请稍后重试')
+    }
+    throw error
+  } finally {
+    window.clearTimeout(timer)
+  }
+}
+
+export async function api<T = any>(
+  path: string,
+  options: ApiRequestInit = {}
+): Promise<ApiResponse<T>> {
+  const { accessToken } = getTokens()
+  let headers = buildHeaders(options, accessToken || undefined)
+  let res = await fetchWithTimeout(`${BASE_URL}${path}`, { ...options, headers })
+
   if (res.status === 401 && !path.includes('/auth/')) {
-    if (!isRefreshing) {
-      isRefreshing = true
-      try {
-        const newToken = await refreshAccessToken()
-        // Retry original request
-        headers['Authorization'] = `Bearer ${newToken}`
-        res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
-        // Resolve queued requests
-        for (const q of refreshQueue) q.resolve(newToken)
-        refreshQueue = []
-      } catch (err) {
-        clearTokens()
-        for (const q of refreshQueue) q.reject(err)
-        refreshQueue = []
-        throw err
-      } finally {
-        isRefreshing = false
+    try {
+      if (!isRefreshing) {
+        isRefreshing = true
       }
-    } else {
-      // Wait for the in-progress refresh
-      const newToken = await new Promise<string>((resolve, reject) => {
-        refreshQueue.push({ resolve, reject })
-      })
-      headers['Authorization'] = `Bearer ${newToken}`
-      res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
+      const newToken = await getFreshAccessToken()
+      headers = buildHeaders(options, newToken)
+      res = await fetchWithTimeout(`${BASE_URL}${path}`, { ...options, headers })
+
+      if (res.status === 401) {
+        clearTokens()
+        throw new Error('登录已过期，请重新登录')
+      }
+    } catch (err: any) {
+      clearTokens()
+      throw new Error(err?.message || '登录已过期，请重新登录')
+    } finally {
+      isRefreshing = false
     }
   }
 
-  const json: ApiResponse<T> = await res.json()
+  let json: ApiResponse<T>
+  try {
+    json = await res.json()
+  } catch {
+    throw new Error('服务器返回格式异常')
+  }
   if (json.code !== 0) {
     throw new Error(json.message)
   }

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { pool } from '../db/connection.js'
 import { userSettings } from '../db/schema.js'
-import { encrypt, decrypt } from '../utils/crypto.js'
+import { decodeStoredApiKey, encodeApiKey } from '../utils/apiKey.js'
 
 const db = drizzle(pool)
 
@@ -25,7 +25,7 @@ export async function getSettings(userId: number) {
 
   return {
     ...settings,
-    aiApiKey: settings.aiApiKey ? decrypt(settings.aiApiKey) : '',
+    aiApiKey: decodeStoredApiKey(settings.aiApiKey),
   }
 }
 
@@ -51,7 +51,7 @@ export async function updateSettings(userId: number, data: Record<string, any>) 
 
   // Encrypt AI API key if provided
   if (data.aiApiKey !== undefined) {
-    updateData.aiApiKey = data.aiApiKey ? encrypt(data.aiApiKey) : null
+    updateData.aiApiKey = encodeApiKey(data.aiApiKey)
   }
 
   if (existing) {

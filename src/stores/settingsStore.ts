@@ -46,11 +46,11 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   async function setApiKey(key: string) {
-    await api('/settings', {
+    const res = await api<UserSettings & { aiApiKey: string }>('/settings', {
       method: 'PUT',
       body: JSON.stringify({ aiApiKey: key }),
     })
-    apiKey.value = key
+    apiKey.value = res.data.aiApiKey || ''
   }
 
   return { settings, apiKey, loaded, loadSettings, saveSettings, setApiKey }

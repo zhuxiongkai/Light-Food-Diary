@@ -280,7 +280,7 @@ function makeDemo(
     key: `demo-${foodName}`,
     date: '',
     mealType: 'breakfast',
-    foodId: `demo-${foodName}`,
+    foodId: 0,
     foodName,
     weight: 100,
     calories,
@@ -326,7 +326,7 @@ async function onConfirmAdd() {
   await mealStore.addMeal({
     date: currentDate.value,
     mealType: activeMeal.value,
-    foodId: selectedFood.value.id,
+    foodId: Number(selectedFood.value.id) || 0,
     foodName: selectedFood.value.name,
     weight: weight.value,
     calories: calcCalories.value,

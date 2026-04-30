@@ -151,6 +151,7 @@ const weightStore = useWeightStore()
 const period = ref<Period>('week')
 const meals = ref<MealRecord[]>([])
 const labels = ref<string[]>([])
+const weightSeries = ref<number[]>([])
 
 const demoCalories = [1450, 1680, 1920, 2140, 1720, 1380, 1280]
 const demoProtein = [88, 102, 116, 125, 98, 82, 64]
@@ -207,12 +208,16 @@ const averageCalories = computed(() =>
 const latestCalories = computed(() => activeCalories.value[activeCalories.value.length - 1] || 0)
 
 const reachedDays = computed(() => activeCalories.value.filter((value) => value >= dailyGoal.value * 0.85 && value <= dailyGoal.value * 1.1).length)
-const completionRate = computed(() => Math.round((reachedDays.value / activeCalories.value.length) * 100))
-const calorieBalance = computed(() => Math.round(averageCalories.value - dailyGoal.value))
+const completionRate = computed(() =>
+  activeCalories.value.length ? Math.round((reachedDays.value / activeCalories.value.length) * 100) : 0
+)
+const calorieBalance = computed(() =>
+  Math.round(activeCalories.value.reduce((sum, value) => sum + (value - dailyGoal.value), 0))
+)
 
 const latestWeight = computed(() => {
-  const first = weightStore.records[0]
-  return first ? first.weight.toFixed(1) : '63.2'
+  const last = [...weightSeries.value].reverse().find((value) => Number.isFinite(value) && value > 0)
+  return last ? last.toFixed(1) : '63.2'
 })
 
 const trendOption = computed(() => ({
@@ -284,7 +289,7 @@ const barOption = computed(() => ({
   grid: { left: 32, right: 4, top: 38, bottom: 20 },
   xAxis: {
     type: 'category',
-    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+    data: chartLabels.value,
     axisTick: { show: false },
     axisLine: { lineStyle: { color: '#d7e0ea' } },
     axisLabel: { color: '#687283', fontSize: 10 }
@@ -352,8 +357,8 @@ const weightOption = computed(() => ({
   },
   yAxis: {
     type: 'value',
-    min: 62,
-    max: 65,
+    min: Math.max(20, Math.floor((Math.min(...weightSeries.value, 63) - 1) * 10) / 10),
+    max: Math.ceil((Math.max(...weightSeries.value, 64) + 1) * 10) / 10,
     splitLine: { lineStyle: { color: '#eef2f6' } },
     axisLabel: { color: '#8a95a7', fontSize: 10 }
   },
@@ -361,7 +366,7 @@ const weightOption = computed(() => ({
     type: 'line',
     smooth: true,
     symbolSize: 6,
-    data: [63.8, 63.5, 63.6, 63.4, 63.35, 63.1, 62.95],
+    data: weightSeries.value.length ? weightSeries.value : [63.8, 63.5, 63.6, 63.4, 63.35, 63.1, 62.95],
     lineStyle: { width: 3 },
     areaStyle: { color: 'rgba(24, 185, 120, 0.08)' }
   }]
@@ -386,8 +391,13 @@ async function loadData() {
 
   const startStr = toDateStr(start)
   const endStr = toDateStr(end)
-  meals.value = await mealStore.getMealsByDateRange(startStr, endStr)
+  const [mealList, weightList] = await Promise.all([
+    mealStore.getMealsByDateRange(startStr, endStr),
+    weightStore.getRecordsByDateRange(startStr, endStr),
+  ])
+  meals.value = mealList
   labels.value = period.value === 'year' ? monthLabels(start, end) : dayLabels(start, end)
+  weightSeries.value = aggregateWeightSeries(weightList)
 }
 
 function aggregateCalories() {
@@ -415,6 +425,25 @@ function aggregateByLabel() {
     bucket.carbs += meal.carbs
   }
   return map
+}
+
+function aggregateWeightSeries(records: { date: string; weight: number }[]) {
+  const map = new Map<string, number>()
+  for (const item of records) {
+    const label = period.value === 'year' ? item.date.slice(0, 7) : item.date.slice(5).replace('-', '/')
+    map.set(label, item.weight)
+  }
+
+  const result: number[] = []
+  let last = records[0]?.weight ?? settingsStore.settings.weight ?? 63.2
+  for (const label of labels.value) {
+    const current = map.get(label)
+    if (typeof current === 'number') {
+      last = current
+    }
+    result.push(Number(last.toFixed(2)))
+  }
+  return result
 }
 
 function toDateStr(date: Date) {

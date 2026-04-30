@@ -156,6 +156,11 @@ function onFilePicked(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files || input.files.length === 0) return
   const file = input.files[0]
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('图片过大，请选择 5MB 以内图片')
+    input.value = ''
+    return
+  }
   const reader = new FileReader()
   reader.onload = () => {
     const dataUrl = reader.result as string
@@ -186,7 +191,7 @@ async function onAddAll() {
     await mealStore.addMeal({
       date: today,
       mealType: 'lunch',
-      foodId: crypto.randomUUID(),
+      foodId: 0,
       foodName: item.foodName,
       weight: item.estimatedWeight,
       calories: Math.round(item.estimatedCalories * item.estimatedWeight / 100),

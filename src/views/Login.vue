@@ -113,7 +113,7 @@ function onVerificationCodeLogin() {
 }
 
 function onGuestExperience() {
-  router.replace('/')
+  router.replace('/guest')
 }
 
 function onForgotPassword() {
