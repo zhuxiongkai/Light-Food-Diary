@@ -1,63 +1,189 @@
 <template>
-  <div class="page">
-    <div class="page-header">设置</div>
+  <div class="page settings-page">
+    <header class="page-header settings-header">
+      <h1 class="page-title">我的</h1>
+      <button class="header-action" type="button">
+        <van-icon name="setting-o" />
+      </button>
+      <button class="header-action" type="button">
+        <van-icon name="comment-o" />
+        <span class="badge"></span>
+      </button>
+    </header>
 
-    <div class="card">
-      <div class="section-title">热量与营养素目标</div>
-      <van-field v-model="form.dailyCalorieGoal" type="number" label="每日热量(kcal)" />
-      <van-field v-model="form.proteinRatio" type="digit" label="蛋白质比例(%)" />
-      <van-field v-model="form.fatRatio" type="digit" label="脂肪比例(%)" />
-      <van-field v-model="form.carbsRatio" type="digit" label="碳水比例(%)" />
-      <div class="mt-8">
-        <van-button type="primary" block round @click="saveGoals">保存目标</van-button>
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="avatar-large">
+          <span>林</span>
+        </div>
+        <div class="profile-info">
+          <h2 class="profile-name">林若安</h2>
+          <p class="profile-id">ID: 20250520</p>
+          <p class="profile-streak">✅ 坚持记录 58 天</p>
+        </div>
+        <button class="edit-btn">
+          <van-icon name="edit" />
+        </button>
+      </div>
+
+      <div class="weight-progress">
+        <div class="progress-label">
+          <span>减脂计划进度</span>
+          <span class="progress-value">64%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 64%"></div>
+        </div>
+        <div class="progress-info">
+          <span>当前体重</span>
+          <span class="highlight">63.2 公斤</span>
+          <span class="divider">|</span>
+          <span>距离目标</span>
+          <span class="highlight">还需 3.2 公斤</span>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="section-title">个人信息</div>
-      <van-field v-model="form.height" type="number" label="身高(cm)" />
-      <van-field v-model="form.weight" type="number" label="当前体重(kg)" />
-      <van-field v-model="form.age" type="number" label="年龄" />
-      <van-field v-model="form.gender" label="性别" is-link readonly @click="showGenderPicker = true" />
-      <van-field v-model="form.weightGoal" type="number" label="目标体重(kg)" />
-      <div class="mt-8">
-        <van-button type="primary" block round @click="saveProfile">保存信息</van-button>
+    <!-- Health Goals -->
+    <section class="settings-section">
+      <h3 class="section-title">健康目标</h3>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="fire-o" />
+          <span>每日热量目标</span>
+        </div>
+        <div class="item-value">2,000 千卡 →</div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">AI API 配置</div>
-      <van-field v-model="apiKeyInput" type="password" label="API Key" placeholder="输入 Claude API Key" />
-      <div class="field-hint">API Key 仅存储在本地，用于 AI 拍照识别食物热量</div>
-      <div class="mt-8">
-        <van-button type="primary" block round @click="saveApiKey">保存 API Key</van-button>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="balance-o" />
+          <span>体重目标</span>
+        </div>
+        <div class="item-value">60.0 公斤 →</div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">数据管理</div>
-      <van-button block round plain type="primary" class="mb-12" @click="onExportJSON">导出 JSON</van-button>
-      <van-button block round plain type="primary" @click="onExportCSV">导出 CSV</van-button>
-      <div class="mt-16">
-        <van-button block round plain type="danger" @click="onClearData">清除所有数据</van-button>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="chart-trending-o" />
+          <span>营养比例</span>
+        </div>
+        <div class="item-value">碳水 52% · 蛋白质 28% · 脂肪 20% →</div>
       </div>
-    </div>
+    </section>
 
-    <div class="card section-title">
-      <router-link to="/food-db">管理食物库 →</router-link>
-    </div>
+    <!-- My Data -->
+    <section class="settings-section">
+      <h3 class="section-title">我的数据</h3>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="user-circle-o" />
+          <span>身体数据</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="water-drop-o" />
+          <span>饮水记录</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="service-o" />
+          <span>运动记录</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="description" />
+          <span>历史报告</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+    </section>
 
-    <van-popup v-model:show="showGenderPicker" position="bottom" round>
-      <van-picker :columns="genderOptions" @confirm="onGenderConfirm" @cancel="showGenderPicker = false" />
-    </van-popup>
+    <!-- Reminders & Sync -->
+    <section class="settings-section">
+      <h3 class="section-title">提醒与同步</h3>
+      <div class="settings-item with-toggle">
+        <div class="item-label">
+          <van-icon name="bell-o" />
+          <span>用餐提醒</span>
+        </div>
+        <span class="reminder-time">07:30, 12:30, 18:30</span>
+        <van-switch v-model="reminders.mealReminder" size="24" />
+      </div>
+      <div class="settings-item with-toggle">
+        <div class="item-label">
+          <van-icon name="balance-o" />
+          <span>体重提醒</span>
+        </div>
+        <span class="reminder-time">每周一 08:00</span>
+        <van-switch v-model="reminders.weightReminder" size="24" />
+      </div>
+      <div class="settings-item with-toggle">
+        <div class="item-label">
+          <van-icon name="heart-o" />
+          <span>Apple 健康同步</span>
+        </div>
+        <van-switch v-model="reminders.appleHealthSync" size="24" />
+      </div>
+    </section>
 
-    <div style="height: 30px" />
+    <!-- General Settings -->
+    <section class="settings-section">
+      <h3 class="section-title">通用设置</h3>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="moon-o" />
+          <span>深色模式</span>
+        </div>
+        <div class="item-value">跟随系统</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="notification-o" />
+          <span>通知设置</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="shield-o" />
+          <span>隐私与安全</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+      <div class="settings-item">
+        <div class="item-label">
+          <van-icon name="question-o" />
+          <span>帮助与反馈</span>
+        </div>
+        <div class="item-value">→</div>
+      </div>
+    </section>
+
+    <!-- VIP Benefits -->
+    <section class="vip-section">
+      <div class="vip-banner">
+        <div class="vip-icon">👑</div>
+        <div class="vip-content">
+          <h3>会员权益</h3>
+          <p>解锁更多数据分析与专享功能</p>
+        </div>
+        <span class="vip-arrow">→</span>
+      </div>
+    </section>
+
+    <div style="height: 30px"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { Field, Button, Popup, Picker, showToast, showConfirmDialog } from 'vant'
+import { Field, Button, Popup, Picker, Switch, showConfirmDialog, showToast, Icon } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { useWeightStore } from '@/stores/weightStore'
@@ -74,6 +200,12 @@ const genderOptions = [
   { text: '女', value: 'female' }
 ]
 const apiKeyInput = ref('')
+
+const reminders = reactive({
+  mealReminder: true,
+  weightReminder: true,
+  appleHealthSync: true
+})
 
 const form = reactive({
   dailyCalorieGoal: 2000,
@@ -150,7 +282,293 @@ async function onClearData() {
 </script>
 
 <style scoped>
-.section-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-.field-hint { font-size: 12px; color: var(--text-secondary); padding: 4px 16px 0; }
-a { color: var(--primary); text-decoration: none; }
+.settings-page {
+  padding: 54px 16px calc(92px + var(--safe-bottom));
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+  flex: 1;
+}
+
+.header-action {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid rgba(132, 149, 171, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.header-action:active {
+  background: rgba(132, 149, 171, 0.1);
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  border: 1px solid rgba(132, 149, 171, 0.08);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(132, 149, 171, 0.08);
+}
+
+.avatar-large {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(22, 185, 120, 0.2);
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.profile-id,
+.profile-streak {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0;
+}
+
+.profile-streak {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.edit-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--primary-soft);
+  border: none;
+  color: var(--primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.weight-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.progress-value {
+  color: var(--primary);
+}
+
+.progress-bar {
+  height: 6px;
+  background: rgba(132, 149, 171, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.progress-info .highlight {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.divider {
+  color: rgba(132, 149, 171, 0.3);
+  margin: 0 4px;
+}
+
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+  padding: 0 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border: 1px solid rgba(132, 149, 171, 0.08);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-item:active {
+  background: rgba(132, 149, 171, 0.04);
+}
+
+.settings-item.with-toggle {
+  background: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.item-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-label .van-icon {
+  font-size: 18px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.item-value {
+  font-size: 14px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.reminder-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.vip-section {
+  margin-bottom: 24px;
+}
+
+.vip-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vip-banner:active {
+  transform: scale(0.98);
+}
+
+.vip-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.vip-content {
+  flex: 1;
+}
+
+.vip-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.vip-content p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(51, 51, 51, 0.7);
+}
+
+.vip-arrow {
+  font-size: 20px;
+  color: #333;
+  flex-shrink: 0;
+}
 </style>

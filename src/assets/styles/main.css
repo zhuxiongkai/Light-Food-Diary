@@ -1,18 +1,29 @@
 @import 'vant/lib/index.css';
 
 :root {
-  --primary: #4CAF50;
-  --primary-light: #81C784;
-  --danger: #F44336;
-  --warning: #FF9800;
-  --bg: #f5f5f5;
-  --card-bg: #ffffff;
-  --text: #333333;
-  --text-secondary: #999999;
-  --border: #ebebeb;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --radius: 12px;
+  --primary: #16b978;
+  --primary-strong: #07a96c;
+  --primary-soft: #e8f8f1;
+  --blue: #4388f4;
+  --blue-soft: #eef5ff;
+  --orange: #ff9d35;
+  --orange-soft: #fff3e6;
+  --purple: #8378ff;
+  --purple-soft: #f0eeff;
+  --danger: #f45a5a;
+  --bg: #f7fbff;
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --text: #141923;
+  --text-soft: #566173;
+  --text-secondary: #8a95a7;
+  --border: rgba(128, 147, 171, 0.16);
+  --shadow: 0 14px 34px rgba(44, 70, 103, 0.09);
+  --shadow-soft: 0 8px 22px rgba(44, 70, 103, 0.07);
+  --radius: 18px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --van-primary-color: var(--primary);
+  --van-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC',
+    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
 }
 
 * {
@@ -21,45 +32,85 @@
   box-sizing: border-box;
 }
 
-html, body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px;
-  color: var(--text);
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+html,
+body {
+  width: 100%;
   height: 100%;
   overflow: hidden;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(83, 170, 255, 0.11), transparent 34%),
+    linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+  font-family: var(--van-font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
 }
 
 #app {
   height: 100%;
-  display: flex;
-  flex-direction: column;
+}
+
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(247, 251, 255, 0.98) 100%);
+  box-shadow: 0 0 0 1px rgba(139, 157, 178, 0.08);
 }
 
 .page {
-  flex: 1;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(60px + var(--safe-bottom));
+  padding: 54px 16px calc(92px + var(--safe-bottom));
+}
+
+.page::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .page-header {
-  padding: 16px 16px 8px;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 18px;
+  background: transparent;
+}
+
+.page-title {
+  color: #05070a;
+  font-size: 30px;
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.glass-card,
+.card {
   background: var(--card-bg);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
 }
 
 .card {
-  background: var(--card-bg);
-  border-radius: var(--radius);
   padding: 16px;
-  margin: 12px 16px;
-  box-shadow: var(--shadow);
+  margin: 12px 0;
 }
 
 .flex-row {
@@ -78,18 +129,77 @@ html, body {
   flex-direction: column;
 }
 
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.text-secondary { color: var(--text-secondary); }
+.text-center {
+  text-align: center;
+}
 
-.mt-8 { margin-top: 8px; }
-.mt-12 { margin-top: 12px; }
-.mt-16 { margin-top: 16px; }
-.mb-8 { margin-bottom: 8px; }
-.mb-12 { margin-bottom: 12px; }
-.mb-16 { margin-bottom: 16px; }
+.text-right {
+  text-align: right;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.mt-8 {
+  margin-top: 8px;
+}
+
+.mt-12 {
+  margin-top: 12px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mb-8 {
+  margin-bottom: 8px;
+}
+
+.mb-12 {
+  margin-bottom: 12px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
 
 .numeric {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+.soft-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  flex: 0 0 auto;
+}
+
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 2px 12px;
+}
+
+.section-heading {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+@media (min-width: 720px) {
+  .app-shell {
+    height: min(100vh, 960px);
+    margin-top: max(0px, calc((100vh - 960px) / 2));
+    border-radius: 36px;
+  }
 }
