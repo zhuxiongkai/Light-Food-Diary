@@ -177,21 +177,38 @@
       </div>
     </section>
 
+    <!-- Logout Button -->
+    <section class="settings-section logout-section">
+      <van-button
+        round
+        block
+        type="danger"
+        @click="onLogout"
+        class="logout-btn"
+      >
+        登出账号
+      </van-button>
+    </section>
+
     <div style="height: 30px"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Field, Button, Popup, Picker, Switch, showConfirmDialog, showToast, Icon } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { useWeightStore } from '@/stores/weightStore'
+import { useAuthStore } from '@/stores/authStore'
 import { exportToJSON, exportToCSV } from '@/utils/exportService'
 
+const router = useRouter()
 const settingsStore = useSettingsStore()
 const mealStore = useMealStore()
 const weightStore = useWeightStore()
+const authStore = useAuthStore()
 
 const showGenderPicker = ref(false)
 const genderOptions = [
@@ -292,6 +309,14 @@ async function onClearData() {
       if (w.id) await weightStore.deleteRecord(w.id)
     }
     showToast('已清除')
+  } catch { /* cancelled */ }
+}
+
+async function onLogout() {
+  try {
+    await showConfirmDialog({ title: '确认', message: '确定要登出账号吗？' })
+    authStore.logout()
+    router.replace('/login')
   } catch { /* cancelled */ }
 }
 </script>
@@ -585,5 +610,17 @@ async function onClearData() {
   font-size: 20px;
   color: #333;
   flex-shrink: 0;
+}
+
+.logout-section {
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.logout-btn {
+  --van-button-danger-background: #ef4444;
+  --van-button-danger-border-color: #ef4444;
+  font-weight: 500;
+  font-size: 16px;
 }
 </style>
