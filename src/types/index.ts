@@ -1,0 +1,70 @@
+export interface FoodItem {
+  id: string
+  name: string
+  category: 'staple' | 'meat' | 'vegetable' | 'fruit' | 'snack' | 'drink' | 'custom'
+  caloriesPer100g: number
+  protein: number
+  fat: number
+  carbs: number
+}
+
+export interface MealRecord {
+  id?: number
+  date: string
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  foodId: string
+  foodName: string
+  weight: number
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+  createdAt?: number
+}
+
+export interface WeightRecord {
+  id?: number
+  date: string
+  weight: number
+  createdAt?: number
+}
+
+export interface UserSettings {
+  id?: number
+  dailyCalorieGoal: number
+  proteinRatio: number
+  fatRatio: number
+  carbsRatio: number
+  height: number
+  weight: number
+  age: number
+  gender: 'male' | 'female'
+  weightGoal: number
+}
+
+export interface AiRecognitionResult {
+  foodName: string
+  estimatedWeight: number
+  estimatedCalories: number
+  confidence: number
+}
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export type FoodCategory = 'staple' | 'meat' | 'vegetable' | 'fruit' | 'snack' | 'drink' | 'custom'
+
+export const MEAL_TYPE_LABELS: Record<MealType, string> = {
+  breakfast: '早餐',
+  lunch: '午餐',
+  dinner: '晚餐',
+  snack: '加餐'
+}
+
+export const FOOD_CATEGORY_LABELS: Record<FoodCategory, string> = {
+  staple: '主食',
+  meat: '肉类',
+  vegetable: '蔬菜',
+  fruit: '水果',
+  snack: '零食',
+  drink: '饮品',
+  custom: '自定义'
+}
