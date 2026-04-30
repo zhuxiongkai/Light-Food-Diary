@@ -1,63 +1,135 @@
 # 热量助手 — Project Context
 
-热量摄入追踪移动应用，面向中文用户。Vue 3 + Capacitor (Android)。
+热量摄入追踪移动应用，面向中文用户。Vue 3 + Capacitor (Android) + Express 后端。
 
 ## 技术栈
 
+### 前端
 - Vue 3 `<script setup>` + TypeScript 6.x
 - Vite 8 (dev server `0.0.0.0:5173`, `@` alias → `src/`)
 - Pinia 3 (Composition API stores)
 - Vue Router 4 (createWebHashHistory)
 - Vant 4 (mobile UI, on-demand import)
-- Dexie 4 (IndexedDB wrapper, db name: `CalorieTrackerDB`)
 - ECharts 6 + vue-echarts 8
 - Capacitor 8 (appId: `com.calorie.tracker`, Android only for now)
 
+### 后端 (`server/`)
+- Express 5 + TypeScript 6
+- Drizzle ORM + mysql2 (MySQL/MariaDB)
+- JWT (access 15min + refresh 7d)，bcrypt 密码哈希
+- AES-256-GCM 加密 AI API Key
+
 ## 路由表
 
-| Path | Name | View | Tab |
-|------|------|------|-----|
-| `/` | dashboard | Dashboard.vue | 概览 |
-| `/log` | log | LogMeal.vue | 记录 |
-| `/ai-photo` | ai-photo | AiPhoto.vue | AI识别 |
-| `/statistics` | statistics | Statistics.vue | 统计 |
-| `/weight` | weight | WeightLog.vue | — |
-| `/settings` | settings | Settings.vue | 设置 |
-| `/food-db` | food-db | FoodDatabase.vue | — |
+| Path | Name | View | Auth | Tab |
+|------|------|------|------|-----|
+| `/login` | login | Login.vue | 否 | — |
+| `/register` | register | Register.vue | 否 | — |
+| `/` | dashboard | Dashboard.vue | 是 | 概览 |
+| `/log` | log | LogMeal.vue | 是 | 记录 |
+| `/ai-photo` | ai-photo | AiPhoto.vue | 是 | AI识别 |
+| `/statistics` | statistics | Statistics.vue | 是 | 统计 |
+| `/weight` | weight | WeightLog.vue | 是 | — |
+| `/settings` | settings | Settings.vue | 是 | 设置 |
+| `/food-db` | food-db | FoodDatabase.vue | 是 | — |
 
-底部 TabBar 只有 5 个固定入口。`/weight` 和 `/food-db` 通过页面内导航进入。
+路由守卫：未登录 → `/login`；已登录访问 guest 页 → `/`。
+底部 TabBar 5 个固定入口。`/login`、`/register`、`/weight`、`/food-db` 通过页面内导航或路由进入。
 
-## 数据模型 (Dexie)
+## API 路由 (后端)
 
-```typescript
-// 4 张表，version 1
-meals:         '++id, date, mealType, foodId'
-customFoods:   '++id, name, category'
-weightRecords: '++id, date'
-userSettings:  '++id'
-```
+所有业务接口需要 `Authorization: Bearer <access_token>`。
 
-关键类型见 `src/types/index.ts`：`FoodItem`, `MealRecord`, `WeightRecord`, `UserSettings`, `AiRecognitionResult`。
+| Method | Path | 说明 |
+|--------|------|------|
+| POST | `/api/auth/register` | 注册 |
+| POST | `/api/auth/login` | 登录 |
+| POST | `/api/auth/refresh` | 刷新 Token |
+| GET | `/api/auth/me` | 当前用户 |
+| GET | `/api/foods?keyword=&category=` | 搜索食物 |
+| POST | `/api/foods/custom` | 添加自定义食物 |
+| PUT | `/api/foods/custom/:id` | 修改自定义食物 |
+| DELETE | `/api/foods/custom/:id` | 删除自定义食物 |
+| GET | `/api/meals?date=YYYY-MM-DD` | 当日餐食 |
+| GET | `/api/meals/range?start=&end=` | 日期范围餐食 |
+| GET | `/api/meals/stats?date=` | 当日营养统计 |
+| POST | `/api/meals` | 添加餐食 |
+| PUT | `/api/meals/:id` | 修改餐食 |
+| DELETE | `/api/meals/:id` | 删除餐食 |
+| GET | `/api/weight` | 体重记录列表 |
+| GET | `/api/weight/range?start=&end=` | 日期范围体重 |
+| POST | `/api/weight` | 添加体重记录 |
+| DELETE | `/api/weight/:id` | 删除体重记录 |
+| GET | `/api/settings` | 获取设置 |
+| PUT | `/api/settings` | 更新设置 |
+| POST | `/api/ai/recognize` | AI 食物识别 |
+
+响应格式统一：`{ code: 0, data: ..., message: 'ok' }` 成功；`{ code: -1, message: '错误信息' }` 失败。
+
+## 数据模型 (MySQL, Drizzle ORM)
+
+6 张表：`users`, `user_settings`, `foods`, `meal_records`, `weight_records`, `refresh_tokens`。
+
+- 内置食物 `user_id = NULL`（所有用户共享）；自定义食物 `user_id` 指向创建者
+- 所有业务表按 `user_id` 隔离
+- AI API Key 加密存储在 `user_settings.ai_api_key`
+
+Schema 定义见 `server/src/db/schema.ts`。
 
 ## Pinia Stores
 
-- **useMealStore** — 当日饮食记录 CRUD，计算 `dailyCalories/dailyProtein/dailyFat/dailyCarbs`，支持按餐别查询和日期范围查询
-- **useFoodStore** — 内置食物 + 自定义食物搜索和管理
-- **useWeightStore** — 体重记录 CRUD
-- **useSettingsStore** — 用户设置（热量目标、营养素比例、身体数据），API Key 存 localStorage
+- **useAuthStore** (`src/stores/authStore.ts`) — 登录/注册/登出，Token + 用户状态管理
+- **useMealStore** — 当日饮食记录 CRUD（调 API），计算 `dailyCalories/dailyProtein/dailyFat/dailyCarbs`
+- **useFoodStore** — 食物搜索（调 API），自定义食物 CRUD
+- **useWeightStore** — 体重记录 CRUD（调 API）
+- **useSettingsStore** — 用户设置读写（调 API），API Key 服务端加密存储
+
+前端 API 客户端见 `src/api/client.ts`，自动带 Token + 401 自动刷新。
 
 ## AI 服务
 
-- `src/utils/aiService.ts` — 调用 Claude Vision API
+- 前端 `src/utils/aiService.ts` → 调后端 `/api/ai/recognize`
+- 后端 `server/src/services/aiService.ts` → 调 Claude Vision API
 - 模型：`claude-haiku-4-5-20251001`，max_tokens 1024
-- API Key 由用户在设置页输入，存在 `localStorage('ai_api_key')`
-- 用户可随时在设置页查看/修改 API Key
+- API Key 由用户在设置页输入，加密存储在服务端 `user_settings` 表
 - 支持 base64 图片传入，返回 `AiRecognitionResult[]`
 
 ## 内置食物库
 
-`src/data/foodDatabase.ts` — 200+ 种中文食物和常见菜品，按分类：
+`src/data/foodDatabase.ts` — 230+ 种中文食物和常见菜品，按分类：
 主食(30) · 肉类/水产/蛋(60+) · 蔬菜/豆制品(38) · 水果(28) · 零食(25) · 饮品(20) · 家常菜(30)
+
+服务端种子数据在 `server/src/data/seedFoods.ts`，通过 `npm run db:seed` 导入 MySQL。
+
+## 环境变量
+
+### 前端 (`VITE_API_URL`)
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `VITE_API_URL` | `http://localhost:3000/api` | 后端 API 地址 |
+
+### 后端 (`server/.env`)
+| 变量 | 说明 |
+|------|------|
+| `PORT` | 服务端口 (默认 3000) |
+| `DB_HOST/PORT/USER/PASSWORD/NAME` | MySQL 连接 |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | JWT 签名密钥 |
+| `ENCRYPTION_KEY` | AI API Key 加密密钥 |
+
+## 启动流程
+
+```bash
+# 后端
+cd server
+npm install
+cp .env.example .env   # 编辑填写数据库密码等
+npm run db:migrate      # 建库建表
+npm run db:seed         # 导入食物数据
+npm run dev             # 启动 (http://localhost:3000)
+
+# 前端
+VITE_API_URL=http://localhost:3000/api npm run dev
+```
 
 ## 重要约定
 
@@ -67,3 +139,4 @@ userSettings:  '++id'
 - 不使用 `vue-echarts` 的全局注册，按需引入
 - Capacitor plugin 权限提示语为中文
 - 构建输出目录 `dist/`，Capacitor `webDir` 指向它
+- Dexie 保留用于离线缓存（后续迭代），当前主存储为 MySQL
