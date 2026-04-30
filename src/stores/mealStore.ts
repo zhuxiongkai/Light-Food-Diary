@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { db } from '@/db'
+import { api } from '@/api/client'
 import type { MealRecord, MealType } from '@/types'
 
 export const useMealStore = defineStore('meal', () => {
   const meals = ref<MealRecord[]>([])
   const loading = ref(false)
 
-  // Get today's date as YYYY-MM-DD
   function todayStr() {
     return new Date().toISOString().slice(0, 10)
   }
@@ -15,7 +14,8 @@ export const useMealStore = defineStore('meal', () => {
   async function loadMeals(date?: string) {
     loading.value = true
     const d = date || todayStr()
-    meals.value = await db.meals.where('date').equals(d).toArray()
+    const res = await api<MealRecord[]>(`/meals?date=${d}`)
+    meals.value = res.data
     loading.value = false
   }
 
@@ -33,19 +33,24 @@ export const useMealStore = defineStore('meal', () => {
   }
 
   async function addMeal(meal: Omit<MealRecord, 'id' | 'createdAt'>) {
-    const record: MealRecord = { ...meal, createdAt: Date.now() }
-    const id = await db.meals.add(record)
-    meals.value.push({ ...record, id })
-    return id
+    const res = await api<MealRecord>('/meals', {
+      method: 'POST',
+      body: JSON.stringify(meal),
+    })
+    meals.value.push(res.data)
+    return res.data.id!
   }
 
   async function deleteMeal(id: number) {
-    await db.meals.delete(id)
+    await api(`/meals/${id}`, { method: 'DELETE' })
     meals.value = meals.value.filter(m => m.id !== id)
   }
 
   async function updateMeal(id: number, data: Partial<MealRecord>) {
-    await db.meals.update(id, data)
+    await api(`/meals/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
     const idx = meals.value.findIndex(m => m.id === id)
     if (idx > -1) {
       meals.value[idx] = { ...meals.value[idx], ...data }
@@ -53,7 +58,8 @@ export const useMealStore = defineStore('meal', () => {
   }
 
   async function getMealsByDateRange(start: string, end: string): Promise<MealRecord[]> {
-    return db.meals.where('date').between(start, end, true, true).toArray()
+    const res = await api<MealRecord[]>(`/meals/range?start=${start}&end=${end}`)
+    return res.data
   }
 
   return {

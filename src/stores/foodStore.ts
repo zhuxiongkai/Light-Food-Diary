@@ -1,18 +1,44 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { db } from '@/db'
+import { api } from '@/api/client'
 import type { FoodItem, FoodCategory } from '@/types'
-import { builtInFoods } from '@/data/foodDatabase'
+
+export interface ApiFood {
+  id: number
+  name: string
+  category: string
+  caloriesPer100g: number
+  protein: number
+  fat: number
+  carbs: number
+  isBuiltin: boolean
+}
+
+function toFoodItem(f: ApiFood): FoodItem {
+  return {
+    id: String(f.id),
+    name: f.name,
+    category: f.category as FoodCategory,
+    caloriesPer100g: f.caloriesPer100g,
+    protein: f.protein,
+    fat: f.fat,
+    carbs: f.carbs,
+  }
+}
 
 export const useFoodStore = defineStore('food', () => {
-  const builtIn = ref<FoodItem[]>([...builtInFoods])
   const customFoods = ref<FoodItem[]>([])
   const loading = ref(false)
 
-  const allFoods = computed(() => [...builtIn.value, ...customFoods.value])
+  // Cache all foods (built-in + custom)
+  const foodCache = ref<FoodItem[]>([])
 
-  async function loadCustomFoods() {
-    customFoods.value = await db.customFoods.toArray()
+  const allFoods = computed(() => foodCache.value)
+
+  async function loadAllFoods() {
+    const res = await api<ApiFood[]>('/foods')
+    foodCache.value = res.data.map(toFoodItem)
+    customFoods.value = foodCache.value.filter(f => f.category === 'custom' || !foodCache.value.includes(f))
   }
 
   function searchFoods(keyword: string, category?: FoodCategory): FoodItem[] {
@@ -28,25 +54,46 @@ export const useFoodStore = defineStore('food', () => {
   }
 
   async function addCustomFood(food: Omit<FoodItem, 'id'>) {
-    const id = crypto.randomUUID()
-    const newFood: FoodItem = { ...food, id, category: 'custom' }
-    await db.customFoods.add(newFood)
+    const res = await api<ApiFood>('/foods/custom', {
+      method: 'POST',
+      body: JSON.stringify(food),
+    })
+    const newFood = toFoodItem(res.data)
     customFoods.value.push(newFood)
+    foodCache.value.push(newFood)
     return newFood
   }
 
   async function deleteCustomFood(id: string) {
-    await db.customFoods.where('id').equals(id).delete()
+    await api(`/foods/custom/${id}`, { method: 'DELETE' })
     customFoods.value = customFoods.value.filter(f => f.id !== id)
+    foodCache.value = foodCache.value.filter(f => f.id !== id)
   }
 
   async function updateCustomFood(id: string, data: Partial<FoodItem>) {
-    await db.customFoods.where('id').equals(id).modify(data)
+    const apiData: Record<string, any> = {}
+    if (data.name !== undefined) apiData.name = data.name
+    if (data.caloriesPer100g !== undefined) apiData.caloriesPer100g = data.caloriesPer100g
+    if (data.protein !== undefined) apiData.protein = data.protein
+    if (data.fat !== undefined) apiData.fat = data.fat
+    if (data.carbs !== undefined) apiData.carbs = data.carbs
+
+    await api(`/foods/custom/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(apiData),
+    })
     const idx = customFoods.value.findIndex(f => f.id === id)
     if (idx > -1) {
       customFoods.value[idx] = { ...customFoods.value[idx], ...data }
     }
+    const cacheIdx = foodCache.value.findIndex(f => f.id === id)
+    if (cacheIdx > -1) {
+      foodCache.value[cacheIdx] = { ...foodCache.value[cacheIdx], ...data }
+    }
   }
 
-  return { builtIn, customFoods, allFoods, loading, loadCustomFoods, searchFoods, addCustomFood, deleteCustomFood, updateCustomFood }
+  return {
+    customFoods, allFoods, loading, loadAllFoods, searchFoods,
+    addCustomFood, deleteCustomFood, updateCustomFood
+  }
 })

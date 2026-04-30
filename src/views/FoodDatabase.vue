@@ -29,7 +29,7 @@ const foodStore = useFoodStore()
 const showAdd = ref(false)
 const form = ref({ name: '', caloriesPer100g: 0, protein: 0, fat: 0, carbs: 0 })
 
-onMounted(() => foodStore.loadCustomFoods())
+onMounted(() => foodStore.loadAllFoods())
 
 function onSelect(food: FoodItem) {
   // View food detail — could navigate or show detail

@@ -9,6 +9,11 @@ lerna-debug.log*
 
 node_modules
 dist
+server/node_modules
+server/dist
+server/drizzle
+.env
+server/.env
 dist-ssr
 *.local
 

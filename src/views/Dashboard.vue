@@ -251,7 +251,7 @@ function nextDay() {
 onMounted(async () => {
   await Promise.all([
     settingsStore.loadSettings(),
-    foodStore.loadCustomFoods(),
+    foodStore.loadAllFoods(),
     mealStore.loadMeals()
   ])
 })

@@ -168,10 +168,10 @@ function onFilePicked(e: Event) {
 }
 
 async function onAnalyze() {
-  if (!imageBase64.value || !settingsStore.apiKey) return
+  if (!imageBase64.value) return
   analyzing.value = true
   try {
-    const res = await analyzeFoodImage(imageBase64.value, imageType.value, settingsStore.apiKey)
+    const res = await analyzeFoodImage(imageBase64.value, imageType.value)
     results.value = res
   } catch (e: any) {
     showToast(e.message || '识别失败，请重试')

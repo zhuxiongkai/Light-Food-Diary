@@ -262,7 +262,7 @@ const calcCarbs = computed(() =>
 )
 
 onMounted(async () => {
-  await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadCustomFoods()])
+  await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadAllFoods()])
 })
 
 function makeDemo(

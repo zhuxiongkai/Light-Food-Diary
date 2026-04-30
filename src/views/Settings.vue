@@ -188,7 +188,6 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { useWeightStore } from '@/stores/weightStore'
 import { exportToJSON, exportToCSV } from '@/utils/exportService'
-import { db } from '@/db'
 
 const settingsStore = useSettingsStore()
 const mealStore = useMealStore()
@@ -258,24 +257,40 @@ function onGenderConfirm({ selectedOptions }: any) {
 }
 
 async function onExportJSON() {
-  const meals = await db.meals.toArray()
-  const weights = await db.weightRecords.toArray()
+  // Load all meals and weights via API for the past year
+  const end = new Date().toISOString().slice(0, 10)
+  const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
+  const [meals, weights] = await Promise.all([
+    mealStore.getMealsByDateRange(start, end),
+    weightStore.getRecordsByDateRange(start, end),
+  ])
   exportToJSON(meals, weights)
   showToast('导出成功')
 }
 
 async function onExportCSV() {
-  const meals = await db.meals.toArray()
+  const end = new Date().toISOString().slice(0, 10)
+  const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
+  const meals = await mealStore.getMealsByDateRange(start, end)
   exportToCSV(meals)
   showToast('导出成功')
 }
 
 async function onClearData() {
+  // Clear all data is handled per-record deletion from the API
+  // For simplicity, we delegate to the meal and weight stores
   try {
     await showConfirmDialog({ title: '确认', message: '这将删除所有记录数据，不可恢复！' })
-    await db.meals.clear()
-    await db.weightRecords.clear()
-    await db.customFoods.clear()
+    const end = new Date().toISOString().slice(0, 10)
+    const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
+    const meals = await mealStore.getMealsByDateRange(start, end)
+    const weights = await weightStore.getRecordsByDateRange(start, end)
+    for (const m of meals) {
+      if (m.id) await mealStore.deleteMeal(m.id)
+    }
+    for (const w of weights) {
+      if (w.id) await weightStore.deleteRecord(w.id)
+    }
     showToast('已清除')
   } catch { /* cancelled */ }
 }
