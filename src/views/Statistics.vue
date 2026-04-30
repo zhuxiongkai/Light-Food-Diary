@@ -614,13 +614,14 @@ small {
 
 .donut-layout {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .donut-chart {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   flex-shrink: 0;
 }
 
@@ -628,14 +629,16 @@ small {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+  width: 100%;
 }
 
 .macro-legend div {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: space-between;
 }
 
 .macro-legend i {
@@ -650,14 +653,17 @@ small {
   color: var(--text-secondary);
   flex: 1;
   min-width: 0;
+  text-align: left;
 }
 
 .macro-legend strong {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--text);
-  margin: 0 8px 0 0;
+  margin: 0;
   flex-shrink: 0;
+  min-width: 32px;
+  text-align: right;
 }
 
 .macro-legend small {
@@ -853,8 +859,9 @@ small {
 
 .exercise-list {
   display: grid;
-  grid-template-columns: repeat(4, 80px);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+  max-width: 100%;
 }
 
 .exercise-list div {
