@@ -46,15 +46,21 @@
       </div>
       <div class="meals-grid">
         <div v-for="meal in mealDistribution" :key="meal.type" class="meal-box" @click="$router.push('/log?meal=' + meal.type)">
-          <div class="meal-icon" :style="{ background: meal.bgColor }">
-            <van-icon :name="meal.icon" :color="meal.color" />
+          <div class="meal-visual" :style="{ background: meal.bgColor }">
+            <div class="food-thumbs">
+              <div v-for="(item, idx) in meal.foods.slice(0, 2)" :key="idx" class="food-thumb" :class="`thumb-${item.thumb}`">
+                <span v-if="item.thumb === 'custom'">{{ item.name.slice(0, 1) }}</span>
+              </div>
+              <div v-if="meal.foods.length === 0" class="empty-visual">
+                <span>{{ meal.emoji }}</span>
+              </div>
+            </div>
           </div>
           <div class="meal-content">
             <div class="meal-label">{{ meal.label }}</div>
             <div class="meal-calories numeric">{{ meal.calories }}<span>千卡</span></div>
             <div class="meal-hint">{{ meal.hint }}</div>
           </div>
-          <van-icon name="arrow" class="meal-arrow" />
         </div>
       </div>
     </div>
@@ -174,44 +180,52 @@ const mealTypes = computed(() =>
   (Object.entries(MEAL_TYPE_LABELS) as [MealType, string][]).map(([value, label]) => ({ value, label }))
 )
 
-const mealDistribution = computed(() => [
-  {
-    type: 'breakfast',
-    label: '早餐',
-    icon: 'sun-o',
-    color: '#FF9800',
-    bgColor: '#FFF3E6',
-    calories: mealStore.caloriesByType('breakfast'),
-    hint: '建议 400-500 千卡'
-  },
-  {
-    type: 'lunch',
-    label: '午餐',
-    icon: 'sunny-o',
-    color: '#4CAF50',
-    bgColor: '#E8F5E9',
-    calories: mealStore.caloriesByType('lunch'),
-    hint: '建议 600-700 千卡'
-  },
-  {
-    type: 'dinner',
-    label: '晚餐',
-    icon: 'moon-o',
-    color: '#2196F3',
-    bgColor: '#E3F2FD',
-    calories: mealStore.caloriesByType('dinner'),
-    hint: '建议 500-600 千卡'
-  },
-  {
-    type: 'snack',
-    label: '加餐',
-    icon: 'bag-o',
-    color: '#9C27B0',
-    bgColor: '#F3E5F5',
-    calories: mealStore.caloriesByType('snack'),
-    hint: '建议 100-200 千卡'
+const getThumbnailType = (foodName: string): string => {
+  const nameMap: Record<string, string> = {
+    '鸡蛋': 'egg', '蛋': 'egg', '水煮鸡蛋': 'egg',
+    '米': 'rice', '饭': 'rice', '粥': 'rice',
+    '蔬菜': 'veg', '菜': 'veg', '沙拉': 'veg',
+    '肉': 'meat', '鸡': 'meat', '牛': 'meat', '猪': 'meat',
+    '水果': 'fruit', '苹果': 'fruit', '香蕉': 'fruit', '蓝莓': 'fruit',
+    '面': 'bread', '包': 'bread', '馒头': 'bread', '面包': 'bread',
+    '奶': 'milk', '牛奶': 'milk', '酸奶': 'milk',
+    '坚果': 'nut', '杏仁': 'nut', '花生': 'nut'
   }
-])
+  for (const [key, type] of Object.entries(nameMap)) {
+    if (foodName.includes(key)) return type
+  }
+  return 'custom'
+}
+
+const mealEmojis: Record<string, string> = {
+  breakfast: '🌅',
+  lunch: '☀️',
+  dinner: '🌙',
+  snack: '🎒'
+}
+
+const mealDistribution = computed(() => {
+  const types: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
+  const configs = [
+    { label: '早餐', emoji: '🌅', color: '#FF9800', bgColor: '#FFF3E6', hint: '建议 400-500 千卡' },
+    { label: '午餐', emoji: '☀️', color: '#4CAF50', bgColor: '#E8F5E9', hint: '建议 600-700 千卡' },
+    { label: '晚餐', emoji: '🌙', color: '#2196F3', bgColor: '#E3F2FD', hint: '建议 500-600 千卡' },
+    { label: '加餐', emoji: '🎒', color: '#9C27B0', bgColor: '#F3E5F5', hint: '建议 100-200 千卡' }
+  ]
+  
+  return types.map((type, idx) => {
+    const mealItems = mealStore.getMealsByType(type)
+    return {
+      type,
+      ...configs[idx],
+      calories: mealStore.caloriesByType(type),
+      foods: mealItems.map(item => ({
+        name: item.foodName,
+        thumb: getThumbnailType(item.foodName)
+      }))
+    }
+  })
+})
 
 function dateStr(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -393,33 +407,112 @@ onMounted(async () => {
 
 .meal-box {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: linear-gradient(135deg, rgba(247, 251, 255, 0.8) 0%, rgba(232, 248, 241, 0.5) 100%);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: white;
   border-radius: 12px;
   border: 1px solid rgba(132, 149, 171, 0.12);
   cursor: pointer;
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .meal-box:active {
   transform: scale(0.98);
 }
 
-.meal-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+.meal-visual {
+  width: 64px;
+  min-width: 64px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
   flex-shrink: 0;
+  border-radius: 12px 0 0 12px;
+}
+
+.food-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  justify-content: center;
+}
+
+.food-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.food-thumb.thumb-egg {
+  background: linear-gradient(135deg, #FFB84D 0%, #FFA500 100%);
+}
+
+.food-thumb.thumb-rice {
+  background: linear-gradient(135deg, #FFE4B5 0%, #FFD699 100%);
+}
+
+.food-thumb.thumb-veg {
+  background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
+}
+
+.food-thumb.thumb-meat {
+  background: linear-gradient(135deg, #EF5350 0%, #E53935 100%);
+}
+
+.food-thumb.thumb-fruit {
+  background: linear-gradient(135deg, #FF6B9D 0%, #E91E63 100%);
+}
+
+.food-thumb.thumb-bread {
+  background: linear-gradient(135deg, #D7B5A5 0%, #C9876A 100%);
+}
+
+.food-thumb.thumb-milk {
+  background: linear-gradient(135deg, #B3E5FC 0%, #80DEEA 100%);
+}
+
+.food-thumb.thumb-nut {
+  background: linear-gradient(135deg, #A1887F 0%, #795548 100%);
+}
+
+.food-thumb.thumb-custom {
+  background: linear-gradient(135deg, #90CAF9 0%, #64B5F6 100%);
+}
+
+.empty-visual {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  opacity: 1;
+  color: inherit;
+}
+
+.empty-visual span {
+  line-height: 1;
 }
 
 .meal-content {
   flex: 1;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   min-width: 0;
 }
 
@@ -446,12 +539,6 @@ onMounted(async () => {
 .meal-hint {
   font-size: 12px;
   color: var(--text-secondary);
-}
-
-.meal-arrow {
-  color: var(--text-secondary);
-  font-size: 16px;
-  flex-shrink: 0;
 }
 
 .macro-section {

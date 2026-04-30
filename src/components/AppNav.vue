@@ -7,7 +7,7 @@
       class="nav-item"
       :class="{ active: isActive(item.to) }"
     >
-      <span class="nav-icon" :class="{ raised: item.to === '/log' }">
+      <span class="nav-icon">
         <van-icon :name="item.icon" />
       </span>
       <span>{{ item.label }}</span>
@@ -82,19 +82,12 @@ function isActive(path: string) {
   transition: all 0.2s ease;
 }
 
-.nav-icon.raised {
-  color: white;
-  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
-  box-shadow: 0 8px 20px rgba(22, 185, 120, 0.3);
-  font-size: 20px;
-}
-
 .nav-item.active {
   color: var(--primary);
   font-weight: 600;
 }
 
-.nav-item.active .nav-icon:not(.raised) {
+.nav-item.active .nav-icon {
   color: var(--primary);
   background: var(--primary-soft);
 }
