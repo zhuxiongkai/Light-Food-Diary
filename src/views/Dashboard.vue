@@ -48,10 +48,7 @@
         <div v-for="meal in mealDistribution" :key="meal.type" class="meal-box" @click="$router.push('/log?meal=' + meal.type)">
           <div class="meal-visual" :style="{ background: meal.bgColor }">
             <div class="food-thumbs">
-              <div v-for="(item, idx) in meal.foods.slice(0, 2)" :key="idx" class="food-thumb" :class="`thumb-${item.thumb}`">
-                <span v-if="item.thumb === 'custom'">{{ item.name.slice(0, 1) }}</span>
-              </div>
-              <div v-if="meal.foods.length === 0" class="empty-visual">
+              <div class="empty-visual">
                 <span>{{ meal.emoji }}</span>
               </div>
             </div>
