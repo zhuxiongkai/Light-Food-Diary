@@ -78,6 +78,16 @@
   --van-switch-on-background: var(--primary);
 }
 
+/* Fix for function-style Toast icon size when style chunks load out of order */
+.van-popup.van-toast {
+  background: var(--van-toast-background);
+  color: var(--van-toast-text-color);
+}
+
+.van-toast .van-toast__icon {
+  font-size: var(--van-toast-icon-size);
+}
+
 /* ═══════════════════════════════════════════
    Reset & Base
    ═══════════════════════════════════════════ */

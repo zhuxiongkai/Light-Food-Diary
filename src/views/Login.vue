@@ -193,13 +193,13 @@ function onForgotPassword() {
 }
 
 .welcome-title {
-  font-size: 42px;
+  font-size: 30px;
   line-height: 1.08;
   letter-spacing: 0;
   font-weight: 600;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: #101622;
-  margin: 0;
+  margin-top: 10px;
 }
 
 .welcome-subtitle {
