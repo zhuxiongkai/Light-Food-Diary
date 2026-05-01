@@ -2,6 +2,22 @@
   <div class="page">
     <div class="page-header">AI拍照估算</div>
 
+    <div class="meal-type-card card">
+      <div class="section-title mb-12">添加餐别</div>
+      <div class="meal-type-switch">
+        <button
+          v-for="tab in mealTabs"
+          :key="tab.value"
+          type="button"
+          class="meal-type-btn"
+          :class="{ active: selectedMealType === tab.value }"
+          @click="selectedMealType = tab.value"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Image area -->
     <div class="card text-center">
       <div class="image-area" v-if="imageSrc">
@@ -34,14 +50,21 @@
     <!-- Results -->
     <div class="card" v-if="results.length > 0">
       <div class="section-title mb-12">识别结果</div>
-      <div v-for="(item, i) in results" :key="i" class="result-item flex-between">
-        <div>
-          <span class="result-name">{{ item.foodName }}</span>
-          <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ getItemCalories(item) }} kcal</span>
-        </div>
-        <div class="flex-row">
-          <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" />
-          <van-icon name="delete-o" class="del-btn" @click="results.splice(i, 1)" />
+      <div v-for="(item, i) in results" :key="i" class="result-item">
+        <div class="result-row">
+          <div>
+            <span class="result-name">{{ item.foodName }}</span>
+            <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ getItemCalories(item) }} kcal</span>
+            <span class="result-meta text-secondary">
+              蛋白质 {{ getItemProtein(item) }}g · 脂肪 {{ getItemFat(item) }}g · 碳水 {{ getItemCarbs(item) }}g
+            </span>
+            <span v-if="item.matchedFoodName" class="match-tip">已匹配食物库：{{ item.matchedFoodName }}</span>
+            <span v-else class="estimate-tip">未匹配食物库，三大营养素按估算值记录</span>
+          </div>
+          <div class="flex-row">
+            <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" />
+            <van-icon name="delete-o" class="del-btn" @click="results.splice(i, 1)" />
+          </div>
         </div>
       </div>
 
@@ -50,7 +73,7 @@
       </div>
 
       <van-button type="primary" block round class="mt-12" @click="onAddAll">
-        一键添加到今日记录
+        添加到{{ mealLabelMap[selectedMealType] }}
       </van-button>
     </div>
 
@@ -88,34 +111,80 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Button, Icon, Loading, Stepper, Dialog, showToast } from 'vant'
+import { ref, computed, onMounted } from 'vue'
+import { Button, Checkbox, CheckboxGroup, Dialog, Icon, Loading, Stepper, showToast } from 'vant'
 import { useMealStore } from '@/stores/mealStore'
+import { useFoodStore } from '@/stores/foodStore'
 import { analyzeFoodImage } from '@/utils/aiService'
-import type { AiRecognitionResult } from '@/types'
+import type { AiRecognitionResult, MealType } from '@/types'
+
+interface EnrichedRecognition extends AiRecognitionResult {
+  matchedFoodId: number
+  matchedFoodName: string
+  estimated: boolean
+  macroPer100g: {
+    protein: number
+    fat: number
+    carbs: number
+  }
+}
 
 const mealStore = useMealStore()
+const foodStore = useFoodStore()
 
 const imageSrc = ref('')
 const imageBase64 = ref('')
 const imageType = ref('image/jpeg')
 const analyzing = ref(false)
-const results = ref<AiRecognitionResult[]>([])
+const results = ref<EnrichedRecognition[]>([])
 const fileInput = ref<HTMLInputElement>()
 const videoEl = ref<HTMLVideoElement>()
 const showCamera = ref(false)
 const showPickDialog = ref(false)
 const candidateResults = ref<AiRecognitionResult[]>([])
 const pickedIndexes = ref<number[]>([])
+const selectedMealType = ref<MealType>('lunch')
 let mediaStream: MediaStream | null = null
 
-function getItemCalories(item: AiRecognitionResult) {
-  return Math.round(item.estimatedCalories * item.estimatedWeight / 100)
+const mealTabs: Array<{ value: MealType; label: string }> = [
+  { value: 'breakfast', label: '早餐' },
+  { value: 'lunch', label: '午餐' },
+  { value: 'dinner', label: '晚餐' },
+  { value: 'snack', label: '加餐' },
+]
+
+const mealLabelMap: Record<MealType, string> = {
+  breakfast: '早餐',
+  lunch: '午餐',
+  dinner: '晚餐',
+  snack: '加餐',
 }
 
 const totalResultCal = computed(() =>
   results.value.reduce((sum, item) => sum + getItemCalories(item), 0)
 )
+
+onMounted(async () => {
+  if (foodStore.allFoods.length === 0) {
+    await foodStore.loadAllFoods().catch(() => undefined)
+  }
+})
+
+function getItemCalories(item: AiRecognitionResult) {
+  return Math.round(item.estimatedCalories * item.estimatedWeight / 100)
+}
+
+function getItemProtein(item: EnrichedRecognition) {
+  return Math.round(item.macroPer100g.protein * item.estimatedWeight) / 100
+}
+
+function getItemFat(item: EnrichedRecognition) {
+  return Math.round(item.macroPer100g.fat * item.estimatedWeight) / 100
+}
+
+function getItemCarbs(item: EnrichedRecognition) {
+  return Math.round(item.macroPer100g.carbs * item.estimatedWeight) / 100
+}
 
 async function onTakePhoto() {
   showCamera.value = true
@@ -201,13 +270,72 @@ function onConfirmPick() {
   results.value = pickedIndexes.value
     .map((i) => candidateResults.value[i])
     .filter((item): item is AiRecognitionResult => !!item)
+    .map(enrichRecognition)
 
   if (results.value.length === 0) {
     showToast('未选中有效菜品，请重试')
     return
   }
 
+  const estimatedCount = results.value.filter((item) => item.estimated).length
+  if (estimatedCount > 0) {
+    showToast(`已选择 ${results.value.length} 项，其中 ${estimatedCount} 项为估算营养`) 
+    return
+  }
+
   showToast(`已选择 ${results.value.length} 项`)
+}
+
+function enrichRecognition(item: AiRecognitionResult): EnrichedRecognition {
+  const matched = findFoodMatch(item.foodName)
+  if (matched) {
+    return {
+      ...item,
+      matchedFoodId: Number(matched.id) || 0,
+      matchedFoodName: matched.name,
+      estimated: false,
+      macroPer100g: {
+        protein: matched.protein,
+        fat: matched.fat,
+        carbs: matched.carbs,
+      },
+      estimatedCalories: matched.caloriesPer100g,
+    }
+  }
+
+  return {
+    ...item,
+    matchedFoodId: 0,
+    matchedFoodName: '',
+    estimated: true,
+    macroPer100g: {
+      protein: 0,
+      fat: 0,
+      carbs: 0,
+    }
+  }
+}
+
+function findFoodMatch(foodName: string) {
+  const normalized = normalizeName(foodName)
+  if (!normalized) return null
+
+  const exact = foodStore.allFoods.find((food) => normalizeName(food.name) === normalized)
+  if (exact) return exact
+
+  const fuzzy = foodStore.allFoods.find((food) => {
+    const name = normalizeName(food.name)
+    return name.includes(normalized) || normalized.includes(name)
+  })
+
+  return fuzzy || null
+}
+
+function normalizeName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[\s·,，。！!？?()（）\-_/]/g, '')
+    .trim()
 }
 
 async function onAddAll() {
@@ -215,23 +343,49 @@ async function onAddAll() {
   for (const item of results.value) {
     await mealStore.addMeal({
       date: today,
-      mealType: 'lunch',
-      foodId: 0,
-      foodName: item.foodName,
+      mealType: selectedMealType.value,
+      foodId: item.matchedFoodId,
+      foodName: item.estimated ? `${item.foodName}（估算）` : item.foodName,
       weight: item.estimatedWeight,
       calories: getItemCalories(item),
-      protein: 0,
-      fat: 0,
-      carbs: 0
+      protein: getItemProtein(item),
+      fat: getItemFat(item),
+      carbs: getItemCarbs(item)
     })
   }
-  showToast(`已添加 ${results.value.length} 项`)
+  showToast(`已添加 ${results.value.length} 项到${mealLabelMap[selectedMealType.value]}`)
   results.value = []
   imageSrc.value = ''
 }
 </script>
 
 <style scoped>
+.meal-type-card {
+  margin-top: 0;
+}
+
+.meal-type-switch {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.meal-type-btn {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  height: 36px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.meal-type-btn.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: transparent;
+  font-weight: 600;
+}
+
 .image-area {
   display: flex;
   flex-direction: column;
@@ -255,6 +409,14 @@ async function onAddAll() {
   padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
+
+.result-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .result-name {
   font-size: 15px;
   font-weight: 500;
@@ -262,7 +424,24 @@ async function onAddAll() {
 }
 .result-meta {
   font-size: 12px;
+  display: block;
 }
+
+.match-tip,
+.estimate-tip {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+.match-tip {
+  color: var(--primary);
+}
+
+.estimate-tip {
+  color: #b66a2e;
+}
+
 .result-total {
   text-align: center;
   font-size: 18px;

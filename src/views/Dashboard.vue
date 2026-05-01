@@ -41,11 +41,6 @@
             <span class="item-label">还可摄入</span>
             <span class="item-value numeric">{{ Math.max(remaining, 0) }} <span>千卡</span></span>
           </div>
-          <div class="summary-item">
-            <span class="dot sport-dot"></span>
-            <span class="item-label">运动消耗</span>
-            <span class="item-value numeric">320 <span>千卡</span></span>
-          </div>
         </div>
       </div>
     </section>
@@ -73,7 +68,7 @@
           </div>
 
           <div class="meal-right">
-            <div class="food-stack">
+            <div class="food-stack" v-if="meal.previewFoods.length > 0">
               <div
                 v-for="(food, foodIndex) in meal.previewFoods"
                 :key="`${meal.type}-${food.name}-${foodIndex}`"
@@ -83,6 +78,7 @@
                 <span>{{ food.emoji }}</span>
               </div>
             </div>
+            <span v-else class="food-empty">暂无记录</span>
             <div class="meal-chevron">
               <van-icon name="arrow" />
             </div>
@@ -134,13 +130,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMealStore } from '@/stores/mealStore'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { useFoodStore } from '@/stores/foodStore'
 import { MEAL_TYPE_LABELS, type MealType } from '@/types'
 import CalorieRing from '@/components/CalorieRing.vue'
 
 const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
-const foodStore = useFoodStore()
 const router = useRouter()
 
 const currentDate = ref(new Date())
@@ -188,13 +182,6 @@ const foodEmojiRules: Array<{ keys: string[]; emoji: string }> = [
   { keys: ['汤'], emoji: '🍲' }
 ]
 
-const defaultMealFoods: Record<MealType, string[]> = {
-  breakfast: ['燕麦', '鸡蛋', '蓝莓'],
-  lunch: ['鸡胸肉', '米饭', '西蓝花'],
-  dinner: ['三文鱼', '青菜', '南瓜汤'],
-  snack: ['坚果', '苹果', '酸奶']
-}
-
 function foodToEmoji(name: string): string {
   const hit = foodEmojiRules.find(rule => rule.keys.some(key => name.includes(key)))
   return hit?.emoji || '🍽️'
@@ -217,9 +204,7 @@ const mealDistribution = computed(() => {
 
   return types.map(type => {
     const mealItems = mealStore.getMealsByType(type)
-    const previewSource = mealItems.length > 0
-      ? mealItems.slice(0, 3).map(item => item.foodName)
-      : defaultMealFoods[type]
+    const previewSource = mealItems.slice(0, 3).map(item => item.foodName)
 
     return {
       type,
@@ -249,7 +234,6 @@ function goToMealLog(type: MealType) {
 onMounted(async () => {
   await Promise.all([
     settingsStore.loadSettings(),
-    foodStore.loadAllFoods(),
     mealStore.loadMeals()
   ])
 })
@@ -530,6 +514,11 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.food-empty {
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 
 .food-stack {

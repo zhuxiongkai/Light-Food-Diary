@@ -17,7 +17,7 @@
 - Express 5 + TypeScript 6
 - Drizzle ORM + mysql2 (MySQL/MariaDB)
 - JWT (access 15min + refresh 7d)，bcrypt 密码哈希
-- AES-256-GCM 加密 AI API Key
+- AI 识别采用服务端统一密钥（Baidu AI）
 
 ## 路由表
 
@@ -72,7 +72,7 @@
 
 - 内置食物 `user_id = NULL`（所有用户共享）；自定义食物 `user_id` 指向创建者
 - 所有业务表按 `user_id` 隔离
-- AI API Key 加密存储在 `user_settings.ai_api_key`
+- `user_settings.ai_api_key` 字段仅保留兼容，当前 AI 识别不再依赖用户侧密钥
 
 Schema 定义见 `server/src/db/schema.ts`。
 
@@ -82,16 +82,15 @@ Schema 定义见 `server/src/db/schema.ts`。
 - **useMealStore** — 当日饮食记录 CRUD（调 API），计算 `dailyCalories/dailyProtein/dailyFat/dailyCarbs`
 - **useFoodStore** — 食物搜索（调 API），自定义食物 CRUD
 - **useWeightStore** — 体重记录 CRUD（调 API）
-- **useSettingsStore** — 用户设置读写（调 API），API Key 服务端加密存储
+- **useSettingsStore** — 用户设置读写（调 API）
 
 前端 API 客户端见 `src/api/client.ts`，自动带 Token + 401 自动刷新。
 
 ## AI 服务
 
 - 前端 `src/utils/aiService.ts` → 调后端 `/api/ai/recognize`
-- 后端 `server/src/services/aiService.ts` → 调 Claude Vision API
-- 模型：`claude-haiku-4-5-20251001`，max_tokens 1024
-- API Key 由用户在设置页输入，加密存储在服务端 `user_settings` 表
+- 后端 `server/src/services/aiService.ts` → 调用 Baidu 菜品识别 API
+- 服务端统一读取 `BAIDU_AI_API_KEY` 与 `BAIDU_AI_SECRET_KEY`
 - 支持 base64 图片传入，返回 `AiRecognitionResult[]`
 
 ## 内置食物库
@@ -115,6 +114,7 @@ Schema 定义见 `server/src/db/schema.ts`。
 | `DB_HOST/PORT/USER/PASSWORD/NAME` | MySQL 连接 |
 | `JWT_SECRET` / `JWT_REFRESH_SECRET` | JWT 签名密钥 |
 | `ENCRYPTION_KEY` | AI API Key 加密密钥 |
+| `BAIDU_AI_API_KEY` / `BAIDU_AI_SECRET_KEY` | Baidu AI 识别服务密钥 |
 
 ## 启动流程
 

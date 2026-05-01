@@ -2,7 +2,7 @@
   <div class="page log-page">
     <header class="page-header log-header">
       <h1 class="page-title">饮食记录</h1>
-      <button class="date-button" type="button" @click="showToast('日期筛选即将开放')">
+      <button class="date-button" type="button" @click="showDatePicker = true">
         <van-icon name="calendar-o" />
         <span>{{ displayDate }}</span>
         <van-icon name="arrow-down" />
@@ -38,7 +38,7 @@
           <span>千卡</span>
         </div>
         <span class="range-text">建议 {{ calorieRange }}</span>
-        <span class="good-text"><van-icon name="success" /> 摄入合理</span>
+        <span class="good-text" v-if="displayMeals.length > 0"><van-icon name="success" /> 已记录 {{ displayMeals.length }} 项</span>
       </div>
       <div class="macro-stack">
         <div v-for="row in macroRows" :key="row.name" class="macro-row">
@@ -63,10 +63,10 @@
         <span class="quick-title">拍照识别</span>
         <span class="quick-sub">智能识别食物</span>
       </button>
-      <button class="quick-card" type="button" @click="showToast('扫码录入已准备好')">
+      <button class="quick-card" type="button" @click="showToast('扫码录入将在后续版本支持')">
         <span class="soft-icon scan-icon"><van-icon name="scan" /></span>
-        <span class="quick-title">扫码入</span>
-        <span class="quick-sub">扫描条形码</span>
+        <span class="quick-title">扫码录入</span>
+        <span class="quick-sub">条码识别（规划中）</span>
       </button>
       <button class="quick-card" type="button" @click="showSearch = true">
         <span class="soft-icon edit-icon"><van-icon name="edit" /></span>
@@ -80,7 +80,12 @@
       <span class="section-tip">长按可删除</span>
     </div>
 
-    <div class="food-list">
+    <div v-if="displayMeals.length === 0" class="empty-state">
+      <van-empty description="当前餐别还没有记录" image="search" />
+      <van-button type="primary" round size="small" @click="showSearch = true">添加食物</van-button>
+    </div>
+
+    <div v-else class="food-list">
       <article
         v-for="item in displayMeals"
         :key="item.key"
@@ -91,7 +96,7 @@
         @touchmove="cancelPress"
       >
         <div class="food-thumb" :class="`thumb-${item.thumb}`">
-          <span v-if="item.thumb === 'custom'">{{ item.foodName.slice(0, 1) }}</span>
+          <span>{{ item.foodName.slice(0, 1) }}</span>
         </div>
         <div class="food-info">
           <strong>{{ item.foodName }}</strong>
@@ -105,7 +110,7 @@
           </div>
           <small>{{ item.time }}</small>
         </div>
-        <button class="more-button" type="button" @click="showToast(`${item.foodName} 详情`)">
+        <button class="more-button" type="button" @click="openMealDetail(item)">
           <van-icon name="arrow" />
         </button>
       </article>
@@ -116,7 +121,26 @@
     </button>
 
     <van-popup v-model:show="showSearch" position="bottom" :style="{ height: '78%' }" round>
-      <FoodSearch @select="onFoodSelect" />
+      <div class="search-popup">
+        <FoodSearch @select="onFoodSelect" />
+        <div class="custom-food-section">
+          <div class="custom-food-divider"><span>找不到想要的？</span></div>
+          <button v-if="!showCustomForm" class="add-custom-btn" type="button" @click="showCustomForm = true">
+            <van-icon name="add-o" /> 添加自定义食物
+          </button>
+          <div v-else class="custom-form">
+            <van-field v-model="customForm.name" label="名称" placeholder="食物名称" />
+            <van-field v-model="customForm.caloriesPer100g" type="number" label="热量/100g" placeholder="kcal" />
+            <van-field v-model="customForm.protein" type="number" label="蛋白质/100g" placeholder="g" />
+            <van-field v-model="customForm.fat" type="number" label="脂肪/100g" placeholder="g" />
+            <van-field v-model="customForm.carbs" type="number" label="碳水/100g" placeholder="g" />
+            <div class="custom-form-actions">
+              <van-button size="small" plain @click="showCustomForm = false">取消</van-button>
+              <van-button size="small" type="primary" @click="onAddCustomFood">确认添加</van-button>
+            </div>
+          </div>
+        </div>
+      </div>
     </van-popup>
 
     <van-popup v-model:show="showWeight" position="bottom" round>
@@ -135,12 +159,37 @@
         </van-button>
       </div>
     </van-popup>
+
+    <van-popup v-model:show="showDatePicker" position="bottom" round>
+      <van-date-picker
+        title="选择日期"
+        :model-value="dateColumns"
+        @confirm="onDateConfirm"
+        @cancel="showDatePicker = false"
+      />
+    </van-popup>
+
+    <van-popup v-model:show="showDetail" position="bottom" round>
+      <div v-if="detailMeal" class="detail-popup">
+        <h3>{{ detailMeal.foodName }}</h3>
+        <div class="detail-time">记录时间：{{ detailMeal.time }}</div>
+        <van-stepper v-model="detailWeight" :min="1" :max="2000" :step="10" input-width="86px" />
+        <div class="detail-grid">
+          <div><span>热量</span><strong>{{ detailCalories }} kcal</strong></div>
+          <div><span>蛋白质</span><strong>{{ detailProtein }} g</strong></div>
+          <div><span>脂肪</span><strong>{{ detailFat }} g</strong></div>
+          <div><span>碳水</span><strong>{{ detailCarbs }} g</strong></div>
+        </div>
+        <van-button type="primary" block round class="mt-16" @click="saveMealDetail">保存修改</van-button>
+      </div>
+    </van-popup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { Button, Icon, Popup, Stepper, showConfirmDialog, showToast } from 'vant'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Button, DatePicker, Empty, Icon, Popup, Stepper, showConfirmDialog, showToast } from 'vant'
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
 import type { FoodItem, MealRecord, MealType } from '@/types'
@@ -154,19 +203,27 @@ type DisplayMeal = MealRecord & {
   tone: Tone
   thumb: string
   time: string
-  isDemo?: boolean
 }
 
 const mealStore = useMealStore()
 const foodStore = useFoodStore()
+const route = useRoute()
+const router = useRouter()
 
 const activeMeal = ref<MealType>('breakfast')
 const showSearch = ref(false)
 const showWeight = ref(false)
+const showDatePicker = ref(false)
+const showDetail = ref(false)
 const selectedFood = ref<FoodItem | null>(null)
 const weight = ref(100)
-const currentDate = ref(mealStore.todayStr())
+const currentDate = ref(resolveRouteDate() || mealStore.todayStr())
 const pressTimer = ref<number | null>(null)
+const detailMeal = ref<DisplayMeal | null>(null)
+const detailWeight = ref(100)
+const detailBase = ref({ weight: 100, calories: 0, protein: 0, fat: 0, carbs: 0 })
+const showCustomForm = ref(false)
+const customForm = ref({ name: '', caloriesPer100g: 0, protein: 0, fat: 0, carbs: 0 })
 
 const mealTabs: { value: MealType; label: string; icon: string }[] = [
   { value: 'breakfast', label: '早餐', icon: 'underway-o' },
@@ -174,27 +231,6 @@ const mealTabs: { value: MealType; label: string; icon: string }[] = [
   { value: 'dinner', label: '晚餐', icon: 'notes-o' },
   { value: 'snack', label: '加餐', icon: 'bag-o' }
 ]
-
-const demoMeals: Record<MealType, DisplayMeal[]> = {
-  breakfast: [
-    makeDemo('燕麦片', '50 克', 190, 6, 3, 34, '高纤维', 'green', 'oat'),
-    makeDemo('水煮鸡蛋', '1 个 (约 50 克)', 70, 6, 5, 1, '优质蛋白', 'green', 'egg'),
-    makeDemo('蓝莓', '80 克', 45, 1, 0, 11, '抗氧化', 'purple', 'berry'),
-    makeDemo('纯牛奶', '200 毫升', 145, 7, 8, 10, '钙质丰富', 'green', 'milk')
-  ],
-  lunch: [
-    makeDemo('鸡胸肉藜麦碗', '1 份', 520, 42, 12, 58, '高蛋白', 'green', 'bowl'),
-    makeDemo('清炒西兰花', '150 克', 78, 5, 3, 9, '高纤维', 'green', 'greens')
-  ],
-  dinner: [
-    makeDemo('番茄牛肉汤', '1 碗', 360, 31, 14, 22, '暖胃', 'blue', 'soup'),
-    makeDemo('紫薯', '120 克', 104, 2, 0, 24, '慢碳水', 'purple', 'potato')
-  ],
-  snack: [
-    makeDemo('无糖酸奶', '180 克', 112, 8, 4, 12, '轻负担', 'blue', 'yogurt'),
-    makeDemo('巴旦木', '15 克', 86, 3, 7, 3, '好脂肪', 'green', 'nuts')
-  ]
-}
 
 const targetByMeal: Record<MealType, { min: number; max: number; protein: number; carbs: number; fat: number }> = {
   breakfast: { min: 400, max: 500, protein: 78, carbs: 152, fat: 42 },
@@ -211,6 +247,11 @@ const displayDate = computed(() => {
   return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`
 })
 
+const dateColumns = computed(() => {
+  const [y, m, d] = currentDate.value.split('-')
+  return [y, m, d]
+})
+
 const realMeals = computed<DisplayMeal[]>(() =>
   mealStore.getMealsByType(activeMeal.value).map((meal) => ({
     ...meal,
@@ -219,14 +260,13 @@ const realMeals = computed<DisplayMeal[]>(() =>
     tag: tagForMeal(meal),
     tone: toneForMeal(meal),
     thumb: 'custom',
-    time: timeForMeal(meal),
-    isDemo: false
+    time: timeForMeal(meal)
   }))
 )
 
-const displayMeals = computed(() => realMeals.value.length ? realMeals.value : demoMeals[activeMeal.value])
+const displayMeals = computed(() => realMeals.value)
 
-const summaryCalories = computed(() => displayMeals.value.reduce((sum, meal) => sum + meal.calories, 0))
+const summaryCalories = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.calories, 0)))
 const summaryProtein = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.protein, 0)))
 const summaryFat = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.fat, 0)))
 const summaryCarbs = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.carbs, 0)))
@@ -261,39 +301,55 @@ const calcCarbs = computed(() =>
   selectedFood.value ? Math.round(selectedFood.value.carbs * weight.value) / 100 : 0
 )
 
+const detailScale = computed(() => {
+  const baseWeight = Math.max(detailBase.value.weight, 1)
+  return detailWeight.value / baseWeight
+})
+
+const detailCalories = computed(() => Math.round(detailBase.value.calories * detailScale.value))
+const detailProtein = computed(() => Math.round(detailBase.value.protein * detailScale.value * 10) / 10)
+const detailFat = computed(() => Math.round(detailBase.value.fat * detailScale.value * 10) / 10)
+const detailCarbs = computed(() => Math.round(detailBase.value.carbs * detailScale.value * 10) / 10)
+
+watch(activeMeal, (mealType) => {
+  setRouteQuery({ meal: mealType })
+})
+
+watch(currentDate, async (date) => {
+  setRouteQuery({ date })
+  await mealStore.loadMeals(date)
+})
+
 onMounted(async () => {
+  const routeMeal = resolveRouteMeal(route.query.meal)
+  if (routeMeal) {
+    activeMeal.value = routeMeal
+  }
+  const routeDate = resolveRouteDate()
+  if (routeDate) {
+    currentDate.value = routeDate
+  }
+
   await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadAllFoods()])
 })
 
-function makeDemo(
-  foodName: string,
-  subtitle: string,
-  calories: number,
-  protein: number,
-  fat: number,
-  carbs: number,
-  tag: string,
-  tone: Tone,
-  thumb: string
-): DisplayMeal {
-  return {
-    key: `demo-${foodName}`,
-    date: '',
-    mealType: 'breakfast',
-    foodId: 0,
-    foodName,
-    weight: 100,
-    calories,
-    protein,
-    fat,
-    carbs,
-    subtitle,
-    tag,
-    tone,
-    thumb,
-    time: '07:30',
-    isDemo: true
+function resolveRouteMeal(value: unknown): MealType | null {
+  if (typeof value !== 'string') return null
+  return ['breakfast', 'lunch', 'dinner', 'snack'].includes(value) ? (value as MealType) : null
+}
+
+function resolveRouteDate() {
+  const value = route.query.date
+  if (typeof value !== 'string') return null
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null
+}
+
+function setRouteQuery(patch: Record<string, string>) {
+  const query = {
+    ...route.query,
+    ...patch,
   }
+  router.replace({ query })
 }
 
 function tagForMeal(meal: MealRecord) {
@@ -310,7 +366,7 @@ function toneForMeal(meal: MealRecord): Tone {
 }
 
 function timeForMeal(meal: MealRecord) {
-  if (!meal.createdAt) return '07:30'
+  if (!meal.createdAt) return '--:--'
   return new Date(meal.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
@@ -319,6 +375,26 @@ function onFoodSelect(food: FoodItem) {
   weight.value = 100
   showSearch.value = false
   showWeight.value = true
+}
+
+async function onAddCustomFood() {
+  if (!customForm.value.name || customForm.value.caloriesPer100g <= 0) {
+    showToast('请填写名称和热量')
+    return
+  }
+  const newFood = await foodStore.addCustomFood({
+    name: customForm.value.name,
+    category: 'custom',
+    caloriesPer100g: Number(customForm.value.caloriesPer100g),
+    protein: Number(customForm.value.protein),
+    fat: Number(customForm.value.fat),
+    carbs: Number(customForm.value.carbs),
+  })
+  showToast('添加成功')
+  customForm.value = { name: '', caloriesPer100g: 0, protein: 0, fat: 0, carbs: 0 }
+  showCustomForm.value = false
+  // 直接进入重量选择流程
+  onFoodSelect(newFood)
 }
 
 async function onConfirmAdd() {
@@ -353,8 +429,8 @@ function cancelPress() {
 
 async function onDeleteMeal(item: DisplayMeal) {
   cancelPress()
-  if (item.isDemo || !item.id) {
-    showToast('示例记录不可删除')
+  if (!item.id) {
+    showToast('记录缺少ID，无法删除')
     return
   }
   try {
@@ -364,6 +440,43 @@ async function onDeleteMeal(item: DisplayMeal) {
   } catch {
     // cancelled
   }
+}
+
+function onDateConfirm(event: { selectedValues: string[] }) {
+  const [y, m, d] = event.selectedValues
+  currentDate.value = `${y}-${m}-${d}`
+  showDatePicker.value = false
+}
+
+function openMealDetail(item: DisplayMeal) {
+  detailMeal.value = item
+  detailWeight.value = item.weight
+  detailBase.value = {
+    weight: Math.max(item.weight, 1),
+    calories: item.calories,
+    protein: item.protein,
+    fat: item.fat,
+    carbs: item.carbs,
+  }
+  showDetail.value = true
+}
+
+async function saveMealDetail() {
+  if (!detailMeal.value?.id) {
+    showToast('记录缺少ID，无法更新')
+    return
+  }
+
+  await mealStore.updateMeal(detailMeal.value.id, {
+    weight: detailWeight.value,
+    calories: detailCalories.value,
+    protein: detailProtein.value,
+    fat: detailFat.value,
+    carbs: detailCarbs.value,
+  })
+
+  showDetail.value = false
+  showToast('已更新')
 }
 </script>
 
@@ -654,6 +767,18 @@ async function onDeleteMeal(item: DisplayMeal) {
   margin-top: 24px;
 }
 
+.empty-state {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 .food-list {
   display: flex;
   flex-direction: column;
@@ -805,11 +930,13 @@ async function onDeleteMeal(item: DisplayMeal) {
   transform: scale(0.92);
 }
 
-.weight-popup {
+.weight-popup,
+.detail-popup {
   padding: 24px 20px 28px;
 }
 
-.weight-popup h3 {
+.weight-popup h3,
+.detail-popup h3 {
   margin-bottom: 18px;
   font-size: 18px;
   text-align: center;
@@ -839,6 +966,105 @@ async function onDeleteMeal(item: DisplayMeal) {
   border-radius: 12px;
   font-size: 13px;
   text-align: center;
+}
+
+.detail-time {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.detail-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-grid div {
+  background: var(--primary-soft);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.detail-grid span {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.detail-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.search-popup {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.custom-food-section {
+  padding: 0 16px 24px;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.custom-food-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.custom-food-divider::before,
+.custom-food-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 12px;
+}
+
+.add-custom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-soft);
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-custom-btn:active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.custom-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.custom-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
 @media (max-width: 390px) {

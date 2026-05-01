@@ -17,11 +17,10 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS })
-  const apiKey = ref<string>('')
   const loaded = ref(false)
 
   async function loadSettings() {
-    const res = await api<UserSettings & { aiApiKey: string }>('/settings')
+    const res = await api<UserSettings>('/settings')
     Object.assign(settings.value, {
       dailyCalorieGoal: res.data.dailyCalorieGoal ?? DEFAULT_SETTINGS.dailyCalorieGoal,
       proteinRatio: res.data.proteinRatio ?? DEFAULT_SETTINGS.proteinRatio,
@@ -33,7 +32,6 @@ export const useSettingsStore = defineStore('settings', () => {
       gender: res.data.gender ?? DEFAULT_SETTINGS.gender,
       weightGoal: res.data.weightGoal ?? DEFAULT_SETTINGS.weightGoal,
     })
-    apiKey.value = res.data.aiApiKey || ''
     loaded.value = true
   }
 
@@ -45,13 +43,5 @@ export const useSettingsStore = defineStore('settings', () => {
     Object.assign(settings.value, data)
   }
 
-  async function setApiKey(key: string) {
-    const res = await api<UserSettings & { aiApiKey: string }>('/settings', {
-      method: 'PUT',
-      body: JSON.stringify({ aiApiKey: key }),
-    })
-    apiKey.value = res.data.aiApiKey || ''
-  }
-
-  return { settings, apiKey, loaded, loadSettings, saveSettings, setApiKey }
+  return { settings, loaded, loadSettings, saveSettings }
 })

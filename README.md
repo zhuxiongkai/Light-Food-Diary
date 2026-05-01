@@ -6,7 +6,7 @@
 
 - **多用户** — 注册/登录，数据按用户隔离
 - **饮食记录** — 按早/午/晚/加餐记录每餐食物，自动计算热量和营养素
-- **AI 拍照识别** — 使用 Claude Vision API 拍摄食物照片自动识别并估算热量
+- **AI 拍照识别** — 基于服务端统一配置的 Baidu AI 菜品识别能力，拍摄食物照片自动识别并估算热量
 - **食物库** — 内置 230+ 种常见中国食物和菜品，支持自定义添加
 - **热量仪表盘** — 环形进度条实时显示当日热量摄入，支持查看历史日
 - **三大营养素追踪** — 蛋白质/脂肪/碳水摄入可视化
@@ -29,7 +29,7 @@
 | 数据库 | MySQL / MariaDB |
 | ORM | Drizzle ORM |
 | 鉴权 | JWT (access + refresh token) |
-| AI 识别 | Claude Vision API (Haiku 4.5，通过后端代理) |
+| AI 识别 | Baidu AI 菜品识别（通过后端代理） |
 
 ## 项目结构
 
@@ -51,7 +51,7 @@ root/
       foodStore.ts            # 食物搜索/自定义食物 CRUD
       mealStore.ts            # 饮食记录 CRUD + 每日统计
       weightStore.ts          # 体重记录 CRUD
-      settingsStore.ts        # 用户设置 + API Key 管理
+      settingsStore.ts        # 用户设置
     views/
       Login.vue / Register.vue  # 登录/注册
       Dashboard.vue / LogMeal.vue / AiPhoto.vue / Statistics.vue
@@ -154,4 +154,4 @@ npm run cap:open:android   # 在 Android Studio 中打开
 - Node.js >= 18
 - MySQL 8.x 或 MariaDB
 - 可选：Android Studio（用于 Android 构建）
-- 可选：Anthropic API Key（用于 AI 拍照识别功能，在设置页配置）
+- 可选：Baidu AI 服务密钥（在 `server/.env` 中配置）

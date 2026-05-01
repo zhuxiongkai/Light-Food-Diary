@@ -2,16 +2,8 @@
   <div class="page settings-page">
     <header class="page-header settings-header">
       <h1 class="page-title">我的</h1>
-      <button class="header-action" type="button">
-        <van-icon name="setting-o" />
-      </button>
-      <button class="header-action" type="button">
-        <van-icon name="comment-o" />
-        <span class="badge"></span>
-      </button>
     </header>
 
-    <!-- Profile Card -->
     <div class="profile-card">
       <div class="profile-header">
         <div class="avatar-large">
@@ -20,16 +12,13 @@
         <div class="profile-info">
           <h2 class="profile-name">{{ profileName }}</h2>
           <p class="profile-id">ID: {{ profileId }}</p>
-          <p class="profile-streak">✅ 已记录 {{ recordDays }} 天</p>
+          <p class="profile-streak">已记录 {{ recordDays }} 天</p>
         </div>
-        <button class="edit-btn">
-          <van-icon name="edit" />
-        </button>
       </div>
 
       <div class="weight-progress">
         <div class="progress-label">
-          <span>减脂计划进度</span>
+          <span>体重目标进度</span>
           <span class="progress-value">{{ progressPercent }}%</span>
         </div>
         <div class="progress-bar">
@@ -39,13 +28,12 @@
           <span>当前体重</span>
           <span class="highlight">{{ currentWeight }} 公斤</span>
           <span class="divider">|</span>
-          <span>距离目标</span>
-          <span class="highlight">{{ weightDiff }} 公斤</span>
+          <span>目标体重</span>
+          <span class="highlight">{{ targetWeight }} 公斤</span>
         </div>
       </div>
     </div>
 
-    <!-- Health Goals -->
     <section class="settings-section">
       <h3 class="section-title">健康目标</h3>
       <div class="settings-item">
@@ -53,131 +41,24 @@
           <van-icon name="fire-o" />
           <span>每日热量目标</span>
         </div>
-        <div class="item-value">{{ Number(form.dailyCalorieGoal).toLocaleString() }} 千卡 →</div>
+        <div class="item-value">{{ Number(form.dailyCalorieGoal).toLocaleString() }} 千卡</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
           <van-icon name="balance-o" />
           <span>体重目标</span>
         </div>
-        <div class="item-value">{{ targetWeight }} 公斤 →</div>
+        <div class="item-value">{{ targetWeight }} 公斤</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
           <van-icon name="chart-trending-o" />
           <span>营养比例</span>
         </div>
-        <div class="item-value">{{ macroSummary }} →</div>
+        <div class="item-value">{{ macroSummary }}</div>
       </div>
     </section>
 
-    <!-- My Data -->
-    <section class="settings-section">
-      <h3 class="section-title">我的数据</h3>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="user-o" />
-          <span>身体数据</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="notes-o" />
-          <span>饮水记录</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="service-o" />
-          <span>运动记录</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="description-o" />
-          <span>历史报告</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-    </section>
-
-    <!-- Reminders & Sync -->
-    <section class="settings-section">
-      <h3 class="section-title">提醒与同步</h3>
-      <div class="settings-item with-toggle">
-        <div class="item-label">
-          <van-icon name="clock-o" />
-          <span>用餐提醒</span>
-        </div>
-        <span class="reminder-time">07:30, 12:30, 18:30</span>
-        <van-switch v-model="reminders.mealReminder" size="24" />
-      </div>
-      <div class="settings-item with-toggle">
-        <div class="item-label">
-          <van-icon name="calendar-o" />
-          <span>体重提醒</span>
-        </div>
-        <span class="reminder-time">每周一 08:00</span>
-        <van-switch v-model="reminders.weightReminder" size="24" />
-      </div>
-      <div class="settings-item with-toggle">
-        <div class="item-label">
-          <van-icon name="like-o" />
-          <span>Apple 健康同步</span>
-        </div>
-        <van-switch v-model="reminders.appleHealthSync" size="24" />
-      </div>
-    </section>
-
-    <!-- General Settings -->
-    <section class="settings-section">
-      <h3 class="section-title">通用设置</h3>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="desktop-o" />
-          <span>深色模式</span>
-        </div>
-        <div class="item-value">跟随系统</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="volume-o" />
-          <span>通知设置</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="shield-o" />
-          <span>隐私与安全</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-      <div class="settings-item">
-        <div class="item-label">
-          <van-icon name="question-o" />
-          <span>帮助与反馈</span>
-        </div>
-        <div class="item-value">→</div>
-      </div>
-    </section>
-
-    <!-- VIP Benefits -->
-    <section class="vip-section">
-      <div class="vip-banner">
-        <div class="vip-icon">👑</div>
-        <div class="vip-content">
-          <h3>会员权益</h3>
-          <p>解锁更多数据分析与专享功能</p>
-        </div>
-        <span class="vip-arrow">→</span>
-      </div>
-    </section>
-
-    <!-- Logout Button -->
     <section class="settings-section logout-section">
       <van-button
         round
@@ -195,33 +76,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { reactive, onMounted, computed, ref } from 'vue'
+import type { MealRecord } from '@/types'
 import { useRouter } from 'vue-router'
-import { Field, Button, Popup, Picker, Switch, showConfirmDialog, showToast, Icon } from 'vant'
+import { Button, showConfirmDialog, Icon } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { useWeightStore } from '@/stores/weightStore'
 import { useAuthStore } from '@/stores/authStore'
-import { exportToJSON, exportToCSV } from '@/utils/exportService'
 
 const router = useRouter()
 const settingsStore = useSettingsStore()
 const mealStore = useMealStore()
 const weightStore = useWeightStore()
 const authStore = useAuthStore()
-
-const showGenderPicker = ref(false)
-const genderOptions = [
-  { text: '男', value: 'male' },
-  { text: '女', value: 'female' }
-]
-const apiKeyInput = ref('')
-
-const reminders = reactive({
-  mealReminder: true,
-  weightReminder: true,
-  appleHealthSync: true
-})
 
 const form = reactive({
   dailyCalorieGoal: 2000,
@@ -237,13 +105,29 @@ const form = reactive({
 
 const profileName = computed(() => authStore.user?.username || '用户')
 const profileId = computed(() => authStore.user?.id ?? '----')
-const recordDays = computed(() => Math.max(weightStore.records.length, mealStore.meals.length, 0))
+const fetchedMeals = ref<MealRecord[]>([])
+const recordDays = computed(() => {
+  const dates = new Set<string>()
+  // weight records
+  for (const r of weightStore.records) {
+    if (r && r.date) dates.add(r.date)
+  }
+  // fetched meal records (history)
+  for (const m of fetchedMeals.value) {
+    if (m && m.date) dates.add(m.date)
+  }
+  // also include currently loaded meals (today)
+  for (const m of mealStore.meals) {
+    if (m && m.date) dates.add(m.date)
+  }
+  return dates.size
+})
 const currentWeight = computed(() => Number(form.weight).toFixed(1))
 const targetWeight = computed(() => Number(form.weightGoal).toFixed(1))
-const weightDiff = computed(() => Math.abs(Number(form.weight) - Number(form.weightGoal)).toFixed(1))
 const progressPercent = computed(() => {
+  const base = Math.max(Number(form.weightGoal), 1)
   const diff = Math.abs(Number(form.weight) - Number(form.weightGoal))
-  return Math.max(0, Math.min(100, Math.round(100 - diff * 10)))
+  return Math.max(0, Math.min(100, Math.round((1 - diff / base) * 100)))
 })
 const macroSummary = computed(
   () => `碳水 ${form.carbsRatio}% · 蛋白质 ${form.proteinRatio}% · 脂肪 ${form.fatRatio}%`
@@ -254,89 +138,33 @@ onMounted(async () => {
     settingsStore.loadSettings(),
     mealStore.loadMeals().catch(() => undefined),
     weightStore.loadRecords().catch(() => undefined),
+    // fetch past year meals to compute recorded days
+    (async () => {
+      try {
+        const now = new Date()
+        const end = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+        const past = new Date()
+        past.setDate(now.getDate() - 365)
+        const start = `${past.getFullYear()}-${String(past.getMonth() + 1).padStart(2, '0')}-${String(past.getDate()).padStart(2, '0')}`
+        const data = await mealStore.getMealsByDateRange(start, end)
+        fetchedMeals.value = data
+      } catch {
+        fetchedMeals.value = []
+      }
+    })(),
     authStore.fetchMe().catch(() => undefined)
   ])
-  const s = settingsStore.settings
-  Object.assign(form, s)
-  apiKeyInput.value = settingsStore.apiKey
+  Object.assign(form, settingsStore.settings)
 })
-
-async function saveGoals() {
-  await settingsStore.saveSettings({
-    dailyCalorieGoal: +form.dailyCalorieGoal,
-    proteinRatio: +form.proteinRatio,
-    fatRatio: +form.fatRatio,
-    carbsRatio: +form.carbsRatio
-  })
-  showToast('已保存')
-}
-
-async function saveProfile() {
-  await settingsStore.saveSettings({
-    height: +form.height,
-    weight: +form.weight,
-    age: +form.age,
-    gender: form.gender as 'male' | 'female',
-    weightGoal: +form.weightGoal
-  })
-  showToast('已保存')
-}
-
-async function saveApiKey() {
-  await settingsStore.setApiKey(apiKeyInput.value)
-  showToast('API Key 已保存')
-}
-
-function onGenderConfirm({ selectedOptions }: any) {
-  form.gender = selectedOptions[0].value
-  showGenderPicker.value = false
-}
-
-async function onExportJSON() {
-  // Load all meals and weights via API for the past year
-  const end = new Date().toISOString().slice(0, 10)
-  const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
-  const [meals, weights] = await Promise.all([
-    mealStore.getMealsByDateRange(start, end),
-    weightStore.getRecordsByDateRange(start, end),
-  ])
-  exportToJSON(meals, weights)
-  showToast('导出成功')
-}
-
-async function onExportCSV() {
-  const end = new Date().toISOString().slice(0, 10)
-  const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
-  const meals = await mealStore.getMealsByDateRange(start, end)
-  exportToCSV(meals)
-  showToast('导出成功')
-}
-
-async function onClearData() {
-  // Clear all data is handled per-record deletion from the API
-  // For simplicity, we delegate to the meal and weight stores
-  try {
-    await showConfirmDialog({ title: '确认', message: '这将删除所有记录数据，不可恢复！' })
-    const end = new Date().toISOString().slice(0, 10)
-    const start = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10)
-    const meals = await mealStore.getMealsByDateRange(start, end)
-    const weights = await weightStore.getRecordsByDateRange(start, end)
-    for (const m of meals) {
-      if (m.id) await mealStore.deleteMeal(m.id)
-    }
-    for (const w of weights) {
-      if (w.id) await weightStore.deleteRecord(w.id)
-    }
-    showToast('已清除')
-  } catch { /* cancelled */ }
-}
 
 async function onLogout() {
   try {
     await showConfirmDialog({ title: '确认', message: '确定要登出账号吗？' })
     authStore.logout()
     router.replace('/login')
-  } catch { /* cancelled */ }
+  } catch {
+    // cancelled
+  }
 }
 </script>
 
@@ -358,37 +186,6 @@ async function onLogout() {
   font-size: 28px;
   font-weight: 800;
   margin: 0;
-  flex: 1;
-}
-
-.header-action {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.header-action:active {
-  background: var(--bg);
-}
-
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background: var(--danger);
-  border-radius: 50%;
 }
 
 .profile-card {
@@ -446,26 +243,6 @@ async function onLogout() {
 .profile-streak {
   color: var(--primary);
   font-weight: 600;
-}
-
-.edit-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--primary-soft);
-  border: none;
-  color: var(--primary);
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.edit-btn:active {
-  background: #c8e8d0;
 }
 
 .weight-progress {
@@ -543,19 +320,10 @@ async function onLogout() {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   margin-bottom: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.settings-item:active {
-  background: var(--bg);
-}
-
-.settings-item.with-toggle {
-  background: var(--card-bg);
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
+.static-item {
+  margin-bottom: 0;
 }
 
 .item-label {
@@ -578,61 +346,7 @@ async function onLogout() {
 .item-value {
   font-size: 14px;
   color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.reminder-time {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-left: auto;
-  margin-right: 12px;
-}
-
-.vip-section {
-  margin-bottom: 24px;
-}
-
-.vip-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, #2d2d1a 0%, #3d3520 100%);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.vip-banner:active {
-  transform: scale(0.98);
-}
-
-.vip-icon {
-  font-size: 32px;
-  flex-shrink: 0;
-}
-
-.vip-content {
-  flex: 1;
-}
-
-.vip-content h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #f0d78c;
-}
-
-.vip-content p {
-  margin: 0;
-  font-size: 12px;
-  color: rgba(240, 215, 140, 0.65);
-}
-
-.vip-arrow {
-  font-size: 20px;
-  color: #f0d78c;
-  flex-shrink: 0;
+  text-align: right;
 }
 
 .logout-section {

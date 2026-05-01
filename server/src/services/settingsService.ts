@@ -2,7 +2,6 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { pool } from '../db/connection.js'
 import { userSettings } from '../db/schema.js'
-import { decodeStoredApiKey, encodeApiKey } from '../utils/apiKey.js'
 
 const db = drizzle(pool)
 
@@ -16,17 +15,10 @@ export async function getSettings(userId: number) {
   if (!settings) {
     // Create default settings if none exist
     await db.insert(userSettings).values({ userId } as any)
-    return {
-      userId,
-      ...defaultSettings(),
-      aiApiKey: '',
-    }
+    return defaultSettings()
   }
 
-  return {
-    ...settings,
-    aiApiKey: decodeStoredApiKey(settings.aiApiKey),
-  }
+  return toPublicSettings(settings)
 }
 
 export async function updateSettings(userId: number, data: Record<string, any>) {
@@ -49,9 +41,8 @@ export async function updateSettings(userId: number, data: Record<string, any>) 
     }
   }
 
-  // Encrypt AI API key if provided
-  if (data.aiApiKey !== undefined) {
-    updateData.aiApiKey = encodeApiKey(data.aiApiKey)
+  if (Object.keys(updateData).length === 0) {
+    return getSettings(userId)
   }
 
   if (existing) {
@@ -74,5 +65,19 @@ function defaultSettings() {
     age: 25,
     gender: 'male' as const,
     weightGoal: 60,
+  }
+}
+
+function toPublicSettings(settings: Record<string, any>) {
+  return {
+    dailyCalorieGoal: settings.dailyCalorieGoal,
+    proteinRatio: settings.proteinRatio,
+    fatRatio: settings.fatRatio,
+    carbsRatio: settings.carbsRatio,
+    height: settings.height,
+    weight: settings.weight,
+    age: settings.age,
+    gender: settings.gender,
+    weightGoal: settings.weightGoal,
   }
 }

@@ -33,14 +33,15 @@
       <div class="trend-metrics">
         <div>
           <span>平均摄入</span>
-          <strong class="numeric">{{ averageCalories.toLocaleString() }} <small>千卡</small></strong>
+          <strong class="numeric">{{ averageCaloriesText }} <small>千卡</small></strong>
         </div>
         <div>
           <span>平均目标</span>
           <strong class="numeric">{{ dailyGoal.toLocaleString() }} <small>千卡</small></strong>
         </div>
       </div>
-      <v-chart :option="trendOption" class="trend-chart" autoresize />
+      <v-chart v-if="hasCalorieData" :option="trendOption" class="trend-chart" autoresize />
+      <div v-else class="empty-chart">暂无热量数据，请先记录饮食</div>
     </section>
 
     <div class="chart-grid">
@@ -49,7 +50,8 @@
           <h2>摄入 vs 目标</h2>
           <van-icon name="question-o" />
         </div>
-        <v-chart :option="barOption" class="mini-chart" autoresize />
+        <v-chart v-if="hasCalorieData" :option="barOption" class="mini-chart" autoresize />
+        <div v-else class="empty-chart">暂无可对比数据</div>
       </section>
 
       <section class="mini-card glass-card macro-card">
@@ -57,7 +59,7 @@
           <h2>三大营养素占比</h2>
           <van-icon name="question-o" />
         </div>
-        <div class="donut-layout">
+        <div v-if="hasCalorieData" class="donut-layout">
           <v-chart :option="donutOption" class="donut-chart" autoresize />
           <div class="macro-legend">
             <div v-for="item in macroLegend" :key="item.name">
@@ -68,6 +70,7 @@
             </div>
           </div>
         </div>
+        <div v-else class="empty-chart">暂无营养素数据</div>
       </section>
     </div>
 
@@ -75,23 +78,24 @@
       <section class="kpi-card glass-card">
         <div class="kpi-icon trend"><van-icon name="chart-trending-o" /></div>
         <span>平均每日摄入</span>
-        <strong class="numeric">{{ averageCalories.toLocaleString() }} <small>千卡</small></strong>
-        <em class="up">较上周 <van-icon name="down" /> 3.5%</em>
+        <strong class="numeric">{{ averageCaloriesText }} <small>千卡</small></strong>
+        <em>{{ calorieChangeText }}</em>
       </section>
 
       <section class="kpi-card glass-card">
         <div class="kpi-icon target"><van-icon name="aim" /></div>
         <span>目标完成率</span>
-        <strong class="numeric">{{ completionRate }}<small>%</small></strong>
-        <em>{{ reachedDays }}/{{ activeCalories.length }} 天达成目标</em>
-        <div class="completion-track"><i :style="{ width: completionRate + '%' }" /></div>
+        <strong class="numeric">{{ completionRateText }}<small>%</small></strong>
+        <em v-if="hasCalorieData">{{ reachedDays }}/{{ calorieSeries.length }} 天达成目标</em>
+        <em v-else>暂无饮食记录</em>
+        <div class="completion-track"><i :style="{ width: completionRateBar + '%' }" /></div>
       </section>
 
       <section class="kpi-card glass-card">
         <div class="kpi-icon balance"><van-icon name="balance-o" /></div>
         <span>累计超额/缺口</span>
-        <strong class="numeric" :class="{ deficit: calorieBalance < 0 }">{{ calorieBalance }} <small>千卡</small></strong>
-        <em>本周期总计缺口</em>
+        <strong class="numeric" :class="{ deficit: (calorieBalance ?? 0) < 0 }">{{ calorieBalanceText }} <small>千卡</small></strong>
+        <em>{{ calorieBalanceLabel }}</em>
       </section>
     </div>
 
@@ -101,32 +105,18 @@
           <h2>体重趋势</h2>
           <van-icon name="question-o" />
         </div>
-        <strong class="numeric">{{ latestWeight }} <small>公斤</small></strong>
-        <span>较上周 <van-icon name="down" /> 0.5 公斤</span>
+        <strong class="numeric">{{ latestWeightText }} <small>公斤</small></strong>
+        <span>{{ weightChangeText }}</span>
       </div>
-      <v-chart :option="weightOption" class="weight-chart" autoresize />
-    </section>
-
-    <section class="exercise-card glass-card">
-      <div class="exercise-total">
-        <span><van-icon name="fire-o" /> 运动消耗</span>
-        <strong class="numeric">1,320 <small>千卡</small></strong>
-        <em>本周累计消耗</em>
-      </div>
-      <div class="exercise-list">
-        <div v-for="item in exercises" :key="item.name">
-          <span class="exercise-icon"><van-icon :name="item.icon" /></span>
-          <strong>{{ item.count }}次</strong>
-          <small>{{ item.calories }} 千卡</small>
-        </div>
-      </div>
+      <v-chart v-if="hasWeightData" :option="weightOption" class="weight-chart" autoresize />
+      <div v-else class="empty-chart">暂无体重记录</div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Icon, showToast } from 'vant'
+import { Icon } from 'vant'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
@@ -141,31 +131,24 @@ use([LineChart, BarChart, PieChart, GridComponent, TooltipComponent, LegendCompo
 
 type Period = 'week' | 'month' | 'year'
 
+type WeightPoint = number | null
+
 const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
 const weightStore = useWeightStore()
 
 const period = ref<Period>('week')
 const meals = ref<MealRecord[]>([])
+const prevMeals = ref<MealRecord[]>([])
 const labels = ref<string[]>([])
-const weightSeries = ref<number[]>([])
-
-const demoCalories = [1450, 1680, 1920, 2140, 1720, 1380, 1280]
-const demoProtein = [88, 102, 116, 125, 98, 82, 64]
-const demoFat = [48, 54, 62, 68, 55, 44, 40]
-const demoCarbs = [182, 212, 246, 272, 218, 170, 196]
+const prevLabels = ref<string[]>([])
+const weightSeries = ref<WeightPoint[]>([])
+const prevWeightSeries = ref<WeightPoint[]>([])
 
 const periodItems = [
   { label: '周', value: 'week' as const },
   { label: '月', value: 'month' as const },
   { label: '年', value: 'year' as const }
-]
-
-const exercises = [
-  { name: '跑步', icon: 'guide-o', count: 4, calories: 560 },
-  { name: '骑行', icon: 'logistics', count: 2, calories: 320 },
-  { name: '游泳', icon: 'like-o', count: 1, calories: 220 },
-  { name: '冥想', icon: 'smile-o', count: 2, calories: 220 }
 ]
 
 const todayLabel = computed(() => {
@@ -176,45 +159,121 @@ const todayLabel = computed(() => {
 
 const dailyGoal = computed(() => settingsStore.settings.dailyCalorieGoal || 2000)
 
-const activeCalories = computed(() => {
-  const values = aggregateCalories()
-  return values.some((value) => value > 0) ? values : demoCalories
+const calorieSeries = computed(() => aggregateMacroSeries(meals.value, labels.value, 'calories'))
+const proteinSeries = computed(() => aggregateMacroSeries(meals.value, labels.value, 'protein'))
+const fatSeries = computed(() => aggregateMacroSeries(meals.value, labels.value, 'fat'))
+const carbsSeries = computed(() => aggregateMacroSeries(meals.value, labels.value, 'carbs'))
+
+const prevCalorieSeries = computed(() => aggregateMacroSeries(prevMeals.value, prevLabels.value, 'calories'))
+
+const hasCalorieData = computed(() => calorieSeries.value.some((value) => value > 0))
+const hasWeightData = computed(() => weightSeries.value.some((value) => typeof value === 'number'))
+
+const chartLabels = computed(() => labels.value)
+
+const averageCalories = computed(() => {
+  if (!hasCalorieData.value || calorieSeries.value.length === 0) return null
+  return Math.round(calorieSeries.value.reduce((sum, value) => sum + value, 0) / calorieSeries.value.length)
 })
 
-const activeProtein = computed(() => {
-  const values = aggregateMacro('protein')
-  return values.some((value) => value > 0) ? values : demoProtein
+const previousAverageCalories = computed(() => {
+  const valid = prevCalorieSeries.value.filter((value) => value > 0)
+  if (valid.length === 0) return null
+  return Math.round(valid.reduce((sum, value) => sum + value, 0) / valid.length)
 })
 
-const activeFat = computed(() => {
-  const values = aggregateMacro('fat')
-  return values.some((value) => value > 0) ? values : demoFat
+const averageCaloriesText = computed(() => averageCalories.value === null ? '--' : averageCalories.value.toLocaleString())
+
+const calorieChangePercent = computed(() => {
+  if (averageCalories.value === null || previousAverageCalories.value === null || previousAverageCalories.value <= 0) {
+    return null
+  }
+  const delta = ((averageCalories.value - previousAverageCalories.value) / previousAverageCalories.value) * 100
+  return Math.round(delta * 10) / 10
 })
 
-const activeCarbs = computed(() => {
-  const values = aggregateMacro('carbs')
-  return values.some((value) => value > 0) ? values : demoCarbs
+const calorieChangeText = computed(() => {
+  if (!hasCalorieData.value) return '暂无历史数据'
+  if (calorieChangePercent.value === null) return '缺少上周期对照'
+  if (calorieChangePercent.value === 0) return '与上周期持平'
+  return calorieChangePercent.value > 0
+    ? `较上周期 +${calorieChangePercent.value}%`
+    : `较上周期 ${calorieChangePercent.value}%`
 })
 
-const chartLabels = computed(() => labels.value.length ? labels.value : ['5/14', '5/15', '5/16', '5/17', '5/18', '5/19', '5/20'])
-
-const averageCalories = computed(() =>
-  Math.round(activeCalories.value.reduce((sum, value) => sum + value, 0) / activeCalories.value.length)
+const reachedDays = computed(() =>
+  calorieSeries.value.filter((value) => value >= dailyGoal.value * 0.85 && value <= dailyGoal.value * 1.1).length
 )
 
-const latestCalories = computed(() => activeCalories.value[activeCalories.value.length - 1] || 0)
+const completionRate = computed(() => {
+  if (!hasCalorieData.value || calorieSeries.value.length === 0) return null
+  return Math.round((reachedDays.value / calorieSeries.value.length) * 100)
+})
 
-const reachedDays = computed(() => activeCalories.value.filter((value) => value >= dailyGoal.value * 0.85 && value <= dailyGoal.value * 1.1).length)
-const completionRate = computed(() =>
-  activeCalories.value.length ? Math.round((reachedDays.value / activeCalories.value.length) * 100) : 0
-)
-const calorieBalance = computed(() =>
-  Math.round(activeCalories.value.reduce((sum, value) => sum + (value - dailyGoal.value), 0))
-)
+const completionRateText = computed(() => completionRate.value === null ? '--' : String(completionRate.value))
+const completionRateBar = computed(() => completionRate.value === null ? 0 : completionRate.value)
+
+const calorieBalance = computed(() => {
+  if (!hasCalorieData.value) return null
+  return Math.round(calorieSeries.value.reduce((sum, value) => sum + (value - dailyGoal.value), 0))
+})
+
+const calorieBalanceText = computed(() => {
+  if (calorieBalance.value === null) return '--'
+  if (calorieBalance.value > 0) return `+${calorieBalance.value}`
+  return String(calorieBalance.value)
+})
+
+const calorieBalanceLabel = computed(() => {
+  if (calorieBalance.value === null) return '暂无周期数据'
+  return calorieBalance.value >= 0 ? '本周期总计超额' : '本周期总计缺口'
+})
 
 const latestWeight = computed(() => {
-  const last = [...weightSeries.value].reverse().find((value) => Number.isFinite(value) && value > 0)
-  return last ? last.toFixed(1) : '63.2'
+  for (let i = weightSeries.value.length - 1; i >= 0; i -= 1) {
+    const value = weightSeries.value[i]
+    if (typeof value === 'number') return value
+  }
+  return null
+})
+
+const previousLatestWeight = computed(() => {
+  for (let i = prevWeightSeries.value.length - 1; i >= 0; i -= 1) {
+    const value = prevWeightSeries.value[i]
+    if (typeof value === 'number') return value
+  }
+  return null
+})
+
+const latestWeightText = computed(() => latestWeight.value === null ? '--' : latestWeight.value.toFixed(1))
+
+const weightChange = computed(() => {
+  if (latestWeight.value === null || previousLatestWeight.value === null) return null
+  return Math.round((latestWeight.value - previousLatestWeight.value) * 10) / 10
+})
+
+const weightChangeText = computed(() => {
+  if (!hasWeightData.value) return '暂无体重变化数据'
+  if (weightChange.value === null) return '缺少上周期体重对照'
+  if (weightChange.value === 0) return '与上周期持平'
+  const sign = weightChange.value > 0 ? '+' : ''
+  return `较上周期 ${sign}${weightChange.value.toFixed(1)} 公斤`
+})
+
+const macroLegend = computed(() => {
+  const proteinCalories = Math.round(proteinSeries.value.reduce((sum, value) => sum + value, 0) * 4)
+  const fatCalories = Math.round(fatSeries.value.reduce((sum, value) => sum + value, 0) * 9)
+  const carbsCalories = Math.round(carbsSeries.value.reduce((sum, value) => sum + value, 0) * 4)
+  const total = proteinCalories + fatCalories + carbsCalories
+
+  return [
+    { name: '碳水化合物', calories: carbsCalories, color: '#b7844a' },
+    { name: '蛋白质', calories: proteinCalories, color: '#5b8c85' },
+    { name: '脂肪', calories: fatCalories, color: '#c97d60' }
+  ].map((item) => ({
+    ...item,
+    percent: total > 0 ? Math.round((item.calories / total) * 100) : 0
+  }))
 })
 
 const trendOption = computed(() => ({
@@ -250,14 +309,7 @@ const trendOption = computed(() => ({
       type: 'line',
       smooth: true,
       symbolSize: 8,
-      data: activeCalories.value,
-      label: {
-        show: true,
-        position: 'bottom',
-        color: '#687283',
-        fontSize: 10,
-        formatter: ({ value }: { value: number }) => value.toLocaleString()
-      },
+      data: calorieSeries.value,
       lineStyle: { width: 3 },
       itemStyle: { borderWidth: 2, borderColor: '#ffffff' }
     },
@@ -265,7 +317,7 @@ const trendOption = computed(() => ({
       name: '目标热量',
       type: 'line',
       symbol: 'none',
-      data: activeCalories.value.map(() => dailyGoal.value),
+      data: calorieSeries.value.map(() => dailyGoal.value),
       lineStyle: { type: 'dashed', width: 2 },
       tooltip: { show: false }
     }
@@ -297,79 +349,81 @@ const barOption = computed(() => ({
     axisLabel: { color: '#687283', fontSize: 10 }
   },
   series: [
-    { name: '摄入热量', type: 'bar', barWidth: 8, data: activeCalories.value, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-    { name: '目标热量', type: 'bar', barWidth: 8, data: activeCalories.value.map(() => dailyGoal.value), itemStyle: { borderRadius: [5, 5, 0, 0] } }
+    { name: '摄入热量', type: 'bar', barWidth: 8, data: calorieSeries.value, itemStyle: { borderRadius: [5, 5, 0, 0] } },
+    { name: '目标热量', type: 'bar', barWidth: 8, data: calorieSeries.value.map(() => dailyGoal.value), itemStyle: { borderRadius: [5, 5, 0, 0] } }
   ]
 }))
 
-const macroLegend = computed(() => {
-  const carbsCalories = Math.round(activeCarbs.value.at(-1)! * 4)
-  const proteinCalories = Math.round(activeProtein.value.at(-1)! * 4)
-  const fatCalories = Math.round(activeFat.value.at(-1)! * 9)
-  const total = Math.max(1, carbsCalories + proteinCalories + fatCalories)
-  return [
-    { name: '碳水化合物', calories: carbsCalories, color: '#b7844a' },
-    { name: '蛋白质', calories: proteinCalories, color: '#5b8c85' },
-    { name: '脂肪', calories: fatCalories, color: '#c97d60' }
-  ].map((item) => ({ ...item, percent: Math.round((item.calories / total) * 100) }))
+const donutOption = computed(() => {
+  const seriesData = macroLegend.value
+    .filter((item) => item.calories > 0)
+    .map((item) => ({
+      name: item.name,
+      value: item.calories,
+      itemStyle: { color: item.color, borderColor: '#fff', borderWidth: 2 }
+    }))
+
+  return {
+    tooltip: { trigger: 'item' },
+    series: [
+      {
+        type: 'pie',
+        radius: ['56%', '78%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: true,
+        label: {
+          show: true,
+          position: 'center',
+          formatter: `${averageCaloriesText.value}\n千卡`,
+          color: '#121721',
+          fontSize: 18,
+          lineHeight: 25,
+          fontWeight: 800
+        },
+        labelLine: { show: false },
+        data: seriesData
+      }
+    ]
+  }
 })
 
-const donutOption = computed(() => ({
-  tooltip: { trigger: 'item' },
-  series: [
-    {
-      type: 'pie',
-      radius: ['56%', '78%'],
-      center: ['50%', '50%'],
-      avoidLabelOverlap: true,
-      label: {
-        show: true,
-        position: 'center',
-        formatter: `${latestCalories.value.toLocaleString()}\n千卡`,
-        color: '#121721',
-        fontSize: 18,
-        lineHeight: 25,
-        fontWeight: 800
-      },
-      labelLine: { show: false },
-      data: macroLegend.value.map((item) => ({
-        name: item.name,
-        value: item.calories,
-        itemStyle: { color: item.color, borderColor: '#fff', borderWidth: 2 }
-      }))
-    }
-  ]
-}))
+const weightOption = computed(() => {
+  const points = weightSeries.value.filter((value): value is number => typeof value === 'number')
+  const minWeight = points.length ? Math.min(...points) : 0
+  const maxWeight = points.length ? Math.max(...points) : 0
 
-const weightOption = computed(() => ({
-  color: ['#2d6a4f'],
-  grid: { left: 4, right: 8, top: 12, bottom: 22 },
-  xAxis: {
-    type: 'category',
-    boundaryGap: false,
-    data: chartLabels.value,
-    axisTick: { show: false },
-    axisLine: { show: false },
-    axisLabel: { color: '#8a95a7', fontSize: 10 }
-  },
-  yAxis: {
-    type: 'value',
-    min: Math.max(20, Math.floor((Math.min(...weightSeries.value, 63) - 1) * 10) / 10),
-    max: Math.ceil((Math.max(...weightSeries.value, 64) + 1) * 10) / 10,
-    splitLine: { lineStyle: { color: '#eef2f6' } },
-    axisLabel: { color: '#8a95a7', fontSize: 10 }
-  },
-  series: [{
-    type: 'line',
-    smooth: true,
-    symbolSize: 6,
-    data: weightSeries.value.length ? weightSeries.value : [63.8, 63.5, 63.6, 63.4, 63.35, 63.1, 62.95],
-    lineStyle: { width: 3 },
-    areaStyle: { color: 'rgba(45, 106, 79, 0.08)' }
-  }]
-}))
+  return {
+    color: ['#2d6a4f'],
+    grid: { left: 4, right: 8, top: 12, bottom: 22 },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: chartLabels.value,
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: { color: '#8a95a7', fontSize: 10 }
+    },
+    yAxis: {
+      type: 'value',
+      min: Math.floor((minWeight - 1) * 10) / 10,
+      max: Math.ceil((maxWeight + 1) * 10) / 10,
+      splitLine: { lineStyle: { color: '#eef2f6' } },
+      axisLabel: { color: '#8a95a7', fontSize: 10 }
+    },
+    series: [{
+      type: 'line',
+      smooth: true,
+      symbolSize: 6,
+      data: weightSeries.value,
+      lineStyle: { width: 3 },
+      areaStyle: { color: 'rgba(45, 106, 79, 0.08)' }
+    }]
+  }
+})
 
-watch(period, loadData)
+watch(period, () => {
+  void loadData()
+})
 
 onMounted(async () => {
   await Promise.all([settingsStore.loadSettings(), weightStore.loadRecords()])
@@ -377,42 +431,65 @@ onMounted(async () => {
 })
 
 async function loadData() {
-  const dayCount = period.value === 'week' ? 7 : period.value === 'month' ? 30 : 12
+  const { start, end, prevStart, prevEnd } = resolveRange(period.value)
+
+  const [mealList, weightList, prevMealList, prevWeightList] = await Promise.all([
+    mealStore.getMealsByDateRange(toDateStr(start), toDateStr(end)),
+    weightStore.getRecordsByDateRange(toDateStr(start), toDateStr(end)),
+    mealStore.getMealsByDateRange(toDateStr(prevStart), toDateStr(prevEnd)),
+    weightStore.getRecordsByDateRange(toDateStr(prevStart), toDateStr(prevEnd)),
+  ])
+
+  meals.value = mealList
+  prevMeals.value = prevMealList
+
+  labels.value = period.value === 'year' ? monthLabels(start, end) : dayLabels(start, end)
+  prevLabels.value = period.value === 'year' ? monthLabels(prevStart, prevEnd) : dayLabels(prevStart, prevEnd)
+
+  weightSeries.value = aggregateWeightSeries(weightList, labels.value)
+  prevWeightSeries.value = aggregateWeightSeries(prevWeightList, prevLabels.value)
+}
+
+function resolveRange(targetPeriod: Period) {
   const end = new Date()
   const start = new Date(end)
-  if (period.value === 'year') {
+
+  if (targetPeriod === 'year') {
+    start.setDate(1)
     start.setMonth(start.getMonth() - 11)
   } else {
+    const dayCount = targetPeriod === 'week' ? 7 : 30
     start.setDate(start.getDate() - dayCount + 1)
   }
 
-  const startStr = toDateStr(start)
-  const endStr = toDateStr(end)
-  const [mealList, weightList] = await Promise.all([
-    mealStore.getMealsByDateRange(startStr, endStr),
-    weightStore.getRecordsByDateRange(startStr, endStr),
-  ])
-  meals.value = mealList
-  labels.value = period.value === 'year' ? monthLabels(start, end) : dayLabels(start, end)
-  weightSeries.value = aggregateWeightSeries(weightList)
+  let prevStart: Date
+  let prevEnd: Date
+
+  if (targetPeriod === 'year') {
+    prevEnd = new Date(start)
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    prevStart = new Date(prevEnd)
+    prevStart.setDate(1)
+    prevStart.setMonth(prevStart.getMonth() - 11)
+  } else {
+    const days = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1
+    prevEnd = new Date(start)
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    prevStart = new Date(prevEnd)
+    prevStart.setDate(prevStart.getDate() - days + 1)
+  }
+
+  return { start, end, prevStart, prevEnd }
 }
 
-function aggregateCalories() {
-  const map = aggregateByLabel()
-  return labels.value.map((label) => Math.round((map.get(label)?.calories || 0)))
-}
-
-function aggregateMacro(key: 'protein' | 'fat' | 'carbs') {
-  const map = aggregateByLabel()
-  return labels.value.map((label) => Math.round(map.get(label)?.[key] || 0))
-}
-
-function aggregateByLabel() {
+function aggregateMacroSeries(sourceMeals: MealRecord[], labelList: string[], key: 'calories' | 'protein' | 'fat' | 'carbs') {
   const map = new Map<string, { calories: number; protein: number; fat: number; carbs: number }>()
-  for (const label of labels.value) {
+
+  for (const label of labelList) {
     map.set(label, { calories: 0, protein: 0, fat: 0, carbs: 0 })
   }
-  for (const meal of meals.value) {
+
+  for (const meal of sourceMeals) {
     const label = period.value === 'year' ? meal.date.slice(0, 7) : meal.date.slice(5).replace('-', '/')
     const bucket = map.get(label)
     if (!bucket) continue
@@ -421,25 +498,30 @@ function aggregateByLabel() {
     bucket.fat += meal.fat
     bucket.carbs += meal.carbs
   }
-  return map
+
+  return labelList.map((label) => Math.round(map.get(label)?.[key] || 0))
 }
 
-function aggregateWeightSeries(records: { date: string; weight: number }[]) {
+function aggregateWeightSeries(records: { date: string; weight: number }[], labelList: string[]) {
+  if (labelList.length === 0) return []
+
   const map = new Map<string, number>()
   for (const item of records) {
     const label = period.value === 'year' ? item.date.slice(0, 7) : item.date.slice(5).replace('-', '/')
     map.set(label, item.weight)
   }
 
-  const result: number[] = []
-  let last = records[0]?.weight ?? settingsStore.settings.weight ?? 63.2
-  for (const label of labels.value) {
+  const result: WeightPoint[] = []
+  let last: WeightPoint = null
+
+  for (const label of labelList) {
     const current = map.get(label)
     if (typeof current === 'number') {
-      last = current
+      last = Number(current.toFixed(2))
     }
-    result.push(Number(last.toFixed(2)))
+    result.push(last)
   }
+
   return result
 }
 
@@ -618,6 +700,19 @@ small {
   height: 220px;
 }
 
+.empty-chart {
+  height: 120px;
+  border-radius: 12px;
+  background: rgba(132, 149, 171, 0.08);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  text-align: center;
+  padding: 0 12px;
+}
+
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -767,11 +862,6 @@ small {
   margin-bottom: 8px;
 }
 
-.kpi-card em.up {
-  color: var(--primary);
-  font-weight: 600;
-}
-
 .completion-track {
   height: 4px;
   background: rgba(156, 142, 132, 0.12);
@@ -837,90 +927,6 @@ small {
   height: 140px;
 }
 
-.exercise-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-.exercise-total {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.exercise-total strong {
-  display: block;
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.exercise-total em {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-style: normal;
-}
-
-.exercise-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  max-width: 100%;
-}
-
-.exercise-list div {
-  text-align: center;
-}
-
-.exercise-icon {
-  width: 40px;
-  height: 40px;
-  margin: 0 auto 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(156, 142, 132, 0.1);
-  color: var(--text-soft);
-  font-size: 18px;
-}
-
-.exercise-list strong {
-  display: block;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.exercise-list small {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 11px;
-  margin-top: 4px;
-}
-
-.next-button {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(156, 142, 132, 0.1);
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
 @media (max-width: 390px) {
   .chart-grid {
     grid-template-columns: 1fr;
@@ -932,18 +938,6 @@ small {
 
   .weight-card {
     grid-template-columns: 1fr;
-  }
-
-  .exercise-card {
-    grid-template-columns: 1fr;
-  }
-
-  .exercise-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .next-button {
-    display: none;
   }
 }
 </style>
