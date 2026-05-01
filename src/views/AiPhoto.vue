@@ -2,13 +2,6 @@
   <div class="page">
     <div class="page-header">AI拍照估算</div>
 
-    <!-- No API key warning -->
-    <div class="card warning-card" v-if="!settingsStore.apiKey">
-      <van-icon name="warning-o" size="20" color="#FF9800" />
-      <span>请先在设置中配置 API Key</span>
-      <van-button size="small" type="primary" @click="$router.push('/settings')">去设置</van-button>
-    </div>
-
     <!-- Image area -->
     <div class="card text-center">
       <div class="image-area" v-if="imageSrc">
@@ -44,10 +37,10 @@
       <div v-for="(item, i) in results" :key="i" class="result-item flex-between">
         <div>
           <span class="result-name">{{ item.foodName }}</span>
-          <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ item.estimatedCalories }} kcal</span>
+          <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ getItemCalories(item) }} kcal</span>
         </div>
         <div class="flex-row">
-          <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" @change="onWeightChange(i)" />
+          <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" />
           <van-icon name="delete-o" class="del-btn" @click="results.splice(i, 1)" />
         </div>
       </div>
@@ -60,6 +53,25 @@
         一键添加到今日记录
       </van-button>
     </div>
+
+    <van-dialog
+      v-model:show="showPickDialog"
+      title="请选择要记录的菜品"
+      show-cancel-button
+      confirm-button-text="确认"
+      cancel-button-text="取消"
+      @confirm="onConfirmPick"
+    >
+      <div class="pick-dialog">
+        <van-checkbox-group v-model="pickedIndexes">
+          <div v-for="(item, i) in candidateResults" :key="`${item.foodName}-${i}`" class="pick-option">
+            <van-checkbox :name="i">
+              {{ item.foodName }}（{{ item.estimatedCalories }} kcal/100g）
+            </van-checkbox>
+          </div>
+        </van-checkbox-group>
+      </div>
+    </van-dialog>
 
     <!-- Hidden file input -->
     <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden-input" @change="onFilePicked" />
@@ -78,12 +90,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Button, Icon, Loading, Stepper, Dialog, showToast } from 'vant'
-import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { analyzeFoodImage } from '@/utils/aiService'
 import type { AiRecognitionResult } from '@/types'
 
-const settingsStore = useSettingsStore()
 const mealStore = useMealStore()
 
 const imageSrc = ref('')
@@ -94,23 +104,20 @@ const results = ref<AiRecognitionResult[]>([])
 const fileInput = ref<HTMLInputElement>()
 const videoEl = ref<HTMLVideoElement>()
 const showCamera = ref(false)
+const showPickDialog = ref(false)
+const candidateResults = ref<AiRecognitionResult[]>([])
+const pickedIndexes = ref<number[]>([])
 let mediaStream: MediaStream | null = null
 
-const totalResultCal = computed(() =>
-  results.value.reduce((s, r) => s + Math.round(r.estimatedCalories * r.estimatedWeight / 100), 0)
-)
-
-function onWeightChange(i: number) {
-  // Update estimatedCalories based on weight change
-  const origPer100 = results.value[i].estimatedCalories
-  results.value[i].estimatedCalories = Math.round(origPer100 * results.value[i].estimatedWeight / 100)
+function getItemCalories(item: AiRecognitionResult) {
+  return Math.round(item.estimatedCalories * item.estimatedWeight / 100)
 }
 
+const totalResultCal = computed(() =>
+  results.value.reduce((sum, item) => sum + getItemCalories(item), 0)
+)
+
 async function onTakePhoto() {
-  if (!settingsStore.apiKey) {
-    showToast('请先配置 API Key')
-    return
-  }
   showCamera.value = true
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
@@ -145,10 +152,6 @@ function stopCamera() {
 }
 
 function onPickFile() {
-  if (!settingsStore.apiKey) {
-    showToast('请先配置 API Key')
-    return
-  }
   fileInput.value?.click()
 }
 
@@ -177,12 +180,34 @@ async function onAnalyze() {
   analyzing.value = true
   try {
     const res = await analyzeFoodImage(imageBase64.value, imageType.value)
-    results.value = res
+    results.value = []
+    candidateResults.value = res
+    pickedIndexes.value = res.map((_, i) => i)
+    showPickDialog.value = true
   } catch (e: any) {
     showToast(e.message || '识别失败，请重试')
   } finally {
     analyzing.value = false
   }
+}
+
+function onConfirmPick() {
+  if (pickedIndexes.value.length === 0) {
+    showToast('请至少选择一个菜品')
+    showPickDialog.value = true
+    return
+  }
+
+  results.value = pickedIndexes.value
+    .map((i) => candidateResults.value[i])
+    .filter((item): item is AiRecognitionResult => !!item)
+
+  if (results.value.length === 0) {
+    showToast('未选中有效菜品，请重试')
+    return
+  }
+
+  showToast(`已选择 ${results.value.length} 项`)
 }
 
 async function onAddAll() {
@@ -194,7 +219,7 @@ async function onAddAll() {
       foodId: 0,
       foodName: item.foodName,
       weight: item.estimatedWeight,
-      calories: Math.round(item.estimatedCalories * item.estimatedWeight / 100),
+      calories: getItemCalories(item),
       protein: 0,
       fat: 0,
       carbs: 0
@@ -207,12 +232,6 @@ async function onAddAll() {
 </script>
 
 <style scoped>
-.warning-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff3e0;
-}
 .image-area {
   display: flex;
   flex-direction: column;
@@ -263,5 +282,20 @@ async function onAddAll() {
   justify-content: center;
   gap: 16px;
   padding: 16px;
+}
+
+.pick-dialog {
+  max-height: 48vh;
+  overflow-y: auto;
+  padding: 10px 16px 2px;
+}
+
+.pick-option {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.pick-option:last-child {
+  border-bottom: none;
 }
 </style>

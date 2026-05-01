@@ -1,13 +1,10 @@
-import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/mysql2'
-import { pool } from '../db/connection.js'
-import { userSettings } from '../db/schema.js'
-import { decodeStoredApiKey } from '../utils/apiKey.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { config } from '../config.js'
 
-const db = drizzle(pool)
-
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages'
+const BAIDU_TOKEN_API_URL = 'https://aip.baidubce.com/oauth/2.0/token'
+const BAIDU_DISH_API_URL = 'https://aip.baidubce.com/rest/2.0/image-classify/v2/dish'
+const DEFAULT_WEIGHT_GRAMS = 100
+const TOKEN_REFRESH_BUFFER_MS = 60 * 1000
 
 interface AiRecognitionResult {
   foodName: string
@@ -16,123 +13,149 @@ interface AiRecognitionResult {
   confidence: number
 }
 
-interface ClaudeResponse {
-  content: Array<{ type: string; text: string }>
+interface BaiduAccessTokenResponse {
+  access_token?: string
+  expires_in?: number
+  error?: string
+  error_description?: string
 }
 
-function toAiResultArray(raw: unknown): AiRecognitionResult[] {
-  if (!Array.isArray(raw)) {
-    throw new AppError('AI返回格式异常，请重试', 500)
+interface BaiduDishItem {
+  name?: string
+  probability?: number
+  calorie?: string | number
+  has_calorie?: boolean | number
+}
+
+interface BaiduDishResponse {
+  error_code?: number
+  error_msg?: string
+  result?: BaiduDishItem[]
+}
+
+let accessTokenCache: { value: string; expiresAt: number } | null = null
+
+function parseCalories(raw: unknown): number {
+  if (typeof raw === 'number' && Number.isFinite(raw) && raw >= 0) {
+    return Math.round(raw)
   }
 
-  return raw
+  if (typeof raw === 'string') {
+    const match = raw.match(/\d+(\.\d+)?/)
+    if (!match) return 0
+    const num = Number(match[0])
+    if (Number.isFinite(num) && num >= 0) {
+      return Math.round(num)
+    }
+  }
+
+  return 0
+}
+
+function normalizeConfidence(raw: unknown): number {
+  const numeric = Number(raw)
+  if (!Number.isFinite(numeric)) return 0
+  if (numeric > 1) return Math.min(1, numeric / 100)
+  if (numeric < 0) return 0
+  return numeric
+}
+
+function toAiResultArray(items: BaiduDishItem[]): AiRecognitionResult[] {
+  return items
     .map((item) => {
-      const record = item as Record<string, unknown>
+      const foodName = String(item.name || '').trim()
+      const confidence = normalizeConfidence(item.probability)
+      const hasCalorie = item.has_calorie === true || Number(item.has_calorie) === 1
+      const estimatedCalories = hasCalorie ? parseCalories(item.calorie) : 0
+
       return {
-        foodName: String(record.foodName || '').trim(),
-        estimatedWeight: Number(record.estimatedWeight),
-        estimatedCalories: Number(record.estimatedCalories),
-        confidence: Number(record.confidence),
+        foodName,
+        // 百度接口返回的是参考卡路里，不包含份量，统一按 100g 返回给前端继续调整。
+        estimatedWeight: DEFAULT_WEIGHT_GRAMS,
+        estimatedCalories,
+        confidence,
       }
     })
-    .filter(
-      (item) =>
-        !!item.foodName &&
-        Number.isFinite(item.estimatedWeight) &&
-        item.estimatedWeight > 0 &&
-        Number.isFinite(item.estimatedCalories) &&
-        item.estimatedCalories >= 0 &&
-        Number.isFinite(item.confidence) &&
-        item.confidence >= 0 &&
-        item.confidence <= 1
-    )
+    .filter((item) => !!item.foodName && item.confidence > 0)
+}
+
+async function getBaiduAccessToken(): Promise<string> {
+  if (
+    accessTokenCache &&
+    accessTokenCache.expiresAt - TOKEN_REFRESH_BUFFER_MS > Date.now()
+  ) {
+    return accessTokenCache.value
+  }
+
+  if (!config.baiduAi.apiKey || !config.baiduAi.secretKey) {
+    throw new AppError('服务端未配置百度AI密钥，请在 server/.env 中设置', 500)
+  }
+
+  const tokenBody = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: config.baiduAi.apiKey,
+    client_secret: config.baiduAi.secretKey,
+  })
+
+  const tokenResponse = await fetch(BAIDU_TOKEN_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: tokenBody.toString(),
+  })
+
+  if (!tokenResponse.ok) {
+    throw new AppError(`获取百度访问令牌失败: ${tokenResponse.status}`, 502)
+  }
+
+  const tokenData: BaiduAccessTokenResponse = await tokenResponse.json()
+  if (!tokenData.access_token) {
+    const errorMessage = tokenData.error_description || tokenData.error || 'unknown error'
+    throw new AppError(`获取百度访问令牌失败: ${errorMessage}`, 502)
+  }
+
+  const expiresIn = Number(tokenData.expires_in)
+  const expiresAt = Date.now() + (Number.isFinite(expiresIn) ? expiresIn : 2592000) * 1000
+  accessTokenCache = { value: tokenData.access_token, expiresAt }
+  return tokenData.access_token
 }
 
 export async function recognizeFood(
-  userId: number,
+  _userId: number,
   imageBase64: string,
-  mediaType: string
+  _mediaType: string
 ): Promise<AiRecognitionResult[]> {
-  // Get user's API key
-  const [settings] = await db
-    .select({ aiApiKey: userSettings.aiApiKey })
-    .from(userSettings)
-    .where(eq(userSettings.userId, userId))
-    .limit(1)
+  const accessToken = await getBaiduAccessToken()
 
-  const apiKey = decodeStoredApiKey(settings?.aiApiKey)
+  const requestBody = new URLSearchParams({
+    image: imageBase64,
+    top_num: '5',
+  })
 
-  if (!apiKey) {
-    throw new AppError('请先在设置中配置AI API Key', 400)
-  }
-
-  const response = await fetch(CLAUDE_API_URL, {
+  const response = await fetch(`${BAIDU_DISH_API_URL}?access_token=${encodeURIComponent(accessToken)}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mediaType,
-                data: imageBase64,
-              },
-            },
-            {
-              type: 'text',
-              text: `请分析这张食物图片，识别出所有食物并估算热量。
-
-请以严格的JSON数组格式返回，每个食物包含以下字段：
-- foodName: 食物名称（中文）
-- estimatedWeight: 估算重量（克）
-- estimatedCalories: 估算热量（千卡）
-- confidence: 置信度（0-1之间的数字）
-
-只返回JSON数组，不要添加任何其他文字。
-
-示例格式：
-[{"foodName": "米饭", "estimatedWeight": 150, "estimatedCalories": 174, "confidence": 0.9}]`,
-            },
-          ],
-        },
-      ],
-    }),
+    body: requestBody.toString(),
   })
 
   if (!response.ok) {
-    const err = await response.text()
-    throw new AppError(`AI识别失败: ${response.status}`, 502)
+    throw new AppError(`百度识别失败: ${response.status}`, 502)
   }
 
-  const data: ClaudeResponse = await response.json()
-  const text = data.content[0]?.text || ''
-
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) {
-    throw new AppError('AI返回格式异常，请重试', 500)
+  const data: BaiduDishResponse = await response.json()
+  if (data.error_code) {
+    throw new AppError(`百度识别失败: ${data.error_msg || data.error_code}`, 502)
   }
 
-  try {
-    const parsed = JSON.parse(jsonMatch[0])
-    const normalized = toAiResultArray(parsed)
-    if (normalized.length === 0) {
-      throw new AppError('AI未识别到有效食物，请重试', 500)
-    }
-    return normalized
-  } catch (error) {
-    if (error instanceof AppError) {
-      throw error
-    }
-    throw new AppError('AI返回解析失败，请重试', 500)
+  if (!Array.isArray(data.result)) {
+    throw new AppError('百度返回格式异常，请重试', 500)
   }
+
+  const normalized = toAiResultArray(data.result)
+  if (normalized.length === 0) {
+    throw new AppError('未识别到有效菜品，请换个角度再试', 500)
+  }
+
+  return normalized
 }

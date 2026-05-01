@@ -24,4 +24,8 @@ export const config = {
   },
   encryptionKey: process.env.ENCRYPTION_KEY || 'dev-encryption-key-32-bytes!!',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  baiduAi: {
+    apiKey: process.env.BAIDU_AI_API_KEY || '',
+    secretKey: process.env.BAIDU_AI_SECRET_KEY || '',
+  },
 }

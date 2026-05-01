@@ -6,7 +6,7 @@ const router = Router()
 router.use(authMiddleware)
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
-const ALLOWED_MEDIA_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const ALLOWED_MEDIA_TYPES = new Set(['image/jpeg', 'image/png'])
 
 function normalizeBase64(input: string): string {
   return input.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '')
@@ -23,7 +23,7 @@ router.post('/recognize', async (req, res, next) => {
     }
 
     if (!ALLOWED_MEDIA_TYPES.has(mediaType)) {
-      res.status(400).json({ code: -1, message: '仅支持 JPG、PNG、WebP 图片' })
+      res.status(400).json({ code: -1, message: '仅支持 JPG、PNG 图片' })
       return
     }
 
