@@ -36,21 +36,21 @@ const items = computed(() => [
     current: Math.round(props.protein),
     goal: Math.round(props.proteinGoal),
     pct: Math.min(Math.round((props.protein / props.proteinGoal) * 100) || 0, 100),
-    color: '#FF5722'
+    color: '#5b8c85'
   },
   {
     label: '脂肪',
     current: Math.round(props.fat),
     goal: Math.round(props.fatGoal),
     pct: Math.min(Math.round((props.fat / props.fatGoal) * 100) || 0, 100),
-    color: '#FF9800'
+    color: '#c97d60'
   },
   {
     label: '碳水',
     current: Math.round(props.carbs),
     goal: Math.round(props.carbsGoal),
     pct: Math.min(Math.round((props.carbs / props.carbsGoal) * 100) || 0, 100),
-    color: '#4CAF50'
+    color: '#b7844a'
   }
 ])
 </script>
@@ -71,7 +71,7 @@ const items = computed(() => [
 }
 .progress-track {
   height: 8px;
-  background: #eee;
+  background: rgba(156, 142, 132, 0.15);
   border-radius: 4px;
   overflow: hidden;
 }

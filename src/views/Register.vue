@@ -85,31 +85,33 @@ async function onRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 20%, rgba(45, 106, 79, 0.08), transparent 60%),
+    linear-gradient(180deg, #f7f3ed 0%, var(--bg) 50%, #f0ede6 100%);
   padding: 20px;
 }
 
 .auth-card {
   width: 100%;
   max-width: 360px;
-  background: #fff;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
   padding: 32px 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-title {
   text-align: center;
   font-size: 28px;
   font-weight: 700;
-  color: #333;
+  color: var(--text);
   margin: 0 0 4px;
 }
 
 .auth-subtitle {
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: var(--text-secondary);
   margin: 0 0 24px;
 }
 
@@ -121,12 +123,12 @@ async function onRegister() {
 .auth-link {
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: var(--text-secondary);
   margin-top: 16px;
 }
 
 .auth-link a {
-  color: #667eea;
+  color: var(--primary);
   font-weight: 500;
 }
 </style>

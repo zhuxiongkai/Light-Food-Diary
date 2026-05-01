@@ -37,37 +37,37 @@ import { Button } from 'vant'
   min-height: 100%;
   padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px 24px;
   background:
-    radial-gradient(92% 58% at 100% 0%, rgba(29, 185, 117, 0.16) 0, rgba(29, 185, 117, 0) 62%),
-    linear-gradient(180deg, #f7fbfc 0%, #eef6f3 100%);
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(45, 106, 79, 0.06), transparent 60%),
+    linear-gradient(180deg, #fdfbf8 0%, #f7f3ee 100%);
 }
 
 .hero-card {
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 16px;
-  padding: 20px 16px;
-  box-shadow: 0 8px 24px rgba(41, 74, 95, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  padding: 24px 16px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
   text-align: center;
 }
 
 .logo {
   width: 72px;
   height: 72px;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   margin-bottom: 10px;
 }
 
 .hero-card h1 {
   margin: 0;
   font-size: 24px;
-  color: #0f1925;
+  color: var(--text-strong);
 }
 
 .hero-card p {
   margin: 10px 0 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #667487;
+  color: var(--text-soft);
 }
 
 .feature-list {
@@ -78,22 +78,22 @@ import { Button } from 'vant'
 }
 
 .feature-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
   padding: 14px;
-  border: 1px solid rgba(129, 148, 170, 0.12);
+  border: 1px solid var(--border);
 }
 
 .feature-card h2 {
   margin: 0;
   font-size: 15px;
-  color: #122031;
+  color: var(--text);
 }
 
 .feature-card p {
   margin: 8px 0 0;
   font-size: 13px;
-  color: #6b7a8f;
+  color: var(--text-soft);
   line-height: 1.5;
 }
 

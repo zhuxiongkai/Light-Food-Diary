@@ -100,10 +100,10 @@ const chartOption = computed(() => {
       smooth: true,
       symbol: 'circle',
       symbolSize: 6,
-      itemStyle: { color: '#FF9800' },
+      itemStyle: { color: '#b7844a' },
       markLine: {
         silent: true,
-        data: [{ yAxis: settings.value.weightGoal, label: { formatter: '目标' }, lineStyle: { color: '#4CAF50', type: 'dashed' } }]
+        data: [{ yAxis: settings.value.weightGoal, label: { formatter: '目标' }, lineStyle: { color: '#2d6a4f', type: 'dashed' } }]
       }
     }]
   }

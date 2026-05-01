@@ -1,7 +1,7 @@
 <template>
   <div class="calorie-ring">
     <svg :width="size" :height="size" viewBox="0 0 140 140">
-      <circle cx="70" cy="70" r="60" fill="none" stroke="#ebebeb" :stroke-width="strokeWidth" />
+      <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(156, 142, 132, 0.15)" :stroke-width="strokeWidth" />
       <circle
         cx="70" cy="70" r="60"
         fill="none"
@@ -15,9 +15,11 @@
       />
     </svg>
     <div class="ring-center">
+      <span class="ring-caption">{{ centerLabel }}</span>
       <span class="ring-value numeric">{{ current }}</span>
-      <span class="ring-label">/ {{ goal }} kcal</span>
-      <span class="ring-pct" v-if="percent > 0">{{ percent }}%</span>
+      <span class="ring-label" v-if="showGoal">/ {{ goal }} {{ unit }}</span>
+      <span class="ring-unit" v-else>{{ unit }}</span>
+      <span class="ring-pct" v-if="showPercent && percent > 0">{{ percent }}%</span>
     </div>
   </div>
 </template>
@@ -30,17 +32,26 @@ const props = withDefaults(defineProps<{
   goal: number
   size?: number
   color?: string
+  unit?: string
+  centerLabel?: string
+  showGoal?: boolean
+  showPercent?: boolean
 }>(), {
   size: 180,
-  color: '#4CAF50'
+  color: '#2d6a4f',
+  unit: '千卡',
+  centerLabel: '已摄入',
+  showGoal: false,
+  showPercent: false
 })
 
 const strokeWidth = 10
 const circumference = 2 * Math.PI * 60
 
-const percent = computed(() => Math.min(Math.round((props.current / props.goal) * 100), 100))
+const safeGoal = computed(() => Math.max(props.goal, 1))
+const percent = computed(() => Math.min(Math.round((props.current / safeGoal.value) * 100), 100))
 const dashArray = computed(() => {
-  const ratio = Math.min(props.current / props.goal, 1) * circumference
+  const ratio = Math.min(props.current / safeGoal.value, 1) * circumference
   return `${ratio} ${circumference * 2}`
 })
 const dashOffset = 0
@@ -58,15 +69,26 @@ const dashOffset = 0
   display: flex;
   flex-direction: column;
   align-items: center;
-  line-height: 1.3;
+  line-height: 1.15;
+}
+.ring-caption {
+  font-size: 15px;
+  color: var(--text-soft);
+  margin-bottom: 2px;
 }
 .ring-value {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 800;
   color: var(--text);
+  letter-spacing: -1.2px;
 }
 .ring-label {
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.ring-unit {
+  font-size: 17px;
+  margin-top: 4px;
   color: var(--text-secondary);
 }
 .ring-pct {

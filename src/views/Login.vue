@@ -69,7 +69,7 @@
     </div>
 
     <label class="agreement">
-      <van-checkbox v-model="agreeTerms" icon-size="20" checked-color="#12b56b" />
+      <van-checkbox v-model="agreeTerms" icon-size="20" checked-color="var(--primary)" />
       <span>我已阅读并同意</span>
       <a href="#" target="_blank">《用户协议》</a>
       <span>和</span>
@@ -124,13 +124,20 @@ function onForgotPassword() {
 <style scoped>
 .login-page {
   position: relative;
+  width: 100%;
   height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
   overflow: hidden;
-  padding: calc(env(safe-area-inset-top, 0px) + 18px) 24px
-    calc(env(safe-area-inset-bottom, 0px) + 16px);
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 24px
+    calc(env(safe-area-inset-bottom, 0px) + 20px);
   background:
-    radial-gradient(145% 88% at 100% 0%, rgba(25, 185, 113, 0.13) 0%, rgba(25, 185, 113, 0.02) 34%, rgba(25, 185, 113, 0) 62%),
-    linear-gradient(180deg, #f7fbfc 0%, #f2f7f9 56%, #edf5f3 100%);
+    radial-gradient(145% 88% at 100% 0%, rgba(45, 106, 79, 0.1) 0%, rgba(45, 106, 79, 0.02) 34%, rgba(45, 106, 79, 0) 62%),
+    linear-gradient(180deg, #fdfbf8 0%, #f7f3ed 56%, #f0ede5 100%);
 }
 
 .top-decoration {
@@ -140,7 +147,7 @@ function onForgotPassword() {
   width: 218px;
   height: 218px;
   border-radius: 50%;
-  border: 18px solid rgba(28, 187, 117, 0.1);
+  border: 18px solid rgba(45, 106, 79, 0.08);
   clip-path: inset(0 0 22% 0);
 }
 
@@ -151,9 +158,9 @@ function onForgotPassword() {
   bottom: -12px;
   height: 132px;
   background:
-    radial-gradient(30px 56px at 22% 78%, rgba(63, 180, 119, 0.2) 0, rgba(63, 180, 119, 0) 95%),
-    radial-gradient(34px 66px at 78% 78%, rgba(63, 180, 119, 0.2) 0, rgba(63, 180, 119, 0) 92%),
-    linear-gradient(180deg, rgba(197, 235, 216, 0) 0%, rgba(197, 235, 216, 0.62) 68%, rgba(183, 232, 208, 0.8) 100%);
+    radial-gradient(30px 56px at 22% 78%, rgba(45, 106, 79, 0.15) 0, rgba(45, 106, 79, 0) 95%),
+    radial-gradient(34px 66px at 78% 78%, rgba(45, 106, 79, 0.15) 0, rgba(45, 106, 79, 0) 92%),
+    linear-gradient(180deg, rgba(216, 243, 220, 0) 0%, rgba(216, 243, 220, 0.5) 68%, rgba(200, 235, 208, 0.7) 100%);
   pointer-events: none;
 }
 
@@ -164,6 +171,8 @@ function onForgotPassword() {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  width: 100%;
+  max-width: 560px;
 }
 
 .app-logo {
@@ -171,7 +180,7 @@ function onForgotPassword() {
   height: 86px;
   margin-bottom: 10px;
   border-radius: 24px;
-  box-shadow: 0 8px 24px rgba(20, 163, 98, 0.1);
+  box-shadow: 0 8px 24px rgba(45, 106, 79, 0.12);
 }
 
 .brand-name {
@@ -203,6 +212,8 @@ function onForgotPassword() {
 .login-card {
   position: relative;
   z-index: 2;
+  width: 100%;
+  max-width: 560px;
   background: rgba(255, 255, 255, 0.93);
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 24px;
@@ -236,7 +247,7 @@ function onForgotPassword() {
 
 .field-panel :deep(.van-field__left-icon),
 .field-panel :deep(.van-field__right-icon) {
-  color: #12b56b;
+  color: var(--primary);
   font-size: 22px;
   margin-right: 10px;
 }
@@ -252,7 +263,7 @@ function onForgotPassword() {
   margin: 12px 0 18px auto;
   border: none;
   background: transparent;
-  color: #12b56b;
+  color: var(--primary);
   font-size: 14px;
   line-height: 1.2;
   padding: 0;
@@ -270,7 +281,7 @@ function onForgotPassword() {
   border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
-  --van-button-primary-background: linear-gradient(90deg, #14ae6a 0%, #18c177 100%);
+  --van-button-primary-background: linear-gradient(90deg, #2d6a4f 0%, #4a9d76 100%);
   --van-button-primary-border-color: transparent;
 }
 
@@ -279,7 +290,7 @@ function onForgotPassword() {
   border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
-  color: #13b26a;
+  color: var(--primary);
   border-color: rgba(19, 178, 106, 0.86);
   background: rgba(255, 255, 255, 0.92);
 }
@@ -287,7 +298,9 @@ function onForgotPassword() {
 .other-login-block {
   position: relative;
   z-index: 2;
-  margin-top: 12px;
+  width: 100%;
+  max-width: 560px;
+  margin-top: 4px;
 }
 
 .divider {
@@ -344,7 +357,7 @@ function onForgotPassword() {
 }
 
 .login-option :deep(.van-icon) {
-  color: #14b26c;
+  color: var(--primary);
   font-size: 20px;
 }
 
@@ -356,19 +369,19 @@ function onForgotPassword() {
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
-  margin-top: 12px;
+  margin-top: 6px;
   font-size: 13px;
   color: #8291a4;
 }
 
 .agreement a {
-  color: #13b26a;
+  color: var(--primary);
   font-weight: 500;
   text-decoration: none;
 }
 
 .agreement :deep(.van-checkbox__icon .van-badge__wrapper) {
-  border: 1px solid #13b26a;
+  border: 1px solid var(--primary);
 }
 
 .agreement :deep(.van-checkbox) {
@@ -378,9 +391,9 @@ function onForgotPassword() {
 .bottom-slogan {
   position: relative;
   z-index: 2;
-  margin-top: 18px;
+  margin-top: 8px;
   text-align: center;
-  color: rgba(31, 166, 103, 0.64);
+  color: rgba(45, 106, 79, 0.55);
   font-size: 16px;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   line-height: 1.2;
@@ -390,6 +403,7 @@ function onForgotPassword() {
   .login-page {
     padding-left: 16px;
     padding-right: 16px;
+    gap: 10px;
   }
 
   .brand-name {
@@ -405,6 +419,15 @@ function onForgotPassword() {
     margin-top: 10px;
     margin-bottom: 16px;
     font-size: 15px;
+  }
+
+  .other-login {
+    flex-direction: column;
+  }
+
+  .login-option {
+    width: 100%;
+    white-space: normal;
   }
 
   .bottom-slogan {

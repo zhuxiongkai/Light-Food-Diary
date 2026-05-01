@@ -6,7 +6,11 @@
       "Bash(npx vite *)",
       "Bash(curl *)",
       "Bash(npx tsc *)",
-      "Bash(npx vue-tsc *)"
+      "Bash(npx vue-tsc *)",
+      "Bash(where npx *)",
+      "Read(//c/Users/30742/AppData/Roaming/npm/**)",
+      "Bash(\"C:/Users/30742/AppData/Roaming/npm/npx.cmd\" --version)",
+      "Read(//c/Program Files \\(x86\\)/**)"
     ]
   }
 }

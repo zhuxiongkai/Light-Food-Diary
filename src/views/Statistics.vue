@@ -120,9 +120,6 @@
           <small>{{ item.calories }} 千卡</small>
         </div>
       </div>
-      <button type="button" class="next-button" @click="showToast('运动详情即将开放')">
-        <van-icon name="arrow" />
-      </button>
     </section>
   </div>
 </template>
@@ -221,7 +218,7 @@ const latestWeight = computed(() => {
 })
 
 const trendOption = computed(() => ({
-  color: ['#18b978', '#6b9cff'],
+  color: ['#2d6a4f', '#b7844a'],
   tooltip: { trigger: 'axis' },
   legend: {
     top: 10,
@@ -276,7 +273,7 @@ const trendOption = computed(() => ({
 }))
 
 const barOption = computed(() => ({
-  color: ['#1fc483', '#5b97f4'],
+  color: ['#2d6a4f', '#b7844a'],
   tooltip: { trigger: 'axis' },
   legend: {
     top: 0,
@@ -311,9 +308,9 @@ const macroLegend = computed(() => {
   const fatCalories = Math.round(activeFat.value.at(-1)! * 9)
   const total = Math.max(1, carbsCalories + proteinCalories + fatCalories)
   return [
-    { name: '碳水化合物', calories: carbsCalories, color: '#5b97f4' },
-    { name: '蛋白质', calories: proteinCalories, color: '#42c987' },
-    { name: '脂肪', calories: fatCalories, color: '#ff9d4c' }
+    { name: '碳水化合物', calories: carbsCalories, color: '#b7844a' },
+    { name: '蛋白质', calories: proteinCalories, color: '#5b8c85' },
+    { name: '脂肪', calories: fatCalories, color: '#c97d60' }
   ].map((item) => ({ ...item, percent: Math.round((item.calories / total) * 100) }))
 })
 
@@ -345,7 +342,7 @@ const donutOption = computed(() => ({
 }))
 
 const weightOption = computed(() => ({
-  color: ['#18b978'],
+  color: ['#2d6a4f'],
   grid: { left: 4, right: 8, top: 12, bottom: 22 },
   xAxis: {
     type: 'category',
@@ -368,7 +365,7 @@ const weightOption = computed(() => ({
     symbolSize: 6,
     data: weightSeries.value.length ? weightSeries.value : [63.8, 63.5, 63.6, 63.4, 63.35, 63.1, 62.95],
     lineStyle: { width: 3 },
-    areaStyle: { color: 'rgba(24, 185, 120, 0.08)' }
+    areaStyle: { color: 'rgba(45, 106, 79, 0.08)' }
   }]
 }))
 
@@ -519,7 +516,7 @@ function monthLabels(start: Date, end: Date) {
   color: white;
   font-size: 24px;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(22, 185, 120, 0.2);
+  box-shadow: 0 4px 14px rgba(45, 106, 79, 0.22);
 }
 
 .period-switch {
@@ -528,10 +525,10 @@ function monthLabels(start: Date, end: Date) {
   gap: 0;
   margin-bottom: 20px;
   padding: 2px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .period-switch button {
@@ -552,12 +549,12 @@ function monthLabels(start: Date, end: Date) {
 }
 
 .trend-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .card-title {
@@ -629,11 +626,11 @@ small {
 }
 
 .mini-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .mini-chart {
@@ -709,11 +706,11 @@ small {
 }
 
 .kpi-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   position: relative;
 }
 
@@ -739,8 +736,8 @@ small {
 }
 
 .kpi-icon.balance {
-  color: var(--text-secondary);
-  background: rgba(132, 149, 171, 0.1);
+  color: var(--text-soft);
+  background: rgba(156, 142, 132, 0.12);
 }
 
 .kpi-card span {
@@ -777,7 +774,7 @@ small {
 
 .completion-track {
   height: 4px;
-  background: rgba(132, 149, 171, 0.1);
+  background: rgba(156, 142, 132, 0.12);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -790,12 +787,12 @@ small {
 }
 
 .weight-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
@@ -841,11 +838,11 @@ small {
 }
 
 .exercise-card {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 20px;
@@ -856,20 +853,6 @@ small {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.exercise-total span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.exercise-total span .van-icon {
-  color: var(--orange);
-  font-size: 16px;
 }
 
 .exercise-total strong {
@@ -905,8 +888,8 @@ small {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(132, 149, 171, 0.1);
-  color: var(--text-secondary);
+  background: rgba(156, 142, 132, 0.1);
+  color: var(--text-soft);
   font-size: 18px;
 }
 
@@ -928,7 +911,7 @@ small {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(132, 149, 171, 0.1);
+  background: rgba(156, 142, 132, 0.1);
   border: none;
   color: var(--text-secondary);
   cursor: pointer;

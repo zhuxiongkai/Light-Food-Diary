@@ -1,30 +1,86 @@
-@import 'vant/lib/index.css';
+/* ═══════════════════════════════════════════
+   Botanical Refinement — Design Tokens
+   Warm sage, paper tones, editorial precision
+   ═══════════════════════════════════════════ */
 
 :root {
-  --primary: #16b978;
-  --primary-strong: #07a96c;
-  --primary-soft: #e8f8f1;
-  --blue: #4388f4;
-  --blue-soft: #eef5ff;
-  --orange: #ff9d35;
-  --orange-soft: #fff3e6;
-  --purple: #8378ff;
-  --purple-soft: #f0eeff;
-  --danger: #f45a5a;
-  --bg: #f7fbff;
-  --card-bg: rgba(255, 255, 255, 0.88);
-  --text: #141923;
-  --text-soft: #566173;
-  --text-secondary: #8a95a7;
-  --border: rgba(128, 147, 171, 0.16);
-  --shadow: 0 14px 34px rgba(44, 70, 103, 0.09);
-  --shadow-soft: 0 8px 22px rgba(44, 70, 103, 0.07);
-  --radius: 18px;
+  /* Primary — deep matcha / sage */
+  --primary: #2d6a4f;
+  --primary-strong: #1b4332;
+  --primary-soft: #d8f3dc;
+  --primary-wash: #f0faf2;
+
+  /* Accent — warm amber */
+  --accent: #b7844a;
+  --accent-soft: #fef3e4;
+
+  /* Macronutrient colors — earthy yet distinct */
+  --protein: #5b8c85;
+  --protein-soft: #e8f4f2;
+  --carbs: #b7844a;
+  --carbs-soft: #fef3e4;
+  --fat: #c97d60;
+  --fat-soft: #fef0eb;
+
+  /* Semantic */
+  --blue: #5b8c85;
+  --blue-soft: #e8f4f2;
+  --orange: #c97d60;
+  --orange-soft: #fef0eb;
+  --purple: #7c6f9c;
+  --purple-soft: #f2eff8;
+  --danger: #c45c4a;
+  --danger-soft: #fdf0ed;
+
+  /* Surface — warm paper tones */
+  --bg: #faf8f5;
+  --bg-warm: #f7f3ed;
+  --card-bg: #ffffff;
+  --surface-elevated: rgba(255, 255, 255, 0.92);
+
+  /* Text — warm charcoal */
+  --text: #2c2420;
+  --text-strong: #1a1410;
+  --text-soft: #6b5e58;
+  --text-secondary: #9c8e84;
+
+  /* Borders & Dividers */
+  --border: rgba(156, 142, 132, 0.18);
+  --border-strong: rgba(156, 142, 132, 0.28);
+  --divider: rgba(156, 142, 132, 0.1);
+
+  /* Shadows — layered, warm */
+  --shadow-sm: 0 1px 3px rgba(44, 36, 32, 0.06);
+  --shadow: 0 4px 16px rgba(44, 36, 32, 0.07), 0 1px 4px rgba(44, 36, 32, 0.04);
+  --shadow-lg: 0 8px 32px rgba(44, 36, 32, 0.09), 0 2px 8px rgba(44, 36, 32, 0.04);
+  --shadow-soft: 0 2px 12px rgba(44, 36, 32, 0.05);
+
+  /* Radius */
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  /* Safe area */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Vant overrides */
   --van-primary-color: var(--primary);
-  --van-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC',
-    'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  --van-font: SimSun, 'Songti SC', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  --van-text-color: var(--text);
+  --van-text-color-regular: var(--text-soft);
+  --van-text-color-secondary: var(--text-secondary);
+  --van-background: var(--bg);
+  --van-background-color-light: var(--bg);
+  --van-border-color: var(--border);
+  --van-cell-background: var(--card-bg);
+  --van-switch-on-background: var(--primary);
 }
+
+/* ═══════════════════════════════════════════
+   Reset & Base
+   ═══════════════════════════════════════════ */
 
 * {
   margin: 0;
@@ -39,12 +95,27 @@ body {
   overflow: hidden;
   color: var(--text);
   background:
-    radial-gradient(circle at 15% 0%, rgba(83, 170, 255, 0.11), transparent 34%),
-    linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 150, 120, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(45, 106, 79, 0.04), transparent 55%),
+    linear-gradient(180deg, #fdfbf8 0%, var(--bg) 50%, #f7f3ee 100%);
   font-family: var(--van-font);
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle paper grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
 }
 
 button,
@@ -57,6 +128,10 @@ textarea {
   height: 100%;
 }
 
+/* ═══════════════════════════════════════════
+   App Shell
+   ═══════════════════════════════════════════ */
+
 .app-shell {
   position: relative;
   width: 100%;
@@ -65,9 +140,13 @@ textarea {
   margin: 0 auto;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(247, 251, 255, 0.98) 100%);
-  box-shadow: 0 0 0 1px rgba(139, 157, 178, 0.08);
+    linear-gradient(180deg, rgba(253, 251, 248, 0.94) 0%, rgba(250, 248, 245, 0.98) 100%);
+  box-shadow: 0 0 0 1px rgba(156, 142, 132, 0.12), var(--shadow-lg);
 }
+
+/* ═══════════════════════════════════════════
+   Page Layout
+   ═══════════════════════════════════════════ */
 
 .page {
   height: 100%;
@@ -75,6 +154,7 @@ textarea {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 54px 16px calc(92px + var(--safe-bottom));
+  scroll-behavior: smooth;
 }
 
 .page::-webkit-scrollbar {
@@ -87,31 +167,44 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 0 18px;
+  padding: 0 0 20px;
   background: transparent;
 }
 
 .page-title {
-  color: #05070a;
-  font-size: 30px;
-  font-weight: 850;
-  line-height: 1.08;
-  letter-spacing: 0;
+  color: var(--text-strong);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.3px;
 }
+
+/* ═══════════════════════════════════════════
+   Cards
+   ═══════════════════════════════════════════ */
 
 .glass-card,
 .card {
   background: var(--card-bg);
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
 
 .card {
-  padding: 16px;
-  margin: 12px 0;
+  padding: 20px;
+  margin: 14px 0;
 }
+
+.glass-card {
+  background: var(--surface-elevated);
+  backdrop-filter: blur(24px);
+}
+
+/* ═══════════════════════════════════════════
+   Flex Utilities
+   ═══════════════════════════════════════════ */
 
 .flex-row {
   display: flex;
@@ -141,6 +234,10 @@ textarea {
   color: var(--text-secondary);
 }
 
+/* ═══════════════════════════════════════════
+   Spacing
+   ═══════════════════════════════════════════ */
+
 .mt-8 {
   margin-top: 8px;
 }
@@ -165,41 +262,90 @@ textarea {
   margin-bottom: 16px;
 }
 
+/* ═══════════════════════════════════════════
+   Typography
+   ═══════════════════════════════════════════ */
+
 .numeric {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-}
-
-.soft-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
-  flex: 0 0 auto;
 }
 
 .section-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 22px 2px 12px;
+  margin: 24px 2px 14px;
 }
 
 .section-heading {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  color: var(--text);
 }
 
 .muted {
   color: var(--text-secondary);
 }
 
+/* ═══════════════════════════════════════════
+   Soft Icon Wrapper
+   ═══════════════════════════════════════════ */
+
+.soft-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  flex: 0 0 auto;
+}
+
+/* ═══════════════════════════════════════════
+   Staggered Entrance Animation
+   ═══════════════════════════════════════════ */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-1 {
+  animation: fadeUp 0.45s ease both;
+}
+
+.stagger-2 {
+  animation: fadeUp 0.45s 0.08s ease both;
+}
+
+.stagger-3 {
+  animation: fadeUp 0.45s 0.16s ease both;
+}
+
+.stagger-4 {
+  animation: fadeUp 0.45s 0.24s ease both;
+}
+
+.stagger-5 {
+  animation: fadeUp 0.45s 0.32s ease both;
+}
+
+/* ═══════════════════════════════════════════
+   Media — Desktop framing
+   ═══════════════════════════════════════════ */
+
 @media (min-width: 720px) {
   .app-shell {
     height: min(100vh, 960px);
     margin-top: max(0px, calc((100vh - 960px) / 2));
-    border-radius: 36px;
+    border-radius: 32px;
   }
 }

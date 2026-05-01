@@ -76,14 +76,14 @@
       <h3 class="section-title">我的数据</h3>
       <div class="settings-item">
         <div class="item-label">
-          <van-icon name="user-circle-o" />
+          <van-icon name="user-o" />
           <span>身体数据</span>
         </div>
         <div class="item-value">→</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
-          <van-icon name="water-drop-o" />
+          <van-icon name="notes-o" />
           <span>饮水记录</span>
         </div>
         <div class="item-value">→</div>
@@ -97,7 +97,7 @@
       </div>
       <div class="settings-item">
         <div class="item-label">
-          <van-icon name="description" />
+          <van-icon name="description-o" />
           <span>历史报告</span>
         </div>
         <div class="item-value">→</div>
@@ -109,7 +109,7 @@
       <h3 class="section-title">提醒与同步</h3>
       <div class="settings-item with-toggle">
         <div class="item-label">
-          <van-icon name="bell-o" />
+          <van-icon name="clock-o" />
           <span>用餐提醒</span>
         </div>
         <span class="reminder-time">07:30, 12:30, 18:30</span>
@@ -117,7 +117,7 @@
       </div>
       <div class="settings-item with-toggle">
         <div class="item-label">
-          <van-icon name="balance-o" />
+          <van-icon name="calendar-o" />
           <span>体重提醒</span>
         </div>
         <span class="reminder-time">每周一 08:00</span>
@@ -125,7 +125,7 @@
       </div>
       <div class="settings-item with-toggle">
         <div class="item-label">
-          <van-icon name="heart-o" />
+          <van-icon name="like-o" />
           <span>Apple 健康同步</span>
         </div>
         <van-switch v-model="reminders.appleHealthSync" size="24" />
@@ -137,14 +137,14 @@
       <h3 class="section-title">通用设置</h3>
       <div class="settings-item">
         <div class="item-label">
-          <van-icon name="moon-o" />
+          <van-icon name="desktop-o" />
           <span>深色模式</span>
         </div>
         <div class="item-value">跟随系统</div>
       </div>
       <div class="settings-item">
         <div class="item-label">
-          <van-icon name="notification-o" />
+          <van-icon name="volume-o" />
           <span>通知设置</span>
         </div>
         <div class="item-value">→</div>
@@ -365,8 +365,8 @@ async function onLogout() {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,7 +378,7 @@ async function onLogout() {
 }
 
 .header-action:active {
-  background: rgba(132, 149, 171, 0.1);
+  background: var(--bg);
 }
 
 .badge {
@@ -392,12 +392,12 @@ async function onLogout() {
 }
 
 .profile-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .profile-header {
@@ -421,7 +421,7 @@ async function onLogout() {
   font-size: 24px;
   font-weight: 800;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(22, 185, 120, 0.2);
+  box-shadow: 0 4px 14px rgba(45, 106, 79, 0.22);
 }
 
 .profile-info {
@@ -451,7 +451,7 @@ async function onLogout() {
 .edit-btn {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--primary-soft);
   border: none;
   color: var(--primary);
@@ -461,6 +461,11 @@ async function onLogout() {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:active {
+  background: #c8e8d0;
 }
 
 .weight-progress {
@@ -482,17 +487,17 @@ async function onLogout() {
 }
 
 .progress-bar {
-  height: 6px;
-  background: rgba(132, 149, 171, 0.1);
+  height: 5px;
+  background: rgba(156, 142, 132, 0.12);
   border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, #4a9d76 100%);
   border-radius: 3px;
-  transition: width 0.3s ease;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-info {
@@ -534,20 +539,20 @@ async function onLogout() {
   justify-content: space-between;
   gap: 12px;
   padding: 16px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.08);
-  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .settings-item:active {
-  background: rgba(132, 149, 171, 0.04);
+  background: var(--bg);
 }
 
 .settings-item.with-toggle {
-  background: white;
+  background: var(--card-bg);
   padding: 12px 16px;
   display: flex;
   align-items: center;
@@ -592,9 +597,8 @@ async function onLogout() {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  background: linear-gradient(135deg, #2d2d1a 0%, #3d3520 100%);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -616,18 +620,18 @@ async function onLogout() {
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 700;
-  color: #333;
+  color: #f0d78c;
 }
 
 .vip-content p {
   margin: 0;
   font-size: 12px;
-  color: rgba(51, 51, 51, 0.7);
+  color: rgba(240, 215, 140, 0.65);
 }
 
 .vip-arrow {
   font-size: 20px;
-  color: #333;
+  color: #f0d78c;
   flex-shrink: 0;
 }
 

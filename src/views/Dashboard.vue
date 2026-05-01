@@ -9,140 +9,139 @@
         </div>
       </div>
       <div class="avatar-circle">
-        <van-icon name="user-o" />
+        <van-icon name="contact" />
       </div>
     </div>
 
-    <!-- Calorie Ring Card -->
-    <div class="card ring-card">
-      <div class="ring-container">
-        <CalorieRing :current="mealStore.dailyCalories" :goal="settings.dailyCalorieGoal" />
+    <section class="card summary-card stagger-1">
+      <div class="ring-zone">
+        <CalorieRing
+          :current="Math.round(mealStore.dailyCalories)"
+          :goal="settings.dailyCalorieGoal"
+          :size="140"
+          :show-percent="false"
+          :show-goal="false"
+        />
+        <p class="ring-foot numeric">{{ consumedPercent }}%</p>
       </div>
-      <div class="calorie-info">
-        <div class="info-row">
-          <span class="info-label">今日目标</span>
-          <span class="info-value">{{ settings.dailyCalorieGoal }}<span class="unit">千卡</span></span>
-        </div>
-        <div class="info-row info-highlight">
-          <span class="info-label highlight-label">
-            <van-icon name="arrow" />
-            <span v-if="remaining > 0">还可摄入</span>
-            <span v-else>已超出</span>
-          </span>
-          <span class="info-value highlight-value">{{ Math.abs(remaining) }}<span class="unit">千卡</span></span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">运动消耗</span>
-          <span class="info-value">320<span class="unit">千卡</span></span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Meals Distribution Section -->
-    <div class="card meals-section">
-      <div class="section-header">
+      <div class="summary-info">
+        <div class="target-head">
+          <span class="target-label">今日目标</span>
+          <div class="target-value numeric">
+            {{ settings.dailyCalorieGoal }}
+            <span>千卡</span>
+            <van-icon name="edit" class="target-edit" />
+          </div>
+        </div>
+
+        <div class="summary-stats">
+          <div class="summary-item">
+            <span class="dot remain-dot"></span>
+            <span class="item-label">还可摄入</span>
+            <span class="item-value numeric">{{ Math.max(remaining, 0) }} <span>千卡</span></span>
+          </div>
+          <div class="summary-item">
+            <span class="dot sport-dot"></span>
+            <span class="item-label">运动消耗</span>
+            <span class="item-value numeric">320 <span>千卡</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="meal-panel stagger-2">
+      <div class="section-head meal-head">
         <h2 class="section-title">今日餐食</h2>
-        <span class="section-hint">建议分配 {{ settings.dailyCalorieGoal }}千卡</span>
+        <span class="section-note">建议分配 {{ settings.dailyCalorieGoal }} 千卡</span>
       </div>
-      <div class="meals-grid">
-        <div v-for="meal in mealDistribution" :key="meal.type" class="meal-box" @click="$router.push('/log?meal=' + meal.type)">
-          <div class="meal-visual" :style="{ background: meal.bgColor }">
-            <div class="food-thumbs">
-              <div class="empty-visual">
-                <span>{{ meal.emoji }}</span>
-              </div>
+
+      <div class="meal-list">
+        <article
+          v-for="meal in mealDistribution"
+          :key="meal.type"
+          class="meal-item"
+          @click="goToMealLog(meal.type)"
+        >
+          <div class="meal-item-left">
+            <div class="meal-icon" :class="`meal-icon-${meal.type}`">{{ meal.emoji }}</div>
+            <div class="meal-main">
+              <p class="meal-name">{{ meal.label }}</p>
+              <p class="meal-calories numeric">{{ meal.calories }} <span>千卡</span></p>
+              <p class="meal-range">建议 {{ meal.hint }}</p>
             </div>
           </div>
-          <div class="meal-content">
-            <div class="meal-label">{{ meal.label }}</div>
-            <div class="meal-calories numeric">{{ meal.calories }}<span>千卡</span></div>
-            <div class="meal-hint">{{ meal.hint }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Macronutrients Section -->
-    <div class="card macro-section">
-      <div class="section-title">三大营养素</div>
-      <div class="macro-details">
-        <div class="macro-row">
-          <div class="macro-item">
-            <div class="macro-icon protein-icon">💪</div>
-            <div class="macro-info">
-              <span class="macro-name">蛋白质</span>
-              <div class="macro-values">
-                <span class="numeric">{{ mealStore.dailyProtein }}</span>
-                <span class="macro-goal">/ {{ macroGoals.protein }} g</span>
+          <div class="meal-right">
+            <div class="food-stack">
+              <div
+                v-for="(food, foodIndex) in meal.previewFoods"
+                :key="`${meal.type}-${food.name}-${foodIndex}`"
+                class="food-thumb"
+                :title="food.name"
+              >
+                <span>{{ food.emoji }}</span>
               </div>
             </div>
-            <span class="macro-percent">{{ proteinPercent }}%</span>
+            <div class="meal-chevron">
+              <van-icon name="arrow" />
+            </div>
           </div>
-          <div class="macro-progress">
-            <div class="progress-bar" :style="{ width: Math.min(proteinPercent, 100) + '%' }"></div>
-          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="card macro-card stagger-3">
+      <div class="section-head">
+        <h2 class="section-title">三大营养素</h2>
+        <span class="detail-link">详情 <van-icon name="arrow" /></span>
+      </div>
+
+      <div class="macro-grid">
+        <div class="macro-col protein-col">
+          <p class="macro-label"><van-icon name="fire-o" /> 蛋白质</p>
+          <p class="macro-value numeric">{{ mealStore.dailyProtein }} <span>/ {{ macroGoals.protein }} g</span></p>
+          <div class="mini-progress"><span :style="{ width: boundedPercent(proteinPercent) + '%' }"></span></div>
+          <p class="macro-rate numeric">{{ proteinPercent }}%</p>
         </div>
 
-        <div class="macro-row">
-          <div class="macro-item">
-            <div class="macro-icon carbs-icon">🌾</div>
-            <div class="macro-info">
-              <span class="macro-name">碳水化合物</span>
-              <div class="macro-values">
-                <span class="numeric">{{ mealStore.dailyCarbs }}</span>
-                <span class="macro-goal">/ {{ macroGoals.carbs }} g</span>
-              </div>
-            </div>
-            <span class="macro-percent">{{ carbsPercent }}%</span>
-          </div>
-          <div class="macro-progress">
-            <div class="progress-bar carbs-bar" :style="{ width: Math.min(carbsPercent, 100) + '%' }"></div>
-          </div>
+        <div class="macro-col carbs-col">
+          <p class="macro-label"><van-icon name="bar-chart-o" /> 碳水化合物</p>
+          <p class="macro-value numeric">{{ mealStore.dailyCarbs }} <span>/ {{ macroGoals.carbs }} g</span></p>
+          <div class="mini-progress"><span :style="{ width: boundedPercent(carbsPercent) + '%' }"></span></div>
+          <p class="macro-rate numeric">{{ carbsPercent }}%</p>
         </div>
 
-        <div class="macro-row">
-          <div class="macro-item">
-            <div class="macro-icon fat-icon">🧈</div>
-            <div class="macro-info">
-              <span class="macro-name">脂肪</span>
-              <div class="macro-values">
-                <span class="numeric">{{ mealStore.dailyFat }}</span>
-                <span class="macro-goal">/ {{ macroGoals.fat }} g</span>
-              </div>
-            </div>
-            <span class="macro-percent">{{ fatPercent }}%</span>
-          </div>
-          <div class="macro-progress">
-            <div class="progress-bar fat-bar" :style="{ width: Math.min(fatPercent, 100) + '%' }"></div>
-          </div>
+        <div class="macro-col fat-col">
+          <p class="macro-label"><van-icon name="flower-o" /> 脂肪</p>
+          <p class="macro-value numeric">{{ mealStore.dailyFat }} <span>/ {{ macroGoals.fat }} g</span></p>
+          <div class="mini-progress"><span :style="{ width: boundedPercent(fatPercent) + '%' }"></span></div>
+          <p class="macro-rate numeric">{{ fatPercent }}%</p>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Tip Box -->
-    <div class="tip-box">
-      <van-icon name="bulb-o" class="tip-icon" />
-      <div class="tip-content">
-        <p>今天还可以摄入 {{ remaining }} 千卡。建议优先选择蛋白质，低脂肪物。</p>
-      </div>
+    <section class="tip-strip stagger-4">
+      <div class="tip-icon"><van-icon name="bulb-o" /></div>
+      <p>小贴士：今天还可以摄入 {{ Math.max(remaining, 0) }} 千卡，建议优先选择高蛋白、低脂食物。</p>
       <van-icon name="cross" class="tip-close" />
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Icon } from 'vant'
+import { useRouter } from 'vue-router'
 import { useMealStore } from '@/stores/mealStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useFoodStore } from '@/stores/foodStore'
 import { MEAL_TYPE_LABELS, type MealType } from '@/types'
 import CalorieRing from '@/components/CalorieRing.vue'
-import MacroBar from '@/components/MacroBar.vue'
 
 const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
 const foodStore = useFoodStore()
+const router = useRouter()
 
 const currentDate = ref(new Date())
 
@@ -157,15 +156,19 @@ const fullDate = computed(() => {
   return `${year}年${month}月${day}日 ${weekday}`
 })
 
-const remaining = computed(() => settings.value.dailyCalorieGoal - mealStore.dailyCalories)
+const remaining = computed(() => settings.value.dailyCalorieGoal - Math.round(mealStore.dailyCalories))
+const consumedPercent = computed(() => {
+  const goal = Math.max(settings.value.dailyCalorieGoal, 1)
+  return Math.max(0, Math.min(100, Math.round((mealStore.dailyCalories / goal) * 100)))
+})
 
 const macroGoals = computed(() => {
   const s = settings.value
-  const cal = s.dailyCalorieGoal
+  const cal = Math.max(s.dailyCalorieGoal, 1)
   return {
-    protein: Math.round(cal * s.proteinRatio / 100 / 4),
-    fat: Math.round(cal * s.fatRatio / 100 / 9),
-    carbs: Math.round(cal * s.carbsRatio / 100 / 4)
+    protein: Math.max(1, Math.round(cal * s.proteinRatio / 100 / 4)),
+    fat: Math.max(1, Math.round(cal * s.fatRatio / 100 / 9)),
+    carbs: Math.max(1, Math.round(cal * s.carbsRatio / 100 / 4))
   }
 })
 
@@ -173,76 +176,74 @@ const proteinPercent = computed(() => Math.round((mealStore.dailyProtein / macro
 const carbsPercent = computed(() => Math.round((mealStore.dailyCarbs / macroGoals.value.carbs) * 100))
 const fatPercent = computed(() => Math.round((mealStore.dailyFat / macroGoals.value.fat) * 100))
 
-const mealTypes = computed(() =>
-  (Object.entries(MEAL_TYPE_LABELS) as [MealType, string][]).map(([value, label]) => ({ value, label }))
-)
+const foodEmojiRules: Array<{ keys: string[]; emoji: string }> = [
+  { keys: ['鸡蛋', '蛋'], emoji: '🥚' },
+  { keys: ['米饭', '米', '粥', '饭'], emoji: '🍚' },
+  { keys: ['鸡胸', '鸡肉', '牛肉', '猪肉', '鱼', '虾', '肉'], emoji: '🍗' },
+  { keys: ['西蓝花', '菠菜', '生菜', '蔬菜', '菜'], emoji: '🥦' },
+  { keys: ['苹果', '香蕉', '蓝莓', '草莓', '水果'], emoji: '🍎' },
+  { keys: ['酸奶', '牛奶', '奶'], emoji: '🥛' },
+  { keys: ['面', '面包', '馒头'], emoji: '🍞' },
+  { keys: ['坚果', '花生', '杏仁'], emoji: '🥜' },
+  { keys: ['汤'], emoji: '🍲' }
+]
 
-const getThumbnailType = (foodName: string): string => {
-  const nameMap: Record<string, string> = {
-    '鸡蛋': 'egg', '蛋': 'egg', '水煮鸡蛋': 'egg',
-    '米': 'rice', '饭': 'rice', '粥': 'rice',
-    '蔬菜': 'veg', '菜': 'veg', '沙拉': 'veg',
-    '肉': 'meat', '鸡': 'meat', '牛': 'meat', '猪': 'meat',
-    '水果': 'fruit', '苹果': 'fruit', '香蕉': 'fruit', '蓝莓': 'fruit',
-    '面': 'bread', '包': 'bread', '馒头': 'bread', '面包': 'bread',
-    '奶': 'milk', '牛奶': 'milk', '酸奶': 'milk',
-    '坚果': 'nut', '杏仁': 'nut', '花生': 'nut'
-  }
-  for (const [key, type] of Object.entries(nameMap)) {
-    if (foodName.includes(key)) return type
-  }
-  return 'custom'
+const defaultMealFoods: Record<MealType, string[]> = {
+  breakfast: ['燕麦', '鸡蛋', '蓝莓'],
+  lunch: ['鸡胸肉', '米饭', '西蓝花'],
+  dinner: ['三文鱼', '青菜', '南瓜汤'],
+  snack: ['坚果', '苹果', '酸奶']
 }
 
-const mealEmojis: Record<string, string> = {
-  breakfast: '🌅',
-  lunch: '☀️',
-  dinner: '🌙',
-  snack: '🎒'
+function foodToEmoji(name: string): string {
+  const hit = foodEmojiRules.find(rule => rule.keys.some(key => name.includes(key)))
+  return hit?.emoji || '🍽️'
 }
 
 const mealDistribution = computed(() => {
   const types: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
-  const configs = [
-    { label: '早餐', emoji: '🌅', color: '#FF9800', bgColor: '#FFF3E6', hint: '建议 400-500 千卡' },
-    { label: '午餐', emoji: '☀️', color: '#4CAF50', bgColor: '#E8F5E9', hint: '建议 600-700 千卡' },
-    { label: '晚餐', emoji: '🌙', color: '#2196F3', bgColor: '#E3F2FD', hint: '建议 500-600 千卡' },
-    { label: '加餐', emoji: '🎒', color: '#9C27B0', bgColor: '#F3E5F5', hint: '建议 100-200 千卡' }
-  ]
-  
-  return types.map((type, idx) => {
+  const hints: Record<MealType, string> = {
+    breakfast: '400-500 千卡',
+    lunch: '600-700 千卡',
+    dinner: '500-600 千卡',
+    snack: '100-200 千卡'
+  }
+  const emojis: Record<MealType, string> = {
+    breakfast: '☀️',
+    lunch: '🌿',
+    dinner: '🌙',
+    snack: '🧁'
+  }
+
+  return types.map(type => {
     const mealItems = mealStore.getMealsByType(type)
+    const previewSource = mealItems.length > 0
+      ? mealItems.slice(0, 3).map(item => item.foodName)
+      : defaultMealFoods[type]
+
     return {
       type,
-      ...configs[idx],
-      calories: mealStore.caloriesByType(type),
-      foods: mealItems.map(item => ({
-        name: item.foodName,
-        thumb: getThumbnailType(item.foodName)
+      label: MEAL_TYPE_LABELS[type],
+      calories: Math.round(mealStore.caloriesByType(type)),
+      hint: hints[type],
+      emoji: emojis[type],
+      previewFoods: previewSource.map(name => ({
+        name,
+        emoji: foodToEmoji(name)
       }))
     }
   })
 })
 
-function dateStr(d: Date) {
-  return d.toISOString().slice(0, 10)
-}
-
-async function loadDay(d: Date) {
-  await mealStore.loadMeals(dateStr(d))
-}
-
-function prevDay() {
-  currentDate.value = new Date(currentDate.value.getTime() - 86400000)
-  loadDay(currentDate.value)
-}
-
-function nextDay() {
-  const next = new Date(currentDate.value.getTime() + 86400000)
-  if (next <= new Date()) {
-    currentDate.value = next
-    loadDay(currentDate.value)
+function boundedPercent(v: number): number {
+  if (!Number.isFinite(v)) {
+    return 0
   }
+  return Math.max(0, Math.min(100, v))
+}
+
+function goToMealLog(type: MealType) {
+  router.push(`/log?meal=${type}`)
 }
 
 onMounted(async () => {
@@ -252,428 +253,468 @@ onMounted(async () => {
     mealStore.loadMeals()
   ])
 })
-
 </script>
 
 <style scoped>
 .dashboard-page {
-  padding: 54px 16px calc(92px + var(--safe-bottom));
+  padding: 38px 14px calc(84px + var(--safe-bottom));
 }
 
 .dashboard-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 0;
-}
-
-.header-left {
-  flex: 1;
+  margin-bottom: 8px;
+  padding: 0 4px;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text);
-  margin: 0 0 8px 0;
-  line-height: 1.2;
+  font-size: 32px;
+  margin: 0 0 2px;
+  letter-spacing: -1px;
+  color: #101726;
 }
 
 .date-info {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
   color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .avatar-circle {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 24px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(22, 185, 120, 0.2);
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
-  border: 1px solid rgba(132, 149, 171, 0.08);
-}
-
-.ring-card {
-  padding: 20px;
-}
-
-.ring-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.calorie-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(132, 149, 171, 0.08);
-}
-
-.info-row:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 14px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.info-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.unit {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-left: 4px;
-}
-
-.info-highlight {
-  background: linear-gradient(135deg, rgba(22, 185, 120, 0.08) 0%, rgba(232, 248, 241, 0.5) 100%);
-  border-radius: 8px;
-  padding: 12px;
-  border-bottom: none;
-}
-
-.highlight-label {
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.highlight-value {
-  color: var(--primary);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
-}
-
-.section-hint {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.meals-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  place-items: center;
+  color: #fff;
+  font-size: 22px;
+  background: linear-gradient(135deg, #d8e6ef, #8fb6cc);
+  box-shadow: 0 4px 14px rgba(102, 112, 120, 0.24);
 }
 
-.meal-box {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  padding: 0;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid rgba(132, 149, 171, 0.12);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
+.summary-card {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 12px;
+  border-radius: 26px;
+  border-color: #e6ebf2;
+  box-shadow: 0 6px 22px rgba(38, 53, 76, 0.08);
+  background:
+    radial-gradient(circle at 14% 100%, rgba(170, 209, 224, 0.2), transparent 52%),
+    radial-gradient(circle at 100% 0%, rgba(191, 209, 238, 0.12), transparent 40%),
+    #ffffff;
 }
 
-.meal-box:active {
-  transform: scale(0.98);
-}
-
-.meal-visual {
-  width: 64px;
-  min-width: 64px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 12px 0 0 12px;
-}
-
-.food-thumbs {
+.ring-zone {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  padding: 8px;
-  justify-content: center;
-}
-
-.food-thumb {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
 }
 
-.food-thumb.thumb-egg {
-  background: linear-gradient(135deg, #FFB84D 0%, #FFA500 100%);
+.ring-foot {
+  margin-top: -4px;
+  color: #14a36f;
+  font-weight: 700;
+  font-size: 19px;
 }
 
-.food-thumb.thumb-rice {
-  background: linear-gradient(135deg, #FFE4B5 0%, #FFD699 100%);
-}
-
-.food-thumb.thumb-veg {
-  background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
-}
-
-.food-thumb.thumb-meat {
-  background: linear-gradient(135deg, #EF5350 0%, #E53935 100%);
-}
-
-.food-thumb.thumb-fruit {
-  background: linear-gradient(135deg, #FF6B9D 0%, #E91E63 100%);
-}
-
-.food-thumb.thumb-bread {
-  background: linear-gradient(135deg, #D7B5A5 0%, #C9876A 100%);
-}
-
-.food-thumb.thumb-milk {
-  background: linear-gradient(135deg, #B3E5FC 0%, #80DEEA 100%);
-}
-
-.food-thumb.thumb-nut {
-  background: linear-gradient(135deg, #A1887F 0%, #795548 100%);
-}
-
-.food-thumb.thumb-custom {
-  background: linear-gradient(135deg, #90CAF9 0%, #64B5F6 100%);
-}
-
-.empty-visual {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  opacity: 1;
-  color: inherit;
-}
-
-.empty-visual span {
-  line-height: 1;
-}
-
-.meal-content {
-  flex: 1;
-  padding: 12px 16px;
+.summary-info {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 8px;
   min-width: 0;
 }
 
-.meal-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.meal-calories {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 4px 0;
-}
-
-.meal-calories span {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  margin-left: 4px;
-}
-
-.meal-hint {
-  font-size: 12px;
+.target-label {
+  font-size: 15px;
   color: var(--text-secondary);
 }
 
-.macro-section {
-  background: white;
-}
-
-.macro-details {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.macro-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.macro-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.macro-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.protein-icon {
-  background: linear-gradient(135deg, rgba(67, 136, 244, 0.15) 0%, rgba(67, 136, 244, 0.05) 100%);
-}
-
-.carbs-icon {
-  background: linear-gradient(135deg, rgba(67, 136, 244, 0.15) 0%, rgba(67, 136, 244, 0.05) 100%);
-}
-
-.fat-icon {
-  background: linear-gradient(135deg, rgba(255, 157, 53, 0.15) 0%, rgba(255, 157, 53, 0.05) 100%);
-}
-
-.macro-info {
-  flex: 1;
-}
-
-.macro-name {
-  display: block;
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 2px;
-}
-
-.macro-values {
+.target-value {
+  margin-top: 0;
+  font-size: 32px;
+  font-weight: 760;
+  color: #182132;
+  letter-spacing: -0.6px;
   display: flex;
   align-items: baseline;
   gap: 4px;
 }
 
-.macro-values .numeric {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.macro-goal {
-  font-size: 12px;
+.target-value span {
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 
-.macro-percent {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--primary);
-  min-width: 32px;
-  text-align: right;
+.target-edit {
+  font-size: 16px;
+  color: #adb7c5;
 }
 
-.macro-progress {
-  height: 6px;
-  background: rgba(132, 149, 171, 0.1);
-  border-radius: 3px;
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: linear-gradient(180deg, #f8fafd, #f5f8fb);
+  border: 1px solid #e9edf2;
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.summary-item {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.remain-dot {
+  background: #2bb673;
+}
+
+.sport-dot {
+  background: #4787ff;
+}
+
+.item-label {
+  font-size: 13px;
+  color: #475164;
+}
+
+.item-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #202a3d;
+}
+
+.item-value span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7d8798;
+}
+
+.meal-panel {
+  margin-top: 6px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 2px 8px;
+}
+
+.meal-head {
+  margin-top: 4px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 740;
+  color: #131d2f;
+  letter-spacing: -0.6px;
+}
+
+.section-note {
+  color: #8390a3;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 18px;
+  padding: 8px 10px;
+  border: 1px solid #e6ebf3;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(41, 58, 84, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.meal-item:hover {
+  box-shadow: 0 10px 24px rgba(41, 58, 84, 0.12);
+}
+
+.meal-item:active {
+  transform: scale(0.985);
+}
+
+.meal-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  flex: 0 0 auto;
+}
+
+.meal-icon-breakfast {
+  background: #fff4d6;
+}
+
+.meal-icon-lunch {
+  background: #e2f8ea;
+}
+
+.meal-icon-dinner {
+  background: #ede6ff;
+}
+
+.meal-icon-snack {
+  background: #ffe9de;
+}
+
+.meal-main {
+  min-width: 0;
+}
+
+.meal-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.meal-calories {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 760;
+  line-height: 1;
+  color: #182235;
+  letter-spacing: -0.4px;
+}
+
+.meal-calories span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7f8898;
+}
+
+.meal-range {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #8b94a2;
+}
+
+.meal-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.food-stack {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.food-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #edf0f5;
+  background: linear-gradient(150deg, #fbfbfd, #f2f4f8);
+  font-size: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(38, 46, 61, 0.08);
+}
+
+.food-thumb + .food-thumb {
+  margin-left: -6px;
+}
+
+.meal-chevron {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f0f3f8;
+  color: #8792a5;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+
+.macro-card {
+  margin-top: 8px;
+  padding: 10px 10px 8px;
+  border-color: #e6ebf2;
+  box-shadow: 0 6px 18px rgba(41, 58, 84, 0.08);
+}
+
+.detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: #7f8898;
+}
+
+.macro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.macro-col {
+  border-radius: 12px;
+  padding: 7px;
+  background: linear-gradient(180deg, #fcfdff, #f9fbff);
+  border: 1px solid #edf1f6;
+}
+
+.macro-label {
+  margin: 0;
+  font-size: 12px;
+  color: #525d72;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.macro-value {
+  margin: 2px 0 5px;
+  font-size: 16px;
+  font-weight: 760;
+  color: #1f2635;
+  line-height: 1.1;
+}
+
+.macro-value span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #8791a2;
+}
+
+.mini-progress {
+  width: 100%;
+  height: 5px;
+  border-radius: 5px;
+  background: #e9eef4;
   overflow: hidden;
 }
 
-.progress-bar {
+.mini-progress span {
+  display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--blue) 0%, #4388f4 100%);
-  border-radius: 3px;
-  transition: width 0.4s ease;
+  border-radius: 6px;
 }
 
-.carbs-bar {
-  background: linear-gradient(90deg, var(--blue) 0%, #4388f4 100%);
+.protein-col .mini-progress span {
+  background: linear-gradient(90deg, #28b270, #7bd5ac);
 }
 
-.fat-bar {
-  background: linear-gradient(90deg, var(--orange) 0%, #ff9d35 100%);
+.carbs-col .mini-progress span {
+  background: linear-gradient(90deg, #4881f1, #78a7ff);
 }
 
-.tip-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(22, 185, 120, 0.08) 0%, rgba(232, 248, 241, 0.5) 100%);
+.fat-col .mini-progress span {
+  background: linear-gradient(90deg, #ff932f, #ffb56b);
+}
+
+.macro-rate {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.protein-col .macro-rate {
+  color: #20a66a;
+}
+
+.carbs-col .macro-rate {
+  color: #3975e5;
+}
+
+.fat-col .macro-rate {
+  color: #f1871f;
+}
+
+.tip-strip {
+  margin-top: 8px;
+  border: 1px solid #cae9d5;
+  background: linear-gradient(180deg, #ecfaf1, #e3f6eb);
   border-radius: 12px;
-  border: 1px solid rgba(22, 185, 120, 0.15);
-  margin: 0 0 20px 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  color: #3f7157;
+  font-size: 11px;
 }
 
 .tip-icon {
-  font-size: 20px;
-  color: var(--primary);
-  flex-shrink: 0;
-  margin-top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #d4f2e1;
+  display: grid;
+  place-items: center;
 }
 
-.tip-content {
-  flex: 1;
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.tip-content p {
+.tip-strip p {
   margin: 0;
 }
 
 .tip-close {
-  font-size: 16px;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  cursor: pointer;
+  color: #7fac95;
+}
+
+@media (max-width: 430px) {
+  .dashboard-page {
+    padding-inline: 12px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .meal-calories {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .summary-info {
+    width: 100%;
+  }
 }
 </style>

@@ -171,7 +171,7 @@ const pressTimer = ref<number | null>(null)
 const mealTabs: { value: MealType; label: string; icon: string }[] = [
   { value: 'breakfast', label: '早餐', icon: 'underway-o' },
   { value: 'lunch', label: '午餐', icon: 'hot-o' },
-  { value: 'dinner', label: '晚餐', icon: 'moon-o' },
+  { value: 'dinner', label: '晚餐', icon: 'notes-o' },
   { value: 'snack', label: '加餐', icon: 'bag-o' }
 ]
 
@@ -392,9 +392,9 @@ async function onDeleteMeal(item: DisplayMeal) {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.12);
-  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   color: var(--text);
   cursor: pointer;
@@ -413,7 +413,7 @@ async function onDeleteMeal(item: DisplayMeal) {
   gap: 12px;
   padding: 0 16px;
   color: var(--text-secondary);
-  background: rgba(235, 241, 248, 0.6);
+  background: rgba(180, 160, 140, 0.12);
   border: none;
   border-radius: 24px;
   font-size: 14px;
@@ -422,7 +422,7 @@ async function onDeleteMeal(item: DisplayMeal) {
 }
 
 .search-shell:active {
-  background: rgba(235, 241, 248, 0.8);
+  background: rgba(180, 160, 140, 0.2);
 }
 
 .search-shell .van-icon {
@@ -435,10 +435,10 @@ async function onDeleteMeal(item: DisplayMeal) {
   gap: 0;
   margin: 20px 0;
   padding: 2px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.12);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .meal-tab {
@@ -476,10 +476,10 @@ async function onDeleteMeal(item: DisplayMeal) {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   padding: 20px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
   margin-bottom: 20px;
 }
 
@@ -557,8 +557,8 @@ async function onDeleteMeal(item: DisplayMeal) {
 }
 
 .macro-track {
-  height: 6px;
-  background: rgba(132, 149, 171, 0.1);
+  height: 5px;
+  background: rgba(156, 142, 132, 0.12);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -601,10 +601,10 @@ async function onDeleteMeal(item: DisplayMeal) {
   align-items: center;
   gap: 10px;
   padding: 16px 12px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
@@ -626,17 +626,17 @@ async function onDeleteMeal(item: DisplayMeal) {
 
 .camera-icon {
   color: var(--primary);
-  background: linear-gradient(135deg, rgba(22, 185, 120, 0.15), rgba(22, 185, 120, 0.05));
+  background: var(--primary-soft);
 }
 
 .scan-icon {
-  color: var(--blue);
-  background: linear-gradient(135deg, rgba(67, 136, 244, 0.15), rgba(67, 136, 244, 0.05));
+  color: var(--protein);
+  background: var(--protein-soft);
 }
 
 .edit-icon {
-  color: var(--orange);
-  background: linear-gradient(135deg, rgba(255, 157, 53, 0.15), rgba(255, 157, 53, 0.05));
+  color: var(--fat);
+  background: var(--fat-soft);
 }
 
 .quick-title {
@@ -667,10 +667,10 @@ async function onDeleteMeal(item: DisplayMeal) {
   gap: 12px;
   align-items: center;
   padding: 12px;
-  background: white;
-  border: 1px solid rgba(132, 149, 171, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(44, 70, 103, 0.08);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   min-height: 80px;
 }
 
@@ -689,7 +689,7 @@ async function onDeleteMeal(item: DisplayMeal) {
 }
 
 .food-thumb.thumb-custom {
-  background: linear-gradient(135deg, #22c985, #4aa2ff);
+  background: linear-gradient(135deg, var(--primary), var(--protein));
 }
 
 .food-info {
@@ -797,7 +797,7 @@ async function onDeleteMeal(item: DisplayMeal) {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(22, 185, 120, 0.25);
+  box-shadow: 0 8px 20px rgba(45, 106, 79, 0.28);
   transition: all 0.2s ease;
 }
 

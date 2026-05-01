@@ -45,50 +45,66 @@ function isActive(path: string) {
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  height: calc(70px + var(--safe-bottom));
-  padding: 8px 16px calc(8px + var(--safe-bottom));
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1px solid rgba(132, 149, 171, 0.08);
-  box-shadow: 0 -4px 16px rgba(44, 70, 103, 0.08);
-  backdrop-filter: blur(12px);
+  height: calc(68px + var(--safe-bottom));
+  padding: 6px 16px calc(6px + var(--safe-bottom));
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid rgba(156, 142, 132, 0.12);
+  box-shadow: 0 -2px 20px rgba(44, 36, 32, 0.06);
+  backdrop-filter: blur(16px);
 }
 
 .nav-item {
+  position: relative;
   display: flex;
   min-width: 0;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 500;
   line-height: 1;
   text-decoration: none;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: color 0.25s ease, transform 0.2s ease;
 }
 
 .nav-item:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 .nav-icon {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   font-size: 22px;
   color: var(--text-secondary);
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item.active {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .nav-item.active .nav-icon {
   color: var(--primary);
   background: var(--primary-soft);
+  border-radius: 12px;
+  transform: translateY(-1px);
+}
+
+/* Active indicator dot */
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.7;
 }
 </style>
