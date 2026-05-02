@@ -47,9 +47,9 @@ function isActive(path: string) {
   grid-template-columns: repeat(4, 1fr);
   height: calc(68px + var(--safe-bottom));
   padding: 6px 16px calc(6px + var(--safe-bottom));
-  background: rgba(255, 255, 255, 0.92);
-  border-top: 1px solid rgba(156, 142, 132, 0.12);
-  box-shadow: 0 -2px 20px rgba(44, 36, 32, 0.06);
+  background: var(--surface-elevated);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 20px var(--shadow-soft);
   backdrop-filter: blur(16px);
 }
 

@@ -87,7 +87,7 @@ async function onRegister() {
   justify-content: center;
   background:
     radial-gradient(ellipse 80% 50% at 50% 20%, rgba(45, 106, 79, 0.08), transparent 60%),
-    linear-gradient(180deg, #f7f3ed 0%, var(--bg) 50%, #f0ede6 100%);
+    linear-gradient(180deg, var(--bg-warm) 0%, var(--bg) 50%, var(--bg) 100%);
   padding: 20px;
 }
 

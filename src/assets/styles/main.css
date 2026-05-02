@@ -64,7 +64,7 @@
   /* Safe area */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* Vant overrides */
+  /* Vant overrides — map to design tokens */
   --van-primary-color: var(--primary);
   --van-font: SimSun, 'Songti SC', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
     'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
@@ -72,10 +72,126 @@
   --van-text-color-regular: var(--text-soft);
   --van-text-color-secondary: var(--text-secondary);
   --van-background: var(--bg);
+  --van-background-2: var(--bg-warm);
+  --van-background-3: var(--bg);
   --van-background-color-light: var(--bg);
   --van-border-color: var(--border);
   --van-cell-background: var(--card-bg);
+  --van-cell-group-background: var(--card-bg);
   --van-switch-on-background: var(--primary);
+  --van-popup-background: var(--card-bg);
+  --van-search-background: var(--bg);
+  --van-search-content-background: var(--card-bg);
+  --van-search-input-background: var(--card-bg);
+  --van-tabs-nav-background: var(--bg);
+  --van-tab-active-text-color: var(--primary);
+  --van-tabs-bottom-bar-color: var(--primary);
+  --van-tabbar-background: var(--surface-elevated);
+  --van-tabbar-item-active-background: var(--primary-soft);
+  --van-tabbar-item-text-color: var(--text-secondary);
+  --van-tabbar-item-active-color: var(--primary);
+  --van-dialog-background: var(--card-bg);
+  --van-overlay-background: rgba(0, 0, 0, 0.5);
+  --van-picker-background: var(--card-bg);
+  --van-dropdown-menu-background: var(--card-bg);
+  --van-stepper-background: var(--card-bg);
+  --van-field-input-text-color: var(--text);
+  --van-calendar-background: var(--card-bg);
+}
+
+/* ═══════════════════════════════════════════
+   Dark Theme
+   ═══════════════════════════════════════════ */
+
+[data-theme="dark"] {
+  /* Primary — brighter green for dark bg */
+  --primary: #52b788;
+  --primary-strong: #40916c;
+  --primary-soft: #1b3a2a;
+  --primary-wash: #162719;
+
+  /* Accent */
+  --accent: #d4a574;
+  --accent-soft: #3a2a1a;
+
+  /* Macronutrient colors */
+  --protein: #6dbfb0;
+  --protein-soft: #1a2e2a;
+  --carbs: #d4a574;
+  --carbs-soft: #3a2a1a;
+  --fat: #e08e70;
+  --fat-soft: #3a1e18;
+
+  /* Semantic */
+  --blue: #6dbfb0;
+  --blue-soft: #1a2e2a;
+  --orange: #e08e70;
+  --orange-soft: #3a1e18;
+  --purple: #a898c4;
+  --purple-soft: #252035;
+  --danger: #e0706a;
+  --danger-soft: #3a1a18;
+
+  /* Surface — dark warm tones */
+  --bg: #1a1815;
+  --bg-warm: #201d19;
+  --card-bg: #24211c;
+  --surface-elevated: rgba(40, 36, 32, 0.92);
+
+  /* Text — warm light */
+  --text: #e8e2d8;
+  --text-strong: #f5f0e8;
+  --text-soft: #b8ae9e;
+  --text-secondary: #8a8072;
+
+  /* Borders — stronger for dark */
+  --border: rgba(156, 142, 132, 0.22);
+  --border-strong: rgba(156, 142, 132, 0.35);
+  --divider: rgba(156, 142, 132, 0.14);
+
+  /* Shadows — deeper, subtle */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-soft: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+  /* Vant overrides — explicit values for dark mode */
+  --van-background: #1a1815;
+  --van-background-2: #201d19;
+  --van-background-3: #1a1815;
+  --van-background-color-light: #1a1815;
+  --van-cell-background: #24211c;
+  --van-cell-group-background: #24211c;
+  --van-popup-background: #24211c;
+  --van-search-background: #1a1815;
+  --van-search-content-background: #24211c;
+  --van-search-input-background: #24211c;
+  --van-tabs-nav-background: #1a1815;
+  --van-tabbar-background: rgba(40, 36, 32, 0.92);
+  --van-tabbar-item-active-background: #1b3a2a;
+  --van-tabbar-item-text-color: #8a8072;
+  --van-tabbar-item-active-color: #52b788;
+  --van-dialog-background: #24211c;
+  --van-picker-background: #24211c;
+  --van-dropdown-menu-background: #24211c;
+  --van-stepper-background: #24211c;
+  --van-field-input-text-color: #e8e2d8;
+  --van-calendar-background: #24211c;
+}
+
+[data-theme="dark"] body::after {
+  opacity: 0.05;
+}
+
+[data-theme="dark"] .app-shell::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(180, 150, 120, 0.15) 20%,
+    rgba(180, 150, 120, 0.25) 50%,
+    rgba(180, 150, 120, 0.15) 80%,
+    transparent
+  );
 }
 
 /* Fix for function-style Toast icon size when style chunks load out of order */
@@ -116,7 +232,7 @@ body {
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 150, 120, 0.08), transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 100%, rgba(45, 106, 79, 0.04), transparent 55%),
-    linear-gradient(180deg, #fdfbf8 0%, var(--bg) 50%, #f7f3ee 100%);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-warm) 50%, var(--bg) 100%);
   font-family: var(--van-font);
   font-size: 15px;
   line-height: 1.5;
@@ -159,8 +275,8 @@ textarea {
   margin: 0 auto;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(253, 251, 248, 0.94) 0%, rgba(250, 248, 245, 0.98) 100%);
-  box-shadow: 0 0 0 1px rgba(156, 142, 132, 0.12), var(--shadow-lg);
+    linear-gradient(180deg, var(--surface-elevated) 0%, var(--card-bg) 100%);
+  box-shadow: 0 0 0 1px var(--border-strong), var(--shadow-lg);
 }
 
 /* ═══════════════════════════════════════════

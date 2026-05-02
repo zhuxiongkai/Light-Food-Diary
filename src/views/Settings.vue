@@ -60,6 +60,30 @@
         <div class="item-value">{{ macroSummary }}</div>
         <van-icon name="arrow" class="item-arrow" />
       </button>
+      <button class="settings-item" type="button" @click="openEdit('body')">
+        <div class="item-label">
+          <van-icon name="user-o" />
+          <span>身体数据</span>
+        </div>
+        <div class="item-value">{{ form.height }}cm · {{ form.weight }}kg · {{ form.age }}岁</div>
+        <van-icon name="arrow" class="item-arrow" />
+      </button>
+    </section>
+
+    <section class="settings-section">
+      <h3 class="section-title">外观</h3>
+      <div class="theme-switch">
+        <button
+          v-for="opt in themeOptions"
+          :key="opt.value"
+          type="button"
+          class="theme-option"
+          :class="{ active: themeMode === opt.value }"
+          @click="setTheme(opt.value)"
+        >
+          <span>{{ opt.label }}</span>
+        </button>
+      </div>
     </section>
 
     <section class="settings-section logout-section">
@@ -115,6 +139,25 @@
           <p class="macro-total" :class="{ invalid: macroTotal !== 100 }">当前合计 {{ macroTotal }}%</p>
         </template>
 
+        <template v-else-if="editSection === 'body'">
+          <van-field v-model="editForm.height" type="number" label="身高" input-align="right">
+            <template #extra>cm</template>
+          </van-field>
+          <van-field v-model="editForm.weight" type="number" label="当前体重" input-align="right">
+            <template #extra>公斤</template>
+          </van-field>
+          <van-field v-model="editForm.age" type="number" label="年龄" input-align="right">
+            <template #extra>岁</template>
+          </van-field>
+          <div class="gender-row">
+            <span class="gender-label">性别</span>
+            <van-radio-group v-model="editForm.gender" direction="horizontal">
+              <van-radio name="male">男</van-radio>
+              <van-radio name="female">女</van-radio>
+            </van-radio-group>
+          </div>
+        </template>
+
         <div class="edit-actions">
           <van-button block plain @click="closeEdit">取消</van-button>
           <van-button block type="primary" :loading="savingEdit" @click="saveEdit">保存</van-button>
@@ -130,11 +173,21 @@
 import { reactive, onMounted, computed, ref, watch } from 'vue'
 import type { MealRecord, UserSettings } from '@/types'
 import { useRoute, useRouter } from 'vue-router'
-import { Button, Field, Icon, Popup, showConfirmDialog, showToast } from 'vant'
+import { Button, Field, Icon, Popup, Radio, RadioGroup, showConfirmDialog, showToast } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useMealStore } from '@/stores/mealStore'
 import { useWeightStore } from '@/stores/weightStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useTheme } from '@/composables/useTheme'
+import type { ThemeMode } from '@/composables/useTheme'
+
+const { currentMode: themeMode, setTheme } = useTheme()
+
+const themeOptions: { value: ThemeMode; label: string }[] = [
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色'},
+  { value: 'system', label: '跟随系统'},
+]
 
 const router = useRouter()
 const route = useRoute()
@@ -155,7 +208,7 @@ const form = reactive({
   weightGoal: 60
 })
 
-type EditSection = 'calorie' | 'weight' | 'macro'
+type EditSection = 'calorie' | 'weight' | 'macro' | 'body'
 
 const showEdit = ref(false)
 const editSection = ref<EditSection>('calorie')
@@ -165,7 +218,11 @@ const editForm = reactive({
   proteinRatio: 20,
   fatRatio: 25,
   carbsRatio: 55,
-  weightGoal: 60
+  weightGoal: 60,
+  height: 170,
+  weight: 65,
+  age: 25,
+  gender: 'male' as string
 })
 
 const profileName = computed(() => authStore.user?.username || '用户')
@@ -203,6 +260,7 @@ const macroTotal = computed(() =>
 const editTitle = computed(() => {
   if (editSection.value === 'calorie') return '编辑每日热量目标'
   if (editSection.value === 'weight') return '编辑体重目标'
+  if (editSection.value === 'body') return '编辑身体数据'
   return '编辑营养比例'
 })
 
@@ -242,11 +300,15 @@ function openEdit(section: EditSection) {
   editForm.proteinRatio = Number(form.proteinRatio)
   editForm.fatRatio = Number(form.fatRatio)
   editForm.carbsRatio = Number(form.carbsRatio)
+  editForm.height = Number(form.height)
+  editForm.weight = Number(form.weight)
+  editForm.age = Number(form.age)
+  editForm.gender = form.gender
   showEdit.value = true
 }
 
 function openEditFromQuery(value: unknown) {
-  if (value === 'calorie' || value === 'weight' || value === 'macro') {
+  if (value === 'calorie' || value === 'weight' || value === 'macro' || value === 'body') {
     openEdit(value)
   }
 }
@@ -301,6 +363,27 @@ async function saveEdit() {
     payload.carbsRatio = carbsRatio
     payload.proteinRatio = proteinRatio
     payload.fatRatio = fatRatio
+  }
+
+  if (editSection.value === 'body') {
+    const height = Number(editForm.height)
+    const weight = Number(editForm.weight)
+    const age = Number(editForm.age)
+    const gender = editForm.gender as 'male' | 'female'
+
+    if (!Number.isFinite(height) || height <= 0) { showToast('身高必须为正数'); return }
+    if (!Number.isFinite(weight) || weight <= 0) { showToast('体重必须为正数'); return }
+    if (!Number.isFinite(age) || age <= 0) { showToast('年龄必须为正数'); return }
+
+    payload.height = Math.round(height * 10) / 10
+    payload.weight = Math.round(weight * 10) / 10
+    payload.age = Math.round(age)
+    payload.gender = gender
+
+    // When weight changes, also record a weight log entry for today
+    if (payload.weight !== Number(form.weight)) {
+      weightStore.addRecord(payload.weight).catch(() => undefined)
+    }
   }
 
   try {
@@ -431,7 +514,7 @@ async function onLogout() {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary) 0%, #4a9d76 100%);
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
   border-radius: 3px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -554,11 +637,58 @@ async function onLogout() {
   color: var(--danger);
 }
 
+.gender-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  margin-top: 8px;
+}
+
+.gender-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
 .edit-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 20px;
+}
+
+.theme-switch {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.theme-option .van-icon {
+  font-size: 20px;
+}
+
+.theme-option.active {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
 }
 
 .logout-section {

@@ -9,6 +9,7 @@ import mealRoutes from './routes/meals.js'
 import weightRoutes from './routes/weight.js'
 import settingsRoutes from './routes/settings.js'
 import aiRoutes from './routes/ai.js'
+import templateRoutes from './routes/templates.js'
 
 const app = express()
 
@@ -27,6 +28,7 @@ app.use('/api/meals', mealRoutes)
 app.use('/api/weight', weightRoutes)
 app.use('/api/settings', settingsRoutes)
 app.use('/api/ai', aiRoutes)
+app.use('/api/meals/templates', templateRoutes)
 
 app.use(errorHandler)
 

@@ -49,6 +49,24 @@ export interface AiRecognitionResult {
   confidence: number
 }
 
+export interface TemplateFoodItem {
+  foodId: number
+  foodName: string
+  weight: number
+  caloriesPer100g: number
+  protein: number
+  fat: number
+  carbs: number
+}
+
+export interface MealTemplate {
+  id?: number
+  name: string
+  mealType: MealType
+  foods: TemplateFoodItem[]
+  createdAt?: string
+}
+
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 export type FoodCategory = 'staple' | 'meat' | 'vegetable' | 'fruit' | 'snack' | 'drink' | 'custom'
 

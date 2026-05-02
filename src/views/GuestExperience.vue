@@ -38,7 +38,7 @@ import { Button } from 'vant'
   padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px 24px;
   background:
     radial-gradient(ellipse 70% 40% at 50% 0%, rgba(45, 106, 79, 0.06), transparent 60%),
-    linear-gradient(180deg, #fdfbf8 0%, #f7f3ee 100%);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-warm) 100%);
 }
 
 .hero-card {

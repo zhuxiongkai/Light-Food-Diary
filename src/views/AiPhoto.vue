@@ -480,7 +480,7 @@ async function onAddAll() {
 }
 
 .estimate-tip {
-  color: #b66a2e;
+  color: var(--orange);
 }
 
 .result-total {

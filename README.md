@@ -12,6 +12,8 @@
 - **三大营养素追踪** — 蛋白质/脂肪/碳水摄入可视化
 - **体重记录** — 记录和查看体重变化趋势
 - **数据统计** — ECharts 图表展示热量和体重变化趋势
+- **餐食模板** — 保存常用搭配为一键模板，批量套用餐食组合
+- **暗色模式** — 浅色 / 深色 / 跟随系统三种主题
 - **数据导出** — 支持导出为 JSON / CSV
 
 ## 技术栈
@@ -52,6 +54,9 @@ root/
       mealStore.ts            # 饮食记录 CRUD + 每日统计
       weightStore.ts          # 体重记录 CRUD
       settingsStore.ts        # 用户设置
+      templateStore.ts       # 餐食模板
+    composables/
+      useTheme.ts            # 主题管理 (light/dark/system)
     views/
       Login.vue / Register.vue / GuestExperience.vue  # 登录/注册/游客体验
       Dashboard.vue / LogMeal.vue / AiPhoto.vue / Statistics.vue
@@ -72,8 +77,8 @@ root/
       middleware/
         auth.ts               # JWT 鉴权中间件
         errorHandler.ts       # 全局错误处理
-      routes/                 # API 路由
-      services/               # 业务逻辑层
+      routes/                 # API 路由 (含 templates)
+      services/               # 业务逻辑层 (含 templateService)
       utils/                  # 工具函数 (jwt, password, crypto)
     .env.example              # 环境变量模板
     drizzle.config.ts         # Drizzle Kit 配置
@@ -148,6 +153,7 @@ npm run cap:open:android   # 在 Android Studio 中打开
 | 体重 | GET `/api/weight[/range]`, POST `/api/weight`, DELETE `/api/weight/:id` |
 | 设置 | GET/PUT `/api/settings` |
 | AI | POST `/api/ai/recognize` |
+| 模板 | GET/POST `/api/meals/templates`, PUT/DELETE `/:id`, POST `/:id/apply` |
 
 ## 环境要求
 

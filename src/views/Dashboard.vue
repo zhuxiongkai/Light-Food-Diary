@@ -266,7 +266,7 @@ onMounted(async () => {
   font-size: 32px;
   margin: 0 0 2px;
   letter-spacing: -1px;
-  color: #101726;
+  color: var(--text-strong);
 }
 
 .date-info {
@@ -298,12 +298,12 @@ onMounted(async () => {
   margin: 0;
   padding: 12px 12px;
   border-radius: 26px;
-  border-color: #e6ebf2;
+  border-color: var(--border);
   box-shadow: 0 6px 22px rgba(38, 53, 76, 0.08);
   background:
     radial-gradient(circle at 14% 100%, rgba(170, 209, 224, 0.2), transparent 52%),
     radial-gradient(circle at 100% 0%, rgba(191, 209, 238, 0.12), transparent 40%),
-    #ffffff;
+    var(--card-bg);
 }
 
 .ring-zone {
@@ -315,7 +315,7 @@ onMounted(async () => {
 
 .ring-foot {
   margin-top: -4px;
-  color: #14a36f;
+  color: var(--primary);
   font-weight: 700;
   font-size: 19px;
 }
@@ -340,7 +340,7 @@ onMounted(async () => {
   margin-top: 0;
   font-size: 32px;
   font-weight: 760;
-  color: #182132;
+  color: var(--text-strong);
   letter-spacing: -0.6px;
   display: flex;
   align-items: baseline;
@@ -356,15 +356,15 @@ onMounted(async () => {
 
 .target-edit {
   font-size: 16px;
-  color: #adb7c5;
+  color: var(--text-secondary);
 }
 
 .summary-stats {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: linear-gradient(180deg, #f8fafd, #f5f8fb);
-  border: 1px solid #e9edf2;
+  background: linear-gradient(180deg, var(--bg-warm), var(--bg));
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 8px 10px;
 }
@@ -383,28 +383,28 @@ onMounted(async () => {
 }
 
 .remain-dot {
-  background: #2bb673;
+  background: var(--primary);
 }
 
 .sport-dot {
-  background: #4787ff;
+  background: var(--blue);
 }
 
 .item-label {
   font-size: 13px;
-  color: #475164;
+  color: var(--text-soft);
 }
 
 .item-value {
   font-size: 14px;
   font-weight: 700;
-  color: #202a3d;
+  color: var(--text);
 }
 
 .item-value span {
   font-size: 12px;
   font-weight: 500;
-  color: #7d8798;
+  color: var(--text-secondary);
 }
 
 .meal-panel {
@@ -427,12 +427,12 @@ onMounted(async () => {
   margin: 0;
   font-size: 22px;
   font-weight: 740;
-  color: #131d2f;
+  color: var(--text-strong);
   letter-spacing: -0.6px;
 }
 
 .section-note {
-  color: #8390a3;
+  color: var(--text-secondary);
   font-size: 14px;
   white-space: nowrap;
 }
@@ -450,8 +450,8 @@ onMounted(async () => {
   gap: 8px;
   border-radius: 18px;
   padding: 8px 10px;
-  border: 1px solid #e6ebf3;
-  background: #ffffff;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
   box-shadow: 0 6px 16px rgba(41, 58, 84, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -482,19 +482,19 @@ onMounted(async () => {
 }
 
 .meal-icon-breakfast {
-  background: #fff4d6;
+  background: var(--accent-soft);
 }
 
 .meal-icon-lunch {
-  background: #e2f8ea;
+  background: var(--primary-soft);
 }
 
 .meal-icon-dinner {
-  background: #ede6ff;
+  background: var(--purple-soft);
 }
 
 .meal-icon-snack {
-  background: #ffe9de;
+  background: var(--fat-soft);
 }
 
 .meal-main {
@@ -512,20 +512,20 @@ onMounted(async () => {
   font-size: 28px;
   font-weight: 760;
   line-height: 1;
-  color: #182235;
+  color: var(--text-strong);
   letter-spacing: -0.4px;
 }
 
 .meal-calories span {
   font-size: 12px;
   font-weight: 500;
-  color: #7f8898;
+  color: var(--text-secondary);
 }
 
 .meal-range {
   margin: 2px 0 0;
   font-size: 11px;
-  color: #8b94a2;
+  color: var(--text-secondary);
 }
 
 .meal-right {
@@ -552,8 +552,8 @@ onMounted(async () => {
   border-radius: 10px;
   display: grid;
   place-items: center;
-  border: 1px solid #edf0f5;
-  background: linear-gradient(150deg, #fbfbfd, #f2f4f8);
+  border: 1px solid var(--border);
+  background: linear-gradient(150deg, var(--bg-warm), var(--bg));
   font-size: 18px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(38, 46, 61, 0.08);
@@ -567,8 +567,8 @@ onMounted(async () => {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #f0f3f8;
-  color: #8792a5;
+  background: var(--divider);
+  color: var(--text-secondary);
   display: grid;
   place-items: center;
   font-size: 13px;
@@ -577,7 +577,7 @@ onMounted(async () => {
 .macro-card {
   margin-top: 8px;
   padding: 10px 10px 8px;
-  border-color: #e6ebf2;
+  border-color: var(--border);
   box-shadow: 0 6px 18px rgba(41, 58, 84, 0.08);
 }
 
@@ -589,7 +589,7 @@ onMounted(async () => {
   align-items: center;
   gap: 2px;
   font-size: 13px;
-  color: #7f8898;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
@@ -602,14 +602,14 @@ onMounted(async () => {
 .macro-col {
   border-radius: 12px;
   padding: 7px;
-  background: linear-gradient(180deg, #fcfdff, #f9fbff);
-  border: 1px solid #edf1f6;
+  background: linear-gradient(180deg, var(--bg), var(--bg-warm));
+  border: 1px solid var(--border);
 }
 
 .macro-label {
   margin: 0;
   font-size: 12px;
-  color: #525d72;
+  color: var(--text-soft);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -619,21 +619,21 @@ onMounted(async () => {
   margin: 2px 0 5px;
   font-size: 16px;
   font-weight: 760;
-  color: #1f2635;
+  color: var(--text-strong);
   line-height: 1.1;
 }
 
 .macro-value span {
   font-size: 12px;
   font-weight: 500;
-  color: #8791a2;
+  color: var(--text-secondary);
 }
 
 .mini-progress {
   width: 100%;
   height: 5px;
   border-radius: 5px;
-  background: #e9eef4;
+  background: rgba(156, 142, 132, 0.15);
   overflow: hidden;
 }
 
@@ -644,15 +644,15 @@ onMounted(async () => {
 }
 
 .protein-col .mini-progress span {
-  background: linear-gradient(90deg, #28b270, #7bd5ac);
+  background: linear-gradient(90deg, var(--primary), var(--primary-strong));
 }
 
 .carbs-col .mini-progress span {
-  background: linear-gradient(90deg, #4881f1, #78a7ff);
+  background: linear-gradient(90deg, var(--blue), var(--blue-soft));
 }
 
 .fat-col .mini-progress span {
-  background: linear-gradient(90deg, #ff932f, #ffb56b);
+  background: linear-gradient(90deg, var(--orange), var(--orange-soft));
 }
 
 .macro-rate {
@@ -663,28 +663,28 @@ onMounted(async () => {
 }
 
 .protein-col .macro-rate {
-  color: #20a66a;
+  color: var(--primary);
 }
 
 .carbs-col .macro-rate {
-  color: #3975e5;
+  color: var(--blue);
 }
 
 .fat-col .macro-rate {
-  color: #f1871f;
+  color: var(--orange);
 }
 
 .tip-strip {
   margin-top: 8px;
-  border: 1px solid #cae9d5;
-  background: linear-gradient(180deg, #ecfaf1, #e3f6eb);
+  border: 1px solid var(--primary-soft);
+  background: linear-gradient(180deg, var(--primary-soft), var(--primary-wash));
   border-radius: 12px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  color: #3f7157;
+  color: var(--primary-strong);
   font-size: 11px;
 }
 
@@ -692,7 +692,7 @@ onMounted(async () => {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #d4f2e1;
+  background: var(--primary-soft);
   display: grid;
   place-items: center;
 }
@@ -707,7 +707,7 @@ onMounted(async () => {
   padding: 0;
   border: none;
   background: transparent;
-  color: #7fac95;
+  color: var(--primary);
   display: grid;
   place-items: center;
   cursor: pointer;

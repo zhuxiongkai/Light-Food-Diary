@@ -64,15 +64,21 @@
 | GET | `/api/settings` | 获取设置 |
 | PUT | `/api/settings` | 更新设置 |
 | POST | `/api/ai/recognize` | AI 食物识别 |
+| GET | `/api/meals/templates` | 餐食模板列表 |
+| POST | `/api/meals/templates` | 创建模板 |
+| PUT | `/api/meals/templates/:id` | 修改模板 |
+| DELETE | `/api/meals/templates/:id` | 删除模板 |
+| POST | `/api/meals/templates/:id/apply` | 应用模板（批量添加餐食） |
 
 响应格式统一：`{ code: 0, data: ..., message: 'ok' }` 成功；`{ code: -1, message: '错误信息' }` 失败。
 
 ## 数据模型 (MySQL, Drizzle ORM)
 
-6 张表：`users`, `user_settings`, `foods`, `meal_records`, `weight_records`, `refresh_tokens`。
+7 张表：`users`, `user_settings`, `foods`, `meal_records`, `meal_templates`, `weight_records`, `refresh_tokens`。
 
 - 内置食物 `user_id = NULL`（所有用户共享）；自定义食物 `user_id` 指向创建者
 - 所有业务表按 `user_id` 隔离
+- `meal_templates.foods` 存 JSON 字符串，含完整营养数据（apply 时无需查库）
 - `user_settings.ai_api_key` 字段仅保留兼容，当前 AI 识别不再依赖用户侧密钥
 
 Schema 定义见 `server/src/db/schema.ts`。
@@ -84,8 +90,17 @@ Schema 定义见 `server/src/db/schema.ts`。
 - **useFoodStore** — 食物搜索（调 API），自定义食物 CRUD
 - **useWeightStore** — 体重记录 CRUD（调 API）
 - **useSettingsStore** — 用户设置读写（调 API）
+- **useTemplateStore** (`src/stores/templateStore.ts`) — 餐食模板 CRUD（调 API）
 
 前端 API 客户端见 `src/api/client.ts`，自动带 Token + 401 自动刷新。
+
+## 主题系统
+
+- `src/composables/useTheme.ts` — 主题管理 composable，三种模式 `light | dark | system`
+- 主题存 localStorage key `app-theme`，`<html data-theme="...">` 控制 CSS 变量
+- `[data-theme="dark"]` CSS 变量覆盖在 `src/assets/styles/main.css`
+- Vant 4 组件背景变量已映射到自定义属性，暗色模式自动跟随
+- Settings 页"外观" section 提供浅色/深色/跟随系统三选一
 
 ## AI 服务
 

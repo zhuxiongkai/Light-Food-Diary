@@ -63,10 +63,10 @@
         <span class="quick-title">拍照识别</span>
         <span class="quick-sub">智能识别食物</span>
       </button>
-      <button class="quick-card disabled" type="button" disabled>
-        <span class="soft-icon scan-icon"><van-icon name="scan" /></span>
-        <span class="quick-title">扫码录入</span>
-        <span class="quick-sub">条码识别（规划中）</span>
+      <button class="quick-card" type="button" @click="showTemplates = true">
+        <span class="soft-icon template-icon"><van-icon name="bookmark-o" /></span>
+        <span class="quick-title">餐食模板</span>
+        <span class="quick-sub">一键套用常用搭配</span>
       </button>
       <button class="quick-card" type="button" @click="showSearch = true">
         <span class="soft-icon edit-icon"><van-icon name="edit" /></span>
@@ -187,6 +187,39 @@
         </div>
       </div>
     </van-popup>
+
+    <van-popup v-model:show="showTemplates" position="bottom" :style="{ height: '70%' }" round>
+      <div class="template-popup">
+        <h3>餐食模板</h3>
+        <div v-if="templateStore.templates.length === 0" class="template-empty">
+          <van-empty description="暂无模板，添加餐食后可保存为模板" image="search" />
+        </div>
+        <div v-else class="template-list">
+          <div v-for="tmpl in templateStore.templates" :key="tmpl.id" class="template-item">
+            <div class="template-info">
+              <strong>{{ tmpl.name }}</strong>
+              <span>{{ mealLabelMap[tmpl.mealType] }} · {{ tmpl.foods.length }}项</span>
+            </div>
+            <div class="template-item-actions">
+              <van-button size="small" type="primary" @click="applyTemplate(tmpl)">使用</van-button>
+              <van-button size="small" plain @click="deleteTemplateConfirm(tmpl)">删除</van-button>
+            </div>
+          </div>
+        </div>
+        <div class="template-footer">
+          <van-button block plain @click="openSaveTemplate">保存当前餐食为模板</van-button>
+        </div>
+      </div>
+    </van-popup>
+
+    <van-popup v-model:show="showSaveTemplate" position="bottom" round>
+      <div class="save-template-popup">
+        <h3>保存为模板</h3>
+        <van-field v-model="templateName" label="模板名称" placeholder="例如：日常早餐" />
+        <p class="save-template-hint">将当前{{ activeMealLabel }}中的 {{ mealStore.getMealsByType(activeMeal).length }} 项食物保存为模板</p>
+        <van-button type="primary" block :disabled="!templateName" @click="saveCurrentAsTemplate">保存</van-button>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -196,7 +229,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { Button, DatePicker, Empty, Icon, Popup, Stepper, showConfirmDialog, showToast } from 'vant'
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
-import type { FoodItem, MealRecord, MealType } from '@/types'
+import { useTemplateStore } from '@/stores/templateStore'
+import type { FoodItem, MealRecord, MealType, MealTemplate } from '@/types'
 import FoodSearch from '@/components/FoodSearch.vue'
 
 type Tone = 'green' | 'blue' | 'purple'
@@ -211,6 +245,7 @@ type DisplayMeal = MealRecord & {
 
 const mealStore = useMealStore()
 const foodStore = useFoodStore()
+const templateStore = useTemplateStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -229,6 +264,9 @@ const detailWeight = ref(100)
 const detailBase = ref({ weight: 100, calories: 0, protein: 0, fat: 0, carbs: 0 })
 const showCustomForm = ref(false)
 const customForm = ref({ name: '', caloriesPer100g: 0, protein: 0, fat: 0, carbs: 0 })
+const showTemplates = ref(false)
+const showSaveTemplate = ref(false)
+const templateName = ref('')
 
 const mealTabs: { value: MealType; label: string; icon: string }[] = [
   { value: 'breakfast', label: '早餐', icon: 'underway-o' },
@@ -242,6 +280,13 @@ const targetByMeal: Record<MealType, { min: number; max: number; protein: number
   lunch: { min: 600, max: 760, protein: 92, carbs: 188, fat: 54 },
   dinner: { min: 520, max: 680, protein: 82, carbs: 132, fat: 46 },
   snack: { min: 120, max: 260, protein: 28, carbs: 46, fat: 18 }
+}
+
+const mealLabelMap: Record<MealType, string> = {
+  breakfast: '早餐',
+  lunch: '午餐',
+  dinner: '晚餐',
+  snack: '加餐',
 }
 
 const activeMealLabel = computed(() => mealTabs.find((tab) => tab.value === activeMeal.value)?.label || '早餐')
@@ -335,7 +380,7 @@ onMounted(async () => {
     currentDate.value = routeDate
   }
 
-  await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadAllFoods()])
+  await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadAllFoods(), templateStore.loadTemplates()])
 })
 
 function resolveRouteMeal(value: unknown): MealType | null {
@@ -510,6 +555,66 @@ async function saveMealDetail() {
 
   showDetail.value = false
   showToast('已更新')
+}
+
+function openSaveTemplate() {
+  const meals = mealStore.getMealsByType(activeMeal.value)
+  if (meals.length === 0) {
+    showToast('当前餐别无记录，无法保存模板')
+    return
+  }
+  templateName.value = ''
+  showSaveTemplate.value = true
+}
+
+async function saveCurrentAsTemplate() {
+  if (!templateName.value) { showToast('请输入模板名称'); return }
+  const meals = mealStore.getMealsByType(activeMeal.value)
+  if (meals.length === 0) { showToast('当前餐别无记录'); return }
+
+  const foods = meals.map((m) => ({
+    foodId: m.foodId,
+    foodName: m.foodName,
+    weight: m.weight,
+    caloriesPer100g: Math.round(m.calories / m.weight * 100),
+    protein: parseFloat((m.protein / m.weight * 100).toFixed(1)),
+    fat: parseFloat((m.fat / m.weight * 100).toFixed(1)),
+    carbs: parseFloat((m.carbs / m.weight * 100).toFixed(1)),
+  }))
+
+  try {
+    await templateStore.createTemplate({
+      name: templateName.value,
+      mealType: activeMeal.value,
+      foods,
+    })
+    showToast('模板已保存')
+    showSaveTemplate.value = false
+    templateName.value = ''
+  } catch (e: any) {
+    showToast(e.message || '保存失败')
+  }
+}
+
+async function applyTemplate(tmpl: MealTemplate) {
+  try {
+    await templateStore.applyTemplate(tmpl.id!, currentDate.value, activeMeal.value)
+    await mealStore.loadMeals(currentDate.value)
+    showToast('已应用模板')
+    showTemplates.value = false
+  } catch (e: any) {
+    showToast(e.message || '应用失败')
+  }
+}
+
+async function deleteTemplateConfirm(tmpl: MealTemplate) {
+  try {
+    await showConfirmDialog({ title: '删除模板', message: `删除"${tmpl.name}"？` })
+    await templateStore.deleteTemplate(tmpl.id!)
+    showToast('已删除')
+  } catch {
+    // cancelled
+  }
 }
 </script>
 
@@ -1112,6 +1217,86 @@ async function saveMealDetail() {
   gap: 12px;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.template-icon {
+  color: var(--purple);
+  background: var(--purple-soft);
+}
+
+.template-popup,
+.save-template-popup {
+  padding: 24px 20px 28px;
+}
+
+.template-popup h3,
+.save-template-popup h3 {
+  margin-bottom: 18px;
+  font-size: 18px;
+  text-align: center;
+  color: var(--text);
+}
+
+.template-empty {
+  padding: 20px 0;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.template-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.template-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.template-info strong {
+  display: block;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.template-info span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.template-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.template-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+}
+
+.save-template-hint {
+  padding: 12px 16px;
+  margin: 8px 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--bg-warm);
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 390px) {

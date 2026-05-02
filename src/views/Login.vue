@@ -139,7 +139,7 @@ function showLegal(type: 'terms' | 'privacy') {
     calc(env(safe-area-inset-bottom, 0px) + 20px);
   background:
     radial-gradient(145% 88% at 100% 0%, rgba(45, 106, 79, 0.1) 0%, rgba(45, 106, 79, 0.02) 34%, rgba(45, 106, 79, 0) 62%),
-    linear-gradient(180deg, #fdfbf8 0%, #f7f3ed 56%, #f0ede5 100%);
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-warm) 56%, var(--bg) 100%);
 }
 
 .top-decoration {
@@ -190,7 +190,7 @@ function showLegal(type: 'terms' | 'privacy') {
   line-height: 1;
   font-weight: 500;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: #141a24;
+  color: var(--text-strong);
   margin: 0 0 10px;
 }
 
@@ -200,13 +200,13 @@ function showLegal(type: 'terms' | 'privacy') {
   letter-spacing: 0;
   font-weight: 600;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  color: #101622;
+  color: var(--text-strong);
   margin-top: 10px;
 }
 
 .welcome-subtitle {
   margin: 10px 0 20px;
-  color: #6d7d92;
+  color: var(--text-soft);
   font-size: 18px;
   line-height: 1.44;
 }
@@ -216,8 +216,8 @@ function showLegal(type: 'terms' | 'privacy') {
   z-index: 2;
   width: 100%;
   max-width: 560px;
-  background: rgba(255, 255, 255, 0.93);
-  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
   border-radius: 24px;
   padding: 18px 16px 16px;
   box-shadow: 0 14px 38px rgba(69, 89, 118, 0.09);
@@ -236,8 +236,8 @@ function showLegal(type: 'terms' | 'privacy') {
   min-height: 58px;
   --van-cell-horizontal-padding: 0;
   --van-cell-background: transparent;
-  --van-cell-text-color: #6e7b8d;
-  --van-field-placeholder-text-color: #a0abbb;
+  --van-cell-text-color: var(--text-soft);
+  --van-field-placeholder-text-color: var(--text-secondary);
   --van-cell-font-size: 16px;
 }
 
@@ -255,7 +255,7 @@ function showLegal(type: 'terms' | 'privacy') {
 }
 
 .field-panel :deep(.van-field__right-icon) {
-  color: #a2adbc;
+  color: var(--text-secondary);
   margin-right: 0;
 }
 
@@ -272,7 +272,7 @@ function showLegal(type: 'terms' | 'privacy') {
 }
 
 .forgot-password:disabled {
-  color: #a6b0bd;
+  color: var(--text-secondary);
 }
 
 .auth-actions {
@@ -287,7 +287,7 @@ function showLegal(type: 'terms' | 'privacy') {
   border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
-  --van-button-primary-background: linear-gradient(90deg, #2d6a4f 0%, #4a9d76 100%);
+  --van-button-primary-background: linear-gradient(90deg, var(--primary) 0%, var(--primary-strong) 100%);
   --van-button-primary-border-color: transparent;
 }
 
@@ -298,7 +298,7 @@ function showLegal(type: 'terms' | 'privacy') {
   font-weight: 600;
   color: var(--primary);
   border-color: rgba(19, 178, 106, 0.86);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card-bg);
 }
 
 .other-login-block {
@@ -312,7 +312,7 @@ function showLegal(type: 'terms' | 'privacy') {
 .divider {
   text-align: center;
   font-size: 13px;
-  color: #8d99aa;
+  color: var(--text-secondary);
   margin: 0 0 12px;
   position: relative;
 }
@@ -351,15 +351,15 @@ function showLegal(type: 'terms' | 'privacy') {
   min-height: 60px;
   border: 0;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--card-bg);
   box-shadow: 0 7px 18px rgba(72, 93, 122, 0.08);
-  color: #1f2a39;
+  color: var(--text);
   font-size: 15px;
   white-space: nowrap;
 }
 
 .login-option:disabled {
-  color: #98a3b3;
+  color: var(--text-secondary);
   background: rgba(245, 247, 250, 0.88);
   box-shadow: none;
 }
@@ -383,7 +383,7 @@ function showLegal(type: 'terms' | 'privacy') {
   gap: 6px;
   margin-top: 6px;
   font-size: 13px;
-  color: #8291a4;
+  color: var(--text-secondary);
 }
 
 .agreement-link {

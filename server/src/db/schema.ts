@@ -6,6 +6,7 @@ import {
   date,
   timestamp,
   mysqlEnum,
+  text,
   uniqueIndex,
   index,
 } from 'drizzle-orm/mysql-core'
@@ -74,6 +75,19 @@ export const weightRecords = mysqlTable('weight_records', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_weight_user_date').on(table.userId, table.date),
+])
+
+export const mealTemplates = mysqlTable('meal_templates', {
+  id: int('id').autoincrement().primaryKey(),
+  userId: int('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  mealType: mysqlEnum('meal_type', [
+    'breakfast', 'lunch', 'dinner', 'snack',
+  ]).notNull(),
+  foods: text('foods').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_template_user').on(table.userId),
 ])
 
 export const refreshTokens = mysqlTable('refresh_tokens', {
