@@ -1,4 +1,4 @@
-# 热量助手
+# 轻卡记
 
 一个基于 Vue 3 的移动端热量追踪应用，Express 后端 + MySQL，支持 Android 平台（通过 Capacitor）。
 

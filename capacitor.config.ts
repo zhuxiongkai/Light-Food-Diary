@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'com.calorie.tracker',
-  appName: '热量助手',
+  appName: '轻卡记',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

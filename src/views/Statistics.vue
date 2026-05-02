@@ -8,9 +8,9 @@
           <span>{{ todayLabel }}</span>
         </div>
       </div>
-      <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
+      <!-- <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
         <van-icon name="user-o" />
-      </button>
+      </button> -->
     </header>
 
     <div class="period-switch">

@@ -8,9 +8,9 @@
           <span>{{ fullDate }}</span>
         </div>
       </div>
-      <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
+      <!-- <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
         <van-icon name="contact" />
-      </button>
+      </button> -->
     </div>
 
     <section class="card summary-card stagger-1">

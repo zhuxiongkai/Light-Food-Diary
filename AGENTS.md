@@ -1,4 +1,4 @@
-# 热量助手 — Project Context
+# 轻卡记 — Project Context
 
 热量摄入追踪移动应用，面向中文用户。Vue 3 + Capacitor (Android) + Express 后端。
 

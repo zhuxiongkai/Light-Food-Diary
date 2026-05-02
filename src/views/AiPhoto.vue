@@ -23,7 +23,7 @@
     <div class="card text-center">
       <div class="image-area" v-if="imageSrc">
         <img :src="imageSrc" class="preview-img" />
-        <van-button size="small" plain class="mt-8" @click="clearImage">重新选择</van-button>
+        <van-button style="margin-top: 10px;" size="small" plain class="mt-8" @click="clearImage">重新选择</van-button>
       </div>
       <div v-else class="image-placeholder">
         <van-icon name="photograph" size="48" color="#ccc" />
