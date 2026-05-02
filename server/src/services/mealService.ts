@@ -25,7 +25,7 @@ export interface MealInput {
 }
 
 export async function getMealsByDate(userId: number, date: string) {
-  return db
+  const records = await db
     .select()
     .from(mealRecords)
     .where(
@@ -35,10 +35,12 @@ export async function getMealsByDate(userId: number, date: string) {
       )
     )
     .orderBy(mealRecords.createdAt)
+
+  return records.map(toPublicMealRecord)
 }
 
 export async function getMealsByDateRange(userId: number, start: string, end: string) {
-  return db
+  const records = await db
     .select()
     .from(mealRecords)
     .where(
@@ -49,6 +51,8 @@ export async function getMealsByDateRange(userId: number, start: string, end: st
       )
     )
     .orderBy(mealRecords.date, mealRecords.createdAt)
+
+  return records.map(toPublicMealRecord)
 }
 
 export async function getMealStats(userId: number, date: string) {
@@ -123,12 +127,12 @@ export async function updateMeal(userId: number, mealId: number, data: Partial<M
   if (data.carbs !== undefined) updateData.carbs = data.carbs
 
   if (Object.keys(updateData).length === 0) {
-    return existing
+    return toPublicMealRecord(existing)
   }
 
   await db.update(mealRecords).set(updateData).where(eq(mealRecords.id, mealId))
 
-  return { ...existing, ...data }
+  return toPublicMealRecord({ ...existing, ...data })
 }
 
 export async function deleteMeal(userId: number, mealId: number) {
@@ -144,4 +148,27 @@ export async function deleteMeal(userId: number, mealId: number) {
 
   await db.delete(mealRecords).where(eq(mealRecords.id, mealId))
   return { success: true }
+}
+
+function formatDateOnly(value: unknown) {
+  if (value instanceof Date) {
+    const y = value.getFullYear()
+    const m = String(value.getMonth() + 1).padStart(2, '0')
+    const d = String(value.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const text = String(value)
+  const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (!match) return text
+
+  const [, y, m, d] = match
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+}
+
+function toPublicMealRecord<T extends Record<string, any>>(record: T): T & { date: string } {
+  return {
+    ...record,
+    date: formatDateOnly(record.date),
+  }
 }

@@ -8,9 +8,9 @@
           <span>{{ fullDate }}</span>
         </div>
       </div>
-      <div class="avatar-circle">
+      <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
         <van-icon name="contact" />
-      </div>
+      </button>
     </div>
 
     <section class="card summary-card stagger-1">
@@ -28,11 +28,11 @@
       <div class="summary-info">
         <div class="target-head">
           <span class="target-label">今日目标</span>
-          <div class="target-value numeric">
+          <button class="target-value numeric" type="button" @click="goToSettingsEdit('calorie')">
             {{ settings.dailyCalorieGoal }}
             <span>千卡</span>
             <van-icon name="edit" class="target-edit" />
-          </div>
+          </button>
         </div>
 
         <div class="summary-stats">
@@ -90,37 +90,39 @@
     <section class="card macro-card stagger-3">
       <div class="section-head">
         <h2 class="section-title">三大营养素</h2>
-        <span class="detail-link">详情 <van-icon name="arrow" /></span>
+        <button class="detail-link" type="button" @click="router.push('/statistics')">详情 <van-icon name="arrow" /></button>
       </div>
 
       <div class="macro-grid">
         <div class="macro-col protein-col">
           <p class="macro-label"><van-icon name="fire-o" /> 蛋白质</p>
-          <p class="macro-value numeric">{{ mealStore.dailyProtein }} <span>/ {{ macroGoals.protein }} g</span></p>
+          <p class="macro-value numeric">{{ formatTwo(mealStore.dailyProtein) }} <span>/ {{ macroGoals.protein }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(proteinPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ proteinPercent }}%</p>
         </div>
 
         <div class="macro-col carbs-col">
           <p class="macro-label"><van-icon name="bar-chart-o" /> 碳水化合物</p>
-          <p class="macro-value numeric">{{ mealStore.dailyCarbs }} <span>/ {{ macroGoals.carbs }} g</span></p>
+          <p class="macro-value numeric">{{ formatTwo(mealStore.dailyCarbs) }} <span>/ {{ macroGoals.carbs }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(carbsPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ carbsPercent }}%</p>
         </div>
 
         <div class="macro-col fat-col">
           <p class="macro-label"><van-icon name="flower-o" /> 脂肪</p>
-          <p class="macro-value numeric">{{ mealStore.dailyFat }} <span>/ {{ macroGoals.fat }} g</span></p>
+          <p class="macro-value numeric">{{ formatTwo(mealStore.dailyFat) }} <span>/ {{ macroGoals.fat }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(fatPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ fatPercent }}%</p>
         </div>
       </div>
     </section>
 
-    <section class="tip-strip stagger-4">
+    <section v-if="showTip" class="tip-strip stagger-4">
       <div class="tip-icon"><van-icon name="bulb-o" /></div>
       <p>小贴士：今天还可以摄入 {{ Math.max(remaining, 0) }} 千卡，建议优先选择高蛋白、低脂食物。</p>
-      <van-icon name="cross" class="tip-close" />
+      <button class="tip-close" type="button" aria-label="关闭小贴士" @click="showTip = false">
+        <van-icon name="cross" />
+      </button>
     </section>
   </div>
 </template>
@@ -138,6 +140,7 @@ const settingsStore = useSettingsStore()
 const router = useRouter()
 
 const currentDate = ref(new Date())
+const showTip = ref(true)
 
 const settings = computed(() => settingsStore.settings)
 
@@ -227,8 +230,18 @@ function boundedPercent(v: number): number {
   return Math.max(0, Math.min(100, v))
 }
 
+function formatTwo(n: number | null | undefined): string {
+  const v = Number(n ?? 0)
+  if (!Number.isFinite(v)) return '0.0'
+  return v.toFixed(1)
+}
+
 function goToMealLog(type: MealType) {
   router.push(`/log?meal=${type}`)
+}
+
+function goToSettingsEdit(section: 'calorie' | 'weight' | 'macro') {
+  router.push({ path: '/settings', query: { edit: section } })
 }
 
 onMounted(async () => {
@@ -265,6 +278,7 @@ onMounted(async () => {
 }
 
 .avatar-circle {
+  border: none;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -274,6 +288,7 @@ onMounted(async () => {
   font-size: 22px;
   background: linear-gradient(135deg, #d8e6ef, #8fb6cc);
   box-shadow: 0 4px 14px rgba(102, 112, 120, 0.24);
+  cursor: pointer;
 }
 
 .summary-card {
@@ -319,6 +334,9 @@ onMounted(async () => {
 }
 
 .target-value {
+  padding: 0;
+  border: none;
+  background: transparent;
   margin-top: 0;
   font-size: 32px;
   font-weight: 760;
@@ -327,6 +345,7 @@ onMounted(async () => {
   display: flex;
   align-items: baseline;
   gap: 4px;
+  cursor: pointer;
 }
 
 .target-value span {
@@ -563,11 +582,15 @@ onMounted(async () => {
 }
 
 .detail-link {
+  padding: 0;
+  border: none;
+  background: transparent;
   display: inline-flex;
   align-items: center;
   gap: 2px;
   font-size: 13px;
   color: #7f8898;
+  cursor: pointer;
 }
 
 .macro-grid {
@@ -679,7 +702,15 @@ onMounted(async () => {
 }
 
 .tip-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #7fac95;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
 
 @media (max-width: 430px) {

@@ -43,7 +43,7 @@ root/
     main.ts                   # 入口：挂载 Vue + Pinia + Router
     App.vue                   # 根组件：router-view + 底部导航
     api/client.ts             # API 客户端（自动 Token + 401 刷新）
-    router/index.ts           # 路由配置 (9 页面 + 鉴权守卫)
+    router/index.ts           # 路由配置 (10 页面 + 鉴权守卫)
     types/index.ts            # TypeScript 类型定义
     data/foodDatabase.ts      # 内置食物数据库（前端离线兜底）
     stores/
@@ -53,7 +53,7 @@ root/
       weightStore.ts          # 体重记录 CRUD
       settingsStore.ts        # 用户设置
     views/
-      Login.vue / Register.vue  # 登录/注册
+      Login.vue / Register.vue / GuestExperience.vue  # 登录/注册/游客体验
       Dashboard.vue / LogMeal.vue / AiPhoto.vue / Statistics.vue
       WeightLog.vue / Settings.vue / FoodDatabase.vue
     components/               # 可复用组件

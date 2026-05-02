@@ -25,16 +25,17 @@
 |------|------|------|------|-----|
 | `/login` | login | Login.vue | 否 | — |
 | `/register` | register | Register.vue | 否 | — |
+| `/guest` | guest | GuestExperience.vue | 否 | — |
 | `/` | dashboard | Dashboard.vue | 是 | 概览 |
 | `/log` | log | LogMeal.vue | 是 | 记录 |
-| `/ai-photo` | ai-photo | AiPhoto.vue | 是 | AI识别 |
+| `/ai-photo` | ai-photo | AiPhoto.vue | 是 | — |
 | `/statistics` | statistics | Statistics.vue | 是 | 统计 |
 | `/weight` | weight | WeightLog.vue | 是 | — |
 | `/settings` | settings | Settings.vue | 是 | 设置 |
 | `/food-db` | food-db | FoodDatabase.vue | 是 | — |
 
 路由守卫：未登录 → `/login`；已登录访问 guest 页 → `/`。
-底部 TabBar 5 个固定入口。`/login`、`/register`、`/weight`、`/food-db` 通过页面内导航或路由进入。
+底部 TabBar 4 个固定入口。`/login`、`/register`、`/guest`、`/weight`、`/food-db`、`/ai-photo` 通过页面内导航或路由进入。
 
 ## API 路由 (后端)
 

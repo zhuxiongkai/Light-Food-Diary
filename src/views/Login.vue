@@ -32,8 +32,8 @@
           />
         </div>
 
-        <button type="button" class="forgot-password" @click="onForgotPassword">
-          忘记密码？
+        <button type="button" class="forgot-password" disabled>
+          忘记密码（暂不可用）
         </button>
 
         <div class="auth-actions">
@@ -57,9 +57,9 @@
     <div class="other-login-block">
       <div class="divider">或使用以下方式登录</div>
       <div class="other-login">
-        <button type="button" class="login-option" @click="onVerificationCodeLogin">
+        <button type="button" class="login-option" disabled>
           <van-icon name="comment-o" />
-          <span>验证码登录</span>
+          <span>验证码登录（规划中）</span>
         </button>
         <button type="button" class="login-option" @click="onGuestExperience">
           <van-icon name="user-o" />
@@ -71,9 +71,9 @@
     <label class="agreement">
       <van-checkbox v-model="agreeTerms" icon-size="20" checked-color="var(--primary)" />
       <span>我已阅读并同意</span>
-      <a href="#" target="_blank">《用户协议》</a>
+      <button type="button" class="agreement-link" @click="showLegal('terms')">《用户协议》</button>
       <span>和</span>
-      <a href="#" target="_blank">《隐私政策》</a>
+      <button type="button" class="agreement-link" @click="showLegal('privacy')">《隐私政策》</button>
     </label>
 
     <p class="bottom-slogan">开启你的轻盈生活</p>
@@ -84,7 +84,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { showDialog, showToast } from 'vant'
 import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
@@ -108,16 +108,18 @@ async function onLogin() {
   }
 }
 
-function onVerificationCodeLogin() {
-  showToast('验证码登录功能开发中')
-}
-
 function onGuestExperience() {
   router.replace('/guest')
 }
 
-function onForgotPassword() {
-  showToast('忘记密码功能开发中')
+function showLegal(type: 'terms' | 'privacy') {
+  showDialog({
+    title: type === 'terms' ? '用户协议' : '隐私政策',
+    message: type === 'terms'
+      ? '使用轻卡记代表你同意以真实、合法的方式记录个人饮食与健康数据。本应用仅用于日常健康管理参考，不替代专业医疗建议。'
+      : '轻卡记会保存你的账号、饮食、体重与目标设置，用于提供热量记录、统计和同步服务。我们不会在未获授权的情况下向第三方出售你的个人数据。',
+    confirmButtonText: '知道了'
+  })
 }
 </script>
 
@@ -269,6 +271,10 @@ function onForgotPassword() {
   padding: 0;
 }
 
+.forgot-password:disabled {
+  color: #a6b0bd;
+}
+
 .auth-actions {
   display: flex;
   flex-direction: column;
@@ -352,6 +358,12 @@ function onForgotPassword() {
   white-space: nowrap;
 }
 
+.login-option:disabled {
+  color: #98a3b3;
+  background: rgba(245, 247, 250, 0.88);
+  box-shadow: none;
+}
+
 .login-option:active {
   opacity: 0.82;
 }
@@ -374,10 +386,14 @@ function onForgotPassword() {
   color: #8291a4;
 }
 
-.agreement a {
+.agreement-link {
+  padding: 0;
+  border: none;
+  background: transparent;
   color: var(--primary);
   font-weight: 500;
   text-decoration: none;
+  font-size: inherit;
 }
 
 .agreement :deep(.van-checkbox__icon .van-badge__wrapper) {

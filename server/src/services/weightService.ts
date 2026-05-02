@@ -7,16 +7,18 @@ import { AppError } from '../middleware/errorHandler.js'
 const db = drizzle(pool)
 
 export async function getWeightRecords(userId: number) {
-  return db
+  const records = await db
     .select()
     .from(weightRecords)
     .where(eq(weightRecords.userId, userId))
     .orderBy(desc(weightRecords.date))
     .limit(200)
+
+  return records.map(toPublicWeightRecord)
 }
 
 export async function getWeightByDateRange(userId: number, start: string, end: string) {
-  return db
+  const records = await db
     .select()
     .from(weightRecords)
     .where(
@@ -27,6 +29,8 @@ export async function getWeightByDateRange(userId: number, start: string, end: s
       )
     )
     .orderBy(weightRecords.date)
+
+  return records.map(toPublicWeightRecord)
 }
 
 export async function addWeightRecord(userId: number, weight: number, date?: string) {
@@ -55,4 +59,27 @@ export async function deleteWeightRecord(userId: number, recordId: number) {
 
   await db.delete(weightRecords).where(eq(weightRecords.id, recordId))
   return { success: true }
+}
+
+function formatDateOnly(value: unknown) {
+  if (value instanceof Date) {
+    const y = value.getFullYear()
+    const m = String(value.getMonth() + 1).padStart(2, '0')
+    const d = String(value.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const text = String(value)
+  const match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (!match) return text
+
+  const [, y, m, d] = match
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+}
+
+function toPublicWeightRecord<T extends Record<string, any>>(record: T): T & { date: string } {
+  return {
+    ...record,
+    date: formatDateOnly(record.date),
+  }
 }

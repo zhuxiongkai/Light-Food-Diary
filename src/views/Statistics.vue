@@ -8,9 +8,9 @@
           <span>{{ todayLabel }}</span>
         </div>
       </div>
-      <div class="avatar-circle">
+      <button class="avatar-circle" type="button" aria-label="进入设置" @click="router.push('/settings')">
         <van-icon name="user-o" />
-      </div>
+      </button>
     </header>
 
     <div class="period-switch">
@@ -28,7 +28,9 @@
     <section class="trend-card glass-card">
       <div class="card-title">
         <h2>热量摄入趋势</h2>
-        <van-icon name="question-o" />
+        <button class="question-btn" type="button" aria-label="查看热量摄入趋势说明" @click="showHelp('trend')">
+          <van-icon name="question-o" />
+        </button>
       </div>
       <div class="trend-metrics">
         <div>
@@ -48,7 +50,9 @@
       <section class="mini-card glass-card">
         <div class="card-title compact">
           <h2>摄入 vs 目标</h2>
-          <van-icon name="question-o" />
+          <button class="question-btn" type="button" aria-label="查看摄入和目标说明" @click="showHelp('target')">
+            <van-icon name="question-o" />
+          </button>
         </div>
         <v-chart v-if="hasCalorieData" :option="barOption" class="mini-chart" autoresize />
         <div v-else class="empty-chart">暂无可对比数据</div>
@@ -57,7 +61,9 @@
       <section class="mini-card glass-card macro-card">
         <div class="card-title compact">
           <h2>三大营养素占比</h2>
-          <van-icon name="question-o" />
+          <button class="question-btn" type="button" aria-label="查看三大营养素说明" @click="showHelp('macro')">
+            <van-icon name="question-o" />
+          </button>
         </div>
         <div v-if="hasCalorieData" class="donut-layout">
           <v-chart :option="donutOption" class="donut-chart" autoresize />
@@ -103,10 +109,15 @@
       <div class="weight-copy">
         <div class="card-title compact">
           <h2>体重趋势</h2>
-          <van-icon name="question-o" />
+          <button class="question-btn" type="button" aria-label="查看体重趋势说明" @click="showHelp('weight')">
+            <van-icon name="question-o" />
+          </button>
         </div>
         <strong class="numeric">{{ latestWeightText }} <small>公斤</small></strong>
         <span>{{ weightChangeText }}</span>
+        <button class="weight-link" type="button" @click="router.push('/weight')">
+          记录体重 <van-icon name="arrow" />
+        </button>
       </div>
       <v-chart v-if="hasWeightData" :option="weightOption" class="weight-chart" autoresize />
       <div v-else class="empty-chart">暂无体重记录</div>
@@ -116,7 +127,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Icon } from 'vant'
+import { useRouter } from 'vue-router'
+import { Icon, showDialog } from 'vant'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
@@ -136,6 +148,7 @@ type WeightPoint = number | null
 const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
 const weightStore = useWeightStore()
+const router = useRouter()
 
 const period = ref<Period>('week')
 const meals = ref<MealRecord[]>([])
@@ -150,6 +163,27 @@ const periodItems = [
   { label: '月', value: 'month' as const },
   { label: '年', value: 'year' as const }
 ]
+
+type HelpKey = 'trend' | 'target' | 'macro' | 'weight'
+
+const helpContent: Record<HelpKey, { title: string; message: string }> = {
+  trend: {
+    title: '热量摄入趋势',
+    message: '展示当前周期每天或每月的热量摄入，并用虚线标出你的每日目标。'
+  },
+  target: {
+    title: '摄入 vs 目标',
+    message: '对比每个时间点的实际摄入和目标热量，帮助判断是否长期偏高或偏低。'
+  },
+  macro: {
+    title: '三大营养素占比',
+    message: '按热量来源统计碳水、蛋白质和脂肪占比，比例来自当前周期内已记录食物。'
+  },
+  weight: {
+    title: '体重趋势',
+    message: '展示当前周期体重记录变化；没有当天记录时，会沿用上一条体重记录形成连续趋势。'
+  }
+}
 
 const todayLabel = computed(() => {
   const date = new Date()
@@ -430,6 +464,15 @@ onMounted(async () => {
   await loadData()
 })
 
+function showHelp(key: HelpKey) {
+  const content = helpContent[key]
+  showDialog({
+    title: content.title,
+    message: content.message,
+    confirmButtonText: '知道了'
+  })
+}
+
 async function loadData() {
   const { start, end, prevStart, prevEnd } = resolveRange(period.value)
 
@@ -490,7 +533,7 @@ function aggregateMacroSeries(sourceMeals: MealRecord[], labelList: string[], ke
   }
 
   for (const meal of sourceMeals) {
-    const label = period.value === 'year' ? meal.date.slice(0, 7) : meal.date.slice(5).replace('-', '/')
+    const label = dateLabelForPeriod(meal.date)
     const bucket = map.get(label)
     if (!bucket) continue
     bucket.calories += meal.calories
@@ -507,7 +550,7 @@ function aggregateWeightSeries(records: { date: string; weight: number }[], labe
 
   const map = new Map<string, number>()
   for (const item of records) {
-    const label = period.value === 'year' ? item.date.slice(0, 7) : item.date.slice(5).replace('-', '/')
+    const label = dateLabelForPeriod(item.date)
     map.set(label, item.weight)
   }
 
@@ -523,6 +566,25 @@ function aggregateWeightSeries(records: { date: string; weight: number }[], labe
   }
 
   return result
+}
+
+function dateLabelForPeriod(date: string) {
+  const match = String(date).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (match) {
+    const [, year, month, day] = match
+    return period.value === 'year' ? `${year}-${month.padStart(2, '0')}` : `${Number(month)}/${Number(day)}`
+  }
+
+  if (period.value === 'year') {
+    return String(date).slice(0, 7)
+  }
+
+  const [, month, day] = String(date).split('-')
+  if (!month || !day) {
+    return String(date).slice(5).replace('-', '/')
+  }
+
+  return `${Number(month)}/${Number(day)}`
 }
 
 function toDateStr(date: Date) {
@@ -588,6 +650,7 @@ function monthLabels(start: Date, end: Date) {
 }
 
 .avatar-circle {
+  border: none;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -599,6 +662,7 @@ function monthLabels(start: Date, end: Date) {
   font-size: 24px;
   flex-shrink: 0;
   box-shadow: 0 4px 14px rgba(45, 106, 79, 0.22);
+  cursor: pointer;
 }
 
 .period-switch {
@@ -658,6 +722,17 @@ function monthLabels(start: Date, end: Date) {
 .card-title .van-icon {
   color: var(--text-secondary);
   font-size: 16px;
+}
+
+.question-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
 }
 
 .card-title.compact h2 {
@@ -920,6 +995,21 @@ small {
   color: var(--primary);
   font-size: 12px;
   font-weight: 600;
+}
+
+.weight-link {
+  width: fit-content;
+  margin-top: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .weight-chart {

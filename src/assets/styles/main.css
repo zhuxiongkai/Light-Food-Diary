@@ -88,6 +88,15 @@
   font-size: var(--van-toast-icon-size);
 }
 
+.van-field.reinput-active .van-field__control::placeholder {
+  color: #b8ada4;
+  opacity: 1;
+}
+
+.van-field.reinput-active .van-field__control {
+  caret-color: var(--primary);
+}
+
 /* ═══════════════════════════════════════════
    Reset & Base
    ═══════════════════════════════════════════ */

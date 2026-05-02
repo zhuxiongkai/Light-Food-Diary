@@ -58,12 +58,12 @@
     </div>
 
     <div class="quick-grid">
-      <button class="quick-card" type="button" @click="$router.push('/ai-photo')">
+      <button class="quick-card" type="button" @click="goToAiPhoto">
         <span class="soft-icon camera-icon"><van-icon name="photograph" /></span>
         <span class="quick-title">拍照识别</span>
         <span class="quick-sub">智能识别食物</span>
       </button>
-      <button class="quick-card" type="button" @click="showToast('扫码录入将在后续版本支持')">
+      <button class="quick-card disabled" type="button" disabled>
         <span class="soft-icon scan-icon"><van-icon name="scan" /></span>
         <span class="quick-title">扫码录入</span>
         <span class="quick-sub">条码识别（规划中）</span>
@@ -77,7 +77,7 @@
 
     <div class="section-divider food-heading">
       <h2 class="section-label">已记录食物</h2>
-      <span class="section-tip">长按可删除</span>
+      <span class="section-tip">点击可编辑 · 长按可删除</span>
     </div>
 
     <div v-if="displayMeals.length === 0" class="empty-state">
@@ -90,6 +90,7 @@
         v-for="item in displayMeals"
         :key="item.key"
         class="food-card"
+        @click="openMealDetail(item)"
         @contextmenu.prevent="onDeleteMeal(item)"
         @touchstart.passive="startPress(item)"
         @touchend="cancelPress"
@@ -110,7 +111,7 @@
           </div>
           <small>{{ item.time }}</small>
         </div>
-        <button class="more-button" type="button" @click="openMealDetail(item)">
+        <button class="more-button" type="button" @click.stop="openMealDetail(item)">
           <van-icon name="arrow" />
         </button>
       </article>
@@ -180,7 +181,10 @@
           <div><span>脂肪</span><strong>{{ detailFat }} g</strong></div>
           <div><span>碳水</span><strong>{{ detailCarbs }} g</strong></div>
         </div>
-        <van-button type="primary" block round class="mt-16" @click="saveMealDetail">保存修改</van-button>
+        <div class="detail-actions">
+          <van-button plain type="danger" round block @click="deleteDetailMeal">删除记录</van-button>
+          <van-button type="primary" round block @click="saveMealDetail">保存修改</van-button>
+        </div>
       </div>
     </van-popup>
   </div>
@@ -219,6 +223,7 @@ const selectedFood = ref<FoodItem | null>(null)
 const weight = ref(100)
 const currentDate = ref(resolveRouteDate() || mealStore.todayStr())
 const pressTimer = ref<number | null>(null)
+const pressTriggered = ref(false)
 const detailMeal = ref<DisplayMeal | null>(null)
 const detailWeight = ref(100)
 const detailBase = ref({ weight: 100, calories: 0, protein: 0, fat: 0, carbs: 0 })
@@ -377,6 +382,16 @@ function onFoodSelect(food: FoodItem) {
   showWeight.value = true
 }
 
+function goToAiPhoto() {
+  router.push({
+    path: '/ai-photo',
+    query: {
+      meal: activeMeal.value,
+      date: currentDate.value
+    }
+  })
+}
+
 async function onAddCustomFood() {
   if (!customForm.value.name || customForm.value.caloriesPer100g <= 0) {
     showToast('请填写名称和热量')
@@ -417,7 +432,10 @@ async function onConfirmAdd() {
 
 function startPress(item: DisplayMeal) {
   cancelPress()
-  pressTimer.value = window.setTimeout(() => onDeleteMeal(item), 560)
+  pressTimer.value = window.setTimeout(() => {
+    pressTriggered.value = true
+    void onDeleteMeal(item)
+  }, 560)
 }
 
 function cancelPress() {
@@ -427,18 +445,20 @@ function cancelPress() {
   }
 }
 
-async function onDeleteMeal(item: DisplayMeal) {
+async function onDeleteMeal(item: DisplayMeal): Promise<boolean> {
   cancelPress()
   if (!item.id) {
     showToast('记录缺少ID，无法删除')
-    return
+    return false
   }
   try {
     await showConfirmDialog({ title: '删除记录', message: `删除 ${item.foodName}？` })
     await mealStore.deleteMeal(item.id)
     showToast('已删除')
+    return true
   } catch {
     // cancelled
+    return false
   }
 }
 
@@ -449,6 +469,10 @@ function onDateConfirm(event: { selectedValues: string[] }) {
 }
 
 function openMealDetail(item: DisplayMeal) {
+  if (pressTriggered.value) {
+    pressTriggered.value = false
+    return
+  }
   detailMeal.value = item
   detailWeight.value = item.weight
   detailBase.value = {
@@ -459,6 +483,15 @@ function openMealDetail(item: DisplayMeal) {
     carbs: item.carbs,
   }
   showDetail.value = true
+}
+
+async function deleteDetailMeal() {
+  if (!detailMeal.value) return
+  const deleted = await onDeleteMeal(detailMeal.value)
+  if (deleted) {
+    showDetail.value = false
+    detailMeal.value = null
+  }
 }
 
 async function saveMealDetail() {
@@ -727,6 +760,12 @@ async function saveMealDetail() {
   transform: scale(0.95);
 }
 
+.quick-card.disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .soft-icon {
   width: 44px;
   height: 44px;
@@ -797,6 +836,7 @@ async function saveMealDetail() {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   min-height: 80px;
+  cursor: pointer;
 }
 
 .food-thumb {
@@ -999,6 +1039,13 @@ async function saveMealDetail() {
   margin-top: 4px;
   font-size: 14px;
   color: var(--text);
+}
+
+.detail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .search-popup {

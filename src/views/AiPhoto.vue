@@ -16,13 +16,14 @@
           {{ tab.label }}
         </button>
       </div>
+      <p class="target-date">记录日期：{{ displaySelectedDate }}</p>
     </div>
 
     <!-- Image area -->
     <div class="card text-center">
       <div class="image-area" v-if="imageSrc">
         <img :src="imageSrc" class="preview-img" />
-        <van-button size="small" plain class="mt-8" @click="imageSrc = ''">重新选择</van-button>
+        <van-button size="small" plain class="mt-8" @click="clearImage">重新选择</van-button>
       </div>
       <div v-else class="image-placeholder">
         <van-icon name="photograph" size="48" color="#ccc" />
@@ -112,6 +113,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { Button, Checkbox, CheckboxGroup, Dialog, Icon, Loading, Stepper, showToast } from 'vant'
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
@@ -131,6 +133,7 @@ interface EnrichedRecognition extends AiRecognitionResult {
 
 const mealStore = useMealStore()
 const foodStore = useFoodStore()
+const route = useRoute()
 
 const imageSrc = ref('')
 const imageBase64 = ref('')
@@ -143,7 +146,8 @@ const showCamera = ref(false)
 const showPickDialog = ref(false)
 const candidateResults = ref<AiRecognitionResult[]>([])
 const pickedIndexes = ref<number[]>([])
-const selectedMealType = ref<MealType>('lunch')
+const selectedMealType = ref<MealType>(resolveRouteMeal(route.query.meal) || 'lunch')
+const selectedDate = ref(resolveRouteDate(route.query.date) || mealStore.todayStr())
 let mediaStream: MediaStream | null = null
 
 const mealTabs: Array<{ value: MealType; label: string }> = [
@@ -163,6 +167,12 @@ const mealLabelMap: Record<MealType, string> = {
 const totalResultCal = computed(() =>
   results.value.reduce((sum, item) => sum + getItemCalories(item), 0)
 )
+const displaySelectedDate = computed(() => {
+  const date = new Date(`${selectedDate.value}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return selectedDate.value
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`
+})
 
 onMounted(async () => {
   if (foodStore.allFoods.length === 0) {
@@ -186,6 +196,30 @@ function getItemCarbs(item: EnrichedRecognition) {
   return Math.round(item.macroPer100g.carbs * item.estimatedWeight) / 100
 }
 
+function resolveRouteMeal(value: unknown): MealType | null {
+  if (typeof value !== 'string') return null
+  return ['breakfast', 'lunch', 'dinner', 'snack'].includes(value) ? (value as MealType) : null
+}
+
+function resolveRouteDate(value: unknown) {
+  if (typeof value !== 'string') return null
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null
+}
+
+function clearRecognitionState() {
+  results.value = []
+  candidateResults.value = []
+  pickedIndexes.value = []
+  showPickDialog.value = false
+}
+
+function clearImage() {
+  imageSrc.value = ''
+  imageBase64.value = ''
+  imageType.value = 'image/jpeg'
+  clearRecognitionState()
+}
+
 async function onTakePhoto() {
   showCamera.value = true
   try {
@@ -201,6 +235,7 @@ async function onTakePhoto() {
 
 function capturePhoto() {
   if (!videoEl.value) return
+  clearRecognitionState()
   const canvas = document.createElement('canvas')
   canvas.width = videoEl.value.videoWidth
   canvas.height = videoEl.value.videoHeight
@@ -233,6 +268,7 @@ function onFilePicked(e: Event) {
     input.value = ''
     return
   }
+  clearRecognitionState()
   const reader = new FileReader()
   reader.onload = () => {
     const dataUrl = reader.result as string
@@ -339,10 +375,9 @@ function normalizeName(value: string) {
 }
 
 async function onAddAll() {
-  const today = mealStore.todayStr()
   for (const item of results.value) {
     await mealStore.addMeal({
-      date: today,
+      date: selectedDate.value,
       mealType: selectedMealType.value,
       foodId: item.matchedFoodId,
       foodName: item.estimated ? `${item.foodName}（估算）` : item.foodName,
@@ -354,8 +389,7 @@ async function onAddAll() {
     })
   }
   showToast(`已添加 ${results.value.length} 项到${mealLabelMap[selectedMealType.value]}`)
-  results.value = []
-  imageSrc.value = ''
+  clearImage()
 }
 </script>
 
@@ -384,6 +418,13 @@ async function onAddAll() {
   color: var(--primary);
   border-color: transparent;
   font-weight: 600;
+}
+
+.target-date {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
 }
 
 .image-area {
