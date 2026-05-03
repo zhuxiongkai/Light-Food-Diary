@@ -122,13 +122,30 @@
       <v-chart v-if="hasWeightData" :option="weightOption" class="weight-chart" autoresize />
       <div v-else class="empty-chart">暂无体重记录</div>
     </section>
+
+    <section class="advice-card glass-card">
+      <div class="card-title compact">
+        <h2>AI 饮食建议</h2>
+        <button class="question-btn" type="button" aria-label="查看 AI 饮食建议说明" @click="showHelp('advice')">
+          <van-icon name="question-o" />
+        </button>
+      </div>
+      <p class="advice-hint">基于近 7 天饮食记录与你在设置中的目标，由 DeepSeek 模型生成解读（仅供参考，不能替代专业医疗意见）。</p>
+      <div v-if="adviceError" class="advice-error">{{ adviceError }}</div>
+      <div v-else-if="adviceLoading" class="advice-loading">正在生成建议…</div>
+      <div v-else-if="adviceText" class="advice-md" v-html="adviceHtml" />
+      <div v-else class="advice-empty">点击下方按钮，根据近一周数据生成个性化建议。</div>
+      <button class="advice-btn" type="button" :disabled="adviceLoading" @click="loadAdvice">
+        {{ adviceText ? '重新生成' : '生成建议' }}
+      </button>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Icon, showDialog } from 'vant'
+import { Icon, showDialog, showToast } from 'vant'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
@@ -137,6 +154,8 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { useMealStore } from '@/stores/mealStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useWeightStore } from '@/stores/weightStore'
+import { fetchNutritionAdvice } from '@/utils/aiService'
+import { renderMarkdownToHtml } from '@/utils/renderMarkdown'
 import type { MealRecord } from '@/types'
 
 use([LineChart, BarChart, PieChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
@@ -157,6 +176,13 @@ const labels = ref<string[]>([])
 const prevLabels = ref<string[]>([])
 const weightSeries = ref<WeightPoint[]>([])
 const prevWeightSeries = ref<WeightPoint[]>([])
+const adviceText = ref('')
+const adviceLoading = ref(false)
+const adviceError = ref('')
+
+const adviceHtml = computed(() =>
+  adviceText.value ? renderMarkdownToHtml(adviceText.value) : ''
+)
 
 const periodItems = [
   { label: '周', value: 'week' as const },
@@ -164,7 +190,7 @@ const periodItems = [
   { label: '年', value: 'year' as const }
 ]
 
-type HelpKey = 'trend' | 'target' | 'macro' | 'weight'
+type HelpKey = 'trend' | 'target' | 'macro' | 'weight' | 'advice'
 
 const helpContent: Record<HelpKey, { title: string; message: string }> = {
   trend: {
@@ -182,6 +208,11 @@ const helpContent: Record<HelpKey, { title: string; message: string }> = {
   weight: {
     title: '体重趋势',
     message: '展示当前周期体重记录变化；没有当天记录时，会沿用上一条体重记录形成连续趋势。'
+  },
+  advice: {
+    title: 'AI 饮食建议',
+    message:
+      '此处分析与上方图表周期无关，固定使用「最近 7 天」的饮食汇总与你的热量及营养素目标，由服务端调用 DeepSeek 生成文本建议。需在后端配置 DEEPSEEK_API_KEY。'
   }
 }
 
@@ -471,6 +502,20 @@ function showHelp(key: HelpKey) {
     message: content.message,
     confirmButtonText: '知道了'
   })
+}
+
+async function loadAdvice() {
+  adviceError.value = ''
+  adviceLoading.value = true
+  try {
+    adviceText.value = await fetchNutritionAdvice()
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : '生成失败，请稍后重试'
+    adviceError.value = msg
+    showToast(msg)
+  } finally {
+    adviceLoading.value = false
+  }
 }
 
 async function loadData() {
@@ -1015,6 +1060,98 @@ small {
 .weight-chart {
   width: 100%;
   height: 140px;
+}
+
+.advice-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.advice-card .card-title {
+  margin-bottom: 12px;
+}
+
+.advice-hint {
+  margin: 0 0 14px 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.advice-md {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.advice-md :deep(h2) {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 14px 0 8px 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.advice-md :deep(h2:first-child) {
+  margin-top: 0;
+}
+
+.advice-md :deep(ul) {
+  margin: 0 0 10px 0;
+  padding-left: 1.15em;
+}
+
+.advice-md :deep(li) {
+  margin: 5px 0;
+}
+
+.advice-md :deep(p) {
+  margin: 0 0 8px 0;
+}
+
+.advice-md :deep(strong) {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.advice-empty,
+.advice-loading {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-height: 2.5em;
+}
+
+.advice-error {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #c45c4a;
+  line-height: 1.5;
+}
+
+.advice-btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  box-shadow: 0 4px 14px rgba(45, 106, 79, 0.22);
+}
+
+.advice-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 @media (max-width: 390px) {

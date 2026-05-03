@@ -1,5 +1,7 @@
 import { AppError } from '../middleware/errorHandler.js'
 import { config } from '../config.js'
+import { getMealsByDateRange } from './mealService.js'
+import { getSettings } from './settingsService.js'
 
 const BAIDU_TOKEN_API_URL = 'https://aip.baidubce.com/oauth/2.0/token'
 const BAIDU_DISH_API_URL = 'https://aip.baidubce.com/rest/2.0/image-classify/v2/dish'
@@ -158,4 +160,171 @@ export async function recognizeFood(
   }
 
   return normalized
+}
+
+const DEEPSEEK_CHAT_PATH = '/chat/completions'
+
+export interface DailyNutritionSnapshot {
+  date: string
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+}
+
+function formatDateYMD(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function getLastNDaysRangeInclusive(days: number): { start: string; end: string } {
+  const end = new Date()
+  const start = new Date(end)
+  start.setDate(start.getDate() - (days - 1))
+  return { start: formatDateYMD(start), end: formatDateYMD(end) }
+}
+
+function enumerateDatesInclusive(start: string, end: string): string[] {
+  const result: string[] = []
+  const cursor = new Date(`${start}T12:00:00`)
+  const last = new Date(`${end}T12:00:00`)
+  while (cursor <= last) {
+    result.push(formatDateYMD(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return result
+}
+
+function aggregateDailyMeals(
+  meals: Awaited<ReturnType<typeof getMealsByDateRange>>,
+  start: string,
+  end: string
+): DailyNutritionSnapshot[] {
+  const dates = enumerateDatesInclusive(start, end)
+  const map = new Map<string, DailyNutritionSnapshot>()
+  for (const date of dates) {
+    map.set(date, { date, calories: 0, protein: 0, fat: 0, carbs: 0 })
+  }
+  for (const m of meals) {
+    const bucket = map.get(m.date)
+    if (!bucket) continue
+    bucket.calories += m.calories
+    bucket.protein += m.protein
+    bucket.fat += m.fat
+    bucket.carbs += m.carbs
+  }
+  return dates.map((d) => map.get(d)!)
+}
+
+interface DeepSeekChatResponse {
+  choices?: Array<{ message?: { content?: string } }>
+  error?: { message?: string }
+}
+
+export async function generateNutritionAdvice(userId: number): Promise<string> {
+  if (!config.deepseek.apiKey) {
+    throw new AppError('服务端未配置 DeepSeek API 密钥，请在 server/.env 中设置 DEEPSEEK_API_KEY', 500)
+  }
+
+  const settings = await getSettings(userId)
+  const { start, end } = getLastNDaysRangeInclusive(7)
+  const meals = await getMealsByDateRange(userId, start, end)
+  const daily = aggregateDailyMeals(meals, start, end)
+
+  const totalCalories = daily.reduce((s, d) => s + d.calories, 0)
+  if (totalCalories <= 0) {
+    return '近 7 天暂无饮食记录。请先在「记录」页添加餐食，积累数据后即可生成个性化建议。'
+  }
+
+  const avgDaily = {
+    calories: Math.round(totalCalories / 7),
+    protein: Math.round(daily.reduce((s, d) => s + d.protein, 0) / 7),
+    fat: Math.round(daily.reduce((s, d) => s + d.fat, 0) / 7),
+    carbs: Math.round(daily.reduce((s, d) => s + d.carbs, 0) / 7),
+  }
+
+  const proteinCal = daily.reduce((s, d) => s + d.protein * 4, 0)
+  const fatCal = daily.reduce((s, d) => s + d.fat * 9, 0)
+  const carbsCal = daily.reduce((s, d) => s + d.carbs * 4, 0)
+  const macroDen = proteinCal + fatCal + carbsCal
+  const macroPct =
+    macroDen > 0
+      ? {
+          protein: Math.round((proteinCal / macroDen) * 100),
+          fat: Math.round((fatCal / macroDen) * 100),
+          carbs: Math.round((carbsCal / macroDen) * 100),
+        }
+      : { protein: 0, fat: 0, carbs: 0 }
+
+  const mid = Math.floor(daily.length / 2)
+  const firstHalf = daily.slice(0, mid)
+  const secondHalf = daily.slice(mid)
+  const avg = (arr: DailyNutritionSnapshot[], key: keyof DailyNutritionSnapshot) =>
+    arr.length === 0
+      ? 0
+      : Math.round(arr.reduce((s, d) => s + (d[key] as number), 0) / arr.length)
+  const trendHint = {
+    caloriesFirstHalf: avg(firstHalf, 'calories'),
+    caloriesSecondHalf: avg(secondHalf, 'calories'),
+    deltaPercent:
+      avg(firstHalf, 'calories') > 0
+        ? Math.round(
+            ((avg(secondHalf, 'calories') - avg(firstHalf, 'calories')) / avg(firstHalf, 'calories')) * 100
+          )
+        : null,
+  }
+
+  const payload = {
+    period: { start, end, days: 7 },
+    userTargets: {
+      dailyCalorieGoal: settings.dailyCalorieGoal,
+      proteinRatio: settings.proteinRatio,
+      fatRatio: settings.fatRatio,
+      carbsRatio: settings.carbsRatio,
+      weightKg: settings.weight,
+    },
+    dailyBreakdown: daily,
+    averages7d: avgDaily,
+    macroPercentByCalories7d: macroPct,
+    trendComparison: trendHint,
+  }
+
+  const systemPrompt =
+    '你是膳食分析助手，面向中文用户，输出非医疗建议。根据近 7 天记录与目标，写极简结论。' +
+    '输出必须是 Markdown：仅用三个二级标题「蛋白质」「碳水与脂肪」「趋势」，每个标题下用 1～2 条无序列表（每条一句话），可加粗关键词。**全文不超过 220 字**，勿寒暄、勿重复数据表格，勿编造记录中没有的信息。'
+
+  const userPrompt = `以下为 JSON 数据，请按上述 Markdown 结构输出：\n${JSON.stringify(payload)}`
+
+  const url = `${config.deepseek.baseUrl}${DEEPSEEK_CHAT_PATH}`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.deepseek.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.deepseek.model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 450,
+    }),
+  })
+
+  const raw: DeepSeekChatResponse = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    const msg = raw.error?.message || `HTTP ${response.status}`
+    throw new AppError(`DeepSeek 请求失败: ${msg}`, 502)
+  }
+
+  const text = raw.choices?.[0]?.message?.content?.trim()
+  if (!text) {
+    throw new AppError('DeepSeek 返回内容为空', 502)
+  }
+
+  return text
 }

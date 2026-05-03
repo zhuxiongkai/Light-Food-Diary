@@ -106,13 +106,13 @@
   ---
   P3 — 智能化 🟢
 
-  14. AI 营养建议
+  14. AI 营养建议 ✅
 
   问题: Dashboard 小贴士为固定文案，Statistics 有图表无解读。
   方案:
-  - POST /api/ai/advice — 传入近7天数据，调用 Baidu AI / Claude API 生成建议
+  - POST /api/ai/advice — 服务端汇总近 7 天数据，调用 DeepSeek Chat API 生成建议（DEEPSEEK_API_KEY）
   - 分析维度：蛋白质摄入是否充足、碳脂比是否合理、摄入趋势是改善还是恶化
-  - Statistics 底部新增"AI 饮食建议"卡片
+  - Statistics 底部「AI 饮食建议」卡片（手动触发生成）
 
   15. 运动消耗记录
 

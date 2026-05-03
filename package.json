@@ -21,7 +21,9 @@
     "@capacitor/filesystem": "^8.1.2",
     "autoprefixer": "^10.5.0",
     "dexie": "^4.4.2",
+    "dompurify": "^3.4.2",
     "echarts": "^6.0.0",
+    "marked": "^18.0.3",
     "pinia": "^3.0.4",
     "postcss": "^8.5.12",
     "tailwindcss": "^4.2.4",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.1",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",

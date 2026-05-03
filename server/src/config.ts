@@ -28,4 +28,10 @@ export const config = {
     apiKey: process.env.BAIDU_AI_API_KEY || '',
     secretKey: process.env.BAIDU_AI_SECRET_KEY || '',
   },
+  deepseek: {
+    apiKey: process.env.DEEPSEEK_API_KEY || '',
+    /** OpenAI-compatible chat completions base URL (no trailing slash) */
+    baseUrl: (process.env.DEEPSEEK_API_BASE_URL || 'https://api.deepseek.com/v1').replace(/\/$/, ''),
+    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+  },
 }

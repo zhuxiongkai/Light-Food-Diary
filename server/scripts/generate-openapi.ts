@@ -757,6 +757,25 @@ const spec = {
     },
 
     // ==================== AI 识别 ====================
+    '/ai/advice': {
+      post: {
+        tags: ['AI识别'],
+        summary: 'AI 营养建议',
+        description:
+          '基于用户近 7 天饮食记录与设置中的目标，调用 DeepSeek Chat API 生成中文营养解读。需在服务端配置 DEEPSEEK_API_KEY。',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: '成功',
+            content: {
+              'application/json': {
+                example: { code: 0, data: { advice: '...' }, message: 'ok' },
+              },
+            },
+          },
+        },
+      },
+    },
     '/ai/recognize': {
       post: {
         tags: ['AI识别'],

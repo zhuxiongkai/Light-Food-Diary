@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { authMiddleware } from '../middleware/auth.js'
-import { recognizeFood } from '../services/aiService.js'
+import { generateNutritionAdvice, recognizeFood } from '../services/aiService.js'
 
 const router = Router()
 router.use(authMiddleware)
@@ -11,6 +11,15 @@ const ALLOWED_MEDIA_TYPES = new Set(['image/jpeg', 'image/png'])
 function normalizeBase64(input: string): string {
   return input.replace(/^data:[^;]+;base64,/, '').replace(/\s/g, '')
 }
+
+router.post('/advice', async (req, res, next) => {
+  try {
+    const advice = await generateNutritionAdvice(req.userId)
+    res.json({ code: 0, data: { advice }, message: 'ok' })
+  } catch (err) {
+    next(err)
+  }
+})
 
 router.post('/recognize', async (req, res, next) => {
   try {

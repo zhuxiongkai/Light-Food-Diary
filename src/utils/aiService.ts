@@ -13,3 +13,12 @@ export async function analyzeFoodImage(
   })
   return res.data
 }
+
+export async function fetchNutritionAdvice(): Promise<string> {
+  const res = await api<{ advice: string }>('/ai/advice', {
+    method: 'POST',
+    body: JSON.stringify({}),
+    timeoutMs: 90000,
+  })
+  return res.data.advice
+}
