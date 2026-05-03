@@ -286,7 +286,7 @@ onMounted(async () => {
   place-items: center;
   color: #fff;
   font-size: 22px;
-  background: linear-gradient(135deg, #d8e6ef, #8fb6cc);
+  background: linear-gradient(135deg, var(--avatar-gradient-start), var(--avatar-gradient-end));
   box-shadow: 0 4px 14px rgba(102, 112, 120, 0.24);
   cursor: pointer;
 }
@@ -301,8 +301,8 @@ onMounted(async () => {
   border-color: var(--border);
   box-shadow: 0 6px 22px rgba(38, 53, 76, 0.08);
   background:
-    radial-gradient(circle at 14% 100%, rgba(170, 209, 224, 0.2), transparent 52%),
-    radial-gradient(circle at 100% 0%, rgba(191, 209, 238, 0.12), transparent 40%),
+    radial-gradient(circle at 14% 100%, var(--summary-card-shine-1), transparent 52%),
+    radial-gradient(circle at 100% 0%, var(--summary-card-shine-2), transparent 40%),
     var(--card-bg);
 }
 

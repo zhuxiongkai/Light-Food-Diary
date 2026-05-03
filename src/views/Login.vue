@@ -149,7 +149,7 @@ function showLegal(type: 'terms' | 'privacy') {
   width: 218px;
   height: 218px;
   border-radius: 50%;
-  border: 18px solid rgba(45, 106, 79, 0.08);
+  border: 18px solid var(--login-decoration-ring);
   clip-path: inset(0 0 22% 0);
 }
 
@@ -160,9 +160,9 @@ function showLegal(type: 'terms' | 'privacy') {
   bottom: -12px;
   height: 132px;
   background:
-    radial-gradient(30px 56px at 22% 78%, rgba(45, 106, 79, 0.15) 0, rgba(45, 106, 79, 0) 95%),
-    radial-gradient(34px 66px at 78% 78%, rgba(45, 106, 79, 0.15) 0, rgba(45, 106, 79, 0) 92%),
-    linear-gradient(180deg, rgba(216, 243, 220, 0) 0%, rgba(216, 243, 220, 0.5) 68%, rgba(200, 235, 208, 0.7) 100%);
+    radial-gradient(30px 56px at 22% 78%, var(--login-bottom-shine-a) 0, transparent 95%),
+    radial-gradient(34px 66px at 78% 78%, var(--login-bottom-shine-a) 0, transparent 92%),
+    linear-gradient(180deg, transparent 0%, var(--login-bottom-gradient-mid) 68%, var(--login-bottom-gradient-end) 100%);
   pointer-events: none;
 }
 
@@ -225,7 +225,7 @@ function showLegal(type: 'terms' | 'privacy') {
 }
 
 .field-panel {
-  background: rgba(244, 247, 250, 0.92);
+  background: var(--login-field-panel-bg);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -242,7 +242,7 @@ function showLegal(type: 'terms' | 'privacy') {
 }
 
 .field-panel :deep(.van-cell::after) {
-  border-bottom-color: rgba(161, 174, 192, 0.35);
+  border-bottom-color: var(--border);
   left: 14px;
   right: 14px;
 }
@@ -360,7 +360,7 @@ function showLegal(type: 'terms' | 'privacy') {
 
 .login-option:disabled {
   color: var(--text-secondary);
-  background: rgba(245, 247, 250, 0.88);
+  background: var(--login-option-disabled-bg);
   box-shadow: none;
 }
 
@@ -409,7 +409,7 @@ function showLegal(type: 'terms' | 'privacy') {
   z-index: 2;
   margin-top: 8px;
   text-align: center;
-  color: rgba(45, 106, 79, 0.55);
+  color: var(--login-slogan-color);
   font-size: 16px;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   line-height: 1.2;

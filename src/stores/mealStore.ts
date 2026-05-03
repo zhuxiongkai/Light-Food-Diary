@@ -17,10 +17,13 @@ export const useMealStore = defineStore('meal', () => {
 
   async function loadMeals(date?: string) {
     loading.value = true
-    const d = date || todayStr()
-    const res = await api<MealRecord[]>(`/meals?date=${d}`)
-    meals.value = res.data
-    loading.value = false
+    try {
+      const d = date || todayStr()
+      const res = await api<MealRecord[]>(`/meals?date=${d}`)
+      meals.value = res.data
+    } finally {
+      loading.value = false
+    }
   }
 
   const dailyCalories = computed(() => meals.value.reduce((sum, m) => sum + m.calories, 0))

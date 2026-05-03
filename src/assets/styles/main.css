@@ -64,6 +64,20 @@
   /* Safe area */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
+  /* Page-specific surfaces (override in [data-theme="dark"]) */
+  --login-field-panel-bg: rgba(244, 247, 250, 0.92);
+  --login-option-disabled-bg: rgba(245, 247, 250, 0.88);
+  --login-slogan-color: rgba(45, 106, 79, 0.55);
+  --login-decoration-ring: rgba(45, 106, 79, 0.08);
+  --login-bottom-shine-a: rgba(45, 106, 79, 0.15);
+  --login-bottom-gradient-mid: rgba(216, 243, 220, 0.5);
+  --login-bottom-gradient-end: rgba(200, 235, 208, 0.7);
+  --thumb-placeholder-bg: #ddd;
+  --avatar-gradient-start: #d8e6ef;
+  --avatar-gradient-end: #8fb6cc;
+  --summary-card-shine-1: rgba(170, 209, 224, 0.2);
+  --summary-card-shine-2: rgba(191, 209, 238, 0.12);
+
   /* Vant overrides — map to design tokens */
   --van-primary-color: var(--primary);
   --van-font: SimSun, 'Songti SC', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
@@ -91,19 +105,24 @@
   --van-tabbar-item-text-color: var(--text-secondary);
   --van-tabbar-item-active-color: var(--primary);
   --van-dialog-background: var(--card-bg);
+  /* 默认 320px 在多数手机上接近满屏；改为随屏宽收缩并保留左右边距 */
+  --van-dialog-width: min(300px, calc(100vw - 40px));
+  --van-dialog-small-screen-width: calc(100vw - 40px);
   --van-overlay-background: rgba(0, 0, 0, 0.5);
   --van-picker-background: var(--card-bg);
   --van-dropdown-menu-background: var(--card-bg);
   --van-stepper-background: var(--card-bg);
   --van-field-input-text-color: var(--text);
   --van-calendar-background: var(--card-bg);
+  /** Plain / ghost buttons — Vant default is white; required for dark popups */
+  --van-button-plain-background: var(--card-bg);
 }
 
 /* ═══════════════════════════════════════════
    Dark Theme
    ═══════════════════════════════════════════ */
 
-[data-theme="dark"] {
+html[data-theme="dark"] {
   /* Primary — brighter green for dark bg */
   --primary: #52b788;
   --primary-strong: #40916c;
@@ -177,13 +196,43 @@
   --van-stepper-background: #24211c;
   --van-field-input-text-color: #e8e2d8;
   --van-calendar-background: #24211c;
+
+  /** Press / inset surfaces used by Stepper fallbacks & lists */
+  --van-active-color: #2e2a26;
+  --van-button-plain-background: var(--card-bg);
+
+  --login-field-panel-bg: rgba(46, 42, 38, 0.94);
+  --login-option-disabled-bg: rgba(52, 48, 44, 0.96);
+  --login-slogan-color: rgba(130, 198, 162, 0.82);
+  --login-decoration-ring: rgba(82, 183, 136, 0.14);
+  --login-bottom-shine-a: rgba(82, 183, 136, 0.18);
+  --login-bottom-gradient-mid: rgba(27, 58, 42, 0.42);
+  --login-bottom-gradient-end: rgba(22, 48, 36, 0.55);
+  --thumb-placeholder-bg: #3a3632;
+  --avatar-gradient-start: #2f4f52;
+  --avatar-gradient-end: #1b4332;
+  --summary-card-shine-1: rgba(82, 183, 136, 0.12);
+  --summary-card-shine-2: rgba(82, 183, 136, 0.07);
 }
 
-[data-theme="dark"] body::after {
+/**
+ * Popups teleported to body: reinforce Stepper when vars were reset by lazy Vant chunks.
+ */
+html[data-theme="dark"] .van-popup .van-stepper__minus,
+html[data-theme="dark"] .van-popup .van-stepper__plus,
+html[data-theme="dark"] .van-popup .van-stepper__input {
+  background-color: var(--van-stepper-background) !important;
+}
+
+html[data-theme="dark"] .van-popup .van-button--plain {
+  background: var(--card-bg) !important;
+}
+
+html[data-theme="dark"] body::after {
   opacity: 0.05;
 }
 
-[data-theme="dark"] .app-shell::before {
+html[data-theme="dark"] .app-shell::before {
   background: linear-gradient(
     90deg,
     transparent,
@@ -205,7 +254,7 @@
 }
 
 .van-field.reinput-active .van-field__control::placeholder {
-  color: #b8ada4;
+  color: var(--text-secondary);
   opacity: 1;
 }
 
@@ -483,4 +532,14 @@ textarea {
     margin-top: max(0px, calc((100vh - 960px) / 2));
     border-radius: 32px;
   }
+}
+
+/**
+ * Vant 按需引入会为 Stepper/Button 等再次注入 `:root { --van-stepper-background: var(--van-active-color) }`，
+ * 与我们的 :root 同优先级时后加载的覆盖前者，导致深色下 Stepper/朴素按钮变浅色。
+ * 使用 `html:root` 提高优先级，保证始终跟随 `--card-bg`。
+ */
+html:root {
+  --van-stepper-background: var(--card-bg);
+  --van-button-plain-background: var(--card-bg);
 }

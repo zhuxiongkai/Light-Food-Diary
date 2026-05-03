@@ -17,9 +17,12 @@ export const useWeightStore = defineStore('weight', () => {
 
   async function loadRecords() {
     loading.value = true
-    const res = await api<WeightRecord[]>('/weight')
-    records.value = res.data
-    loading.value = false
+    try {
+      const res = await api<WeightRecord[]>('/weight')
+      records.value = res.data
+    } finally {
+      loading.value = false
+    }
   }
 
   async function addRecord(weight: number, date?: string) {

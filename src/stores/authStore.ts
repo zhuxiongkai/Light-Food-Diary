@@ -31,30 +31,36 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(username: string, password: string) {
     loading.value = true
-    const res = await api<{ user: User; accessToken: string; refreshToken: string }>(
-      '/auth/login',
-      {
-        method: 'POST',
-        body: JSON.stringify({ username, password }),
-      }
-    )
-    setAuth(res.data.accessToken, res.data.refreshToken)
-    user.value = res.data.user
-    loading.value = false
+    try {
+      const res = await api<{ user: User; accessToken: string; refreshToken: string }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        }
+      )
+      setAuth(res.data.accessToken, res.data.refreshToken)
+      user.value = res.data.user
+    } finally {
+      loading.value = false
+    }
   }
 
   async function register(username: string, password: string, email?: string) {
     loading.value = true
-    const res = await api<{ user: User; accessToken: string; refreshToken: string }>(
-      '/auth/register',
-      {
-        method: 'POST',
-        body: JSON.stringify({ username, password, email }),
-      }
-    )
-    setAuth(res.data.accessToken, res.data.refreshToken)
-    user.value = res.data.user
-    loading.value = false
+    try {
+      const res = await api<{ user: User; accessToken: string; refreshToken: string }>(
+        '/auth/register',
+        {
+          method: 'POST',
+          body: JSON.stringify({ username, password, email }),
+        }
+      )
+      setAuth(res.data.accessToken, res.data.refreshToken)
+      user.value = res.data.user
+    } finally {
+      loading.value = false
+    }
   }
 
   function logout() {

@@ -955,7 +955,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   font-weight: 800;
   color: white;
   overflow: hidden;
-  background: #ddd;
+  background: var(--thumb-placeholder-bg);
 }
 
 .food-thumb.thumb-custom {
