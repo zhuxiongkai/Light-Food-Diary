@@ -1,10 +1,13 @@
 <template>
-  <div class="page">
-    <div class="page-header">AI拍照估算</div>
+  <div class="page ai-photo-page">
+    <header class="ai-header">
+      <h1>拍照估算</h1>
+      <p>拍下食物，确认份量后记录</p>
+    </header>
 
-    <div class="meal-type-card card">
-      <div class="section-title mb-12">添加餐别</div>
-      <div class="meal-type-switch">
+    <section class="ai-card meal-type-card">
+      <h2>这餐记到</h2>
+      <div class="meal-type-switch" role="tablist" aria-label="餐别">
         <button
           v-for="tab in mealTabs"
           :key="tab.value"
@@ -13,84 +16,117 @@
           :class="{ active: selectedMealType === tab.value }"
           @click="selectedMealType = tab.value"
         >
-          {{ tab.label }}
+          <van-icon :name="tab.icon" />
+          <span>{{ tab.label }}</span>
         </button>
       </div>
-      <p class="target-date">记录日期：{{ displaySelectedDate }}</p>
-    </div>
+      <p class="target-date">
+        <van-icon name="calendar-o" />
+        <span>记录日期</span>
+        <strong>{{ displaySelectedDate }}</strong>
+      </p>
+    </section>
 
-    <!-- Image area -->
-    <div class="card text-center">
+    <section class="ai-card image-card">
       <div class="image-area" v-if="imageSrc">
         <img :src="imageSrc" class="preview-img" />
-        <van-button style="margin-top: 10px;" size="small" plain class="mt-8" @click="clearImage">重新选择</van-button>
+        <div class="image-actions">
+          <button class="ghost-action" type="button" @click="clearImage">
+            <van-icon name="replay" />
+            <span>重新选择</span>
+          </button>
+          <button
+            v-if="results.length === 0"
+            class="ghost-action primary-action"
+            type="button"
+            :disabled="analyzing"
+            @click="onAnalyze"
+          >
+            <van-loading v-if="analyzing" size="15" />
+            <van-icon v-else name="search" />
+            <span>{{ analyzing ? '识别中' : '开始识别' }}</span>
+          </button>
+        </div>
       </div>
       <div v-else class="image-placeholder">
-        <van-icon name="photograph" size="48" color="#ccc" />
-        <p class="text-secondary mt-8">拍照或选择食物照片进行AI识别</p>
-        <div class="img-actions mt-12">
-          <van-button type="primary" @click="onTakePhoto">拍照</van-button>
-          <van-button plain type="primary" @click="onPickFile">相册</van-button>
+        <div class="placeholder-icon">
+          <van-icon name="photograph" />
+        </div>
+        <p>选择一张清晰的食物照片</p>
+        <div class="img-actions">
+          <button type="button" class="capture-btn" @click="onTakePhoto">
+            <van-icon name="photograph" />
+            <span>拍照</span>
+          </button>
+          <button type="button" class="capture-btn outline" @click="onPickFile">
+            <van-icon name="photo-o" />
+            <span>相册</span>
+          </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Analyze button -->
-    <div class="card text-center" v-if="imageSrc && !analyzing && results.length === 0">
-      <van-button type="primary" size="large" round block :loading="analyzing" @click="onAnalyze">
-        开始识别
-      </van-button>
-    </div>
-
-    <!-- Analyzing indicator -->
-    <div class="card text-center" v-if="analyzing">
-      <van-loading type="spinner" size="32" />
-      <p class="mt-8">AI正在识别食物...</p>
-    </div>
-
-    <!-- Results -->
-    <div class="card" v-if="results.length > 0">
-      <div class="section-title mb-12">识别结果</div>
-      <div v-for="(item, i) in results" :key="i" class="result-item">
-        <div class="result-row">
-          <div>
-            <span class="result-name">{{ item.foodName }}</span>
-            <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ getItemCalories(item) }} kcal</span>
-            <span class="result-meta text-secondary">标准份量：1{{ item.servingUnit }}约 {{ item.defaultServingWeight }}g</span>
-            <span class="result-meta text-secondary">
+    <section class="ai-card result-card" v-if="results.length > 0">
+      <h2>确认食物</h2>
+      <article v-for="(item, i) in results" :key="`${item.foodName}-${i}`" class="result-item">
+        <div class="result-top">
+          <div class="result-copy">
+            <h3>{{ item.foodName }}</h3>
+            <p class="result-calorie">
+              <span>{{ item.estimatedWeight }}g</span>
+              <i></i>
+              <strong>{{ getItemCalories(item) }} kcal</strong>
+            </p>
+            <p class="result-meta">标准份量：1{{ item.servingUnit }}约 {{ item.defaultServingWeight }}g</p>
+            <p class="result-meta">
               蛋白质 {{ getItemProtein(item) }}g · 脂肪 {{ getItemFat(item) }}g · 碳水 {{ getItemCarbs(item) }}g
-            </span>
-            <span v-if="item.matchedFoodName" class="match-tip">{{ getMatchTip(item) }}</span>
-            <span v-else class="estimate-tip">未匹配食物库，请手动确认营养数据</span>
-            <div class="portion-controls" aria-label="份量快捷选择">
-              <button
-                v-for="option in item.servingOptions"
-                :key="`${item.foodName}-${option.label}`"
-                type="button"
-                class="portion-btn"
-                :class="{ active: isServingOptionActive(item, option.weight) }"
-                @click="applyServingOption(i, option.weight)"
-              >
-                <span>{{ option.label }}</span>
-                <small>{{ option.weight }}g</small>
-              </button>
+            </p>
+            <p v-if="item.matchedFoodName" class="match-tip">
+              <van-icon name="checked" />
+              <span>{{ getMatchTip(item) }}</span>
+            </p>
+            <div v-else class="estimate-edit">
+              <p class="estimate-tip">未匹配食物库（可手动填写每100g 营养）</p>
+              <div class="manual-nutrition">
+                <van-field v-model.number="item.macroPer100g.protein" type="number" label="蛋白质 (g/100g)" placeholder="例如 10" />
+                <van-field v-model.number="item.macroPer100g.fat" type="number" label="脂肪 (g/100g)" placeholder="例如 5" />
+                <van-field v-model.number="item.macroPer100g.carbs" type="number" label="碳水 (g/100g)" placeholder="例如 20" />
+              </div>
             </div>
           </div>
-          <div class="flex-row">
-            <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" />
-            <van-icon name="delete-o" class="del-btn" @click="results.splice(i, 1)" />
+          <div class="result-controls">
+            <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="64px" />
+            <button class="delete-btn" type="button" aria-label="删除识别项" @click="results.splice(i, 1)">
+              <van-icon name="delete-o" />
+            </button>
           </div>
         </div>
+
+        <div class="portion-controls" aria-label="份量快捷选择">
+          <button
+            v-for="option in item.servingOptions"
+            :key="`${item.foodName}-${option.label}`"
+            type="button"
+            class="portion-btn"
+            :class="{ active: isServingOptionActive(item, option.weight) }"
+            @click="applyServingOption(i, option.weight)"
+          >
+            <span>{{ option.label }}</span>
+            <small>{{ option.weight }}g</small>
+          </button>
+        </div>
+      </article>
+
+      <div class="result-total">
+        <span class="total-icon"><van-icon name="fire-o" /></span>
+        <span>合计：</span>
+        <strong>{{ totalResultCal }} kcal</strong>
       </div>
 
-      <div class="result-total mt-16">
-        <span>合计: {{ totalResultCal }} kcal</span>
-      </div>
-
-      <van-button type="primary" block round class="mt-12" @click="onAddAll">
-        添加到{{ mealLabelMap[selectedMealType] }}
-      </van-button>
-    </div>
+      <button class="add-all-btn" type="button" @click="onAddAll">
+        添加到{{ selectedMealLabel }}
+      </button>
+    </section>
 
     <van-dialog
       v-model:show="showPickDialog"
@@ -120,7 +156,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Button, Checkbox, CheckboxGroup, Dialog, Icon, Loading, Stepper, showToast } from 'vant'
+import { Button, Checkbox, CheckboxGroup, Dialog, Field, Icon, Loading, Stepper, showToast } from 'vant'
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
 import { useMealStore } from '@/stores/mealStore'
@@ -160,11 +196,11 @@ const pickedIndexes = ref<number[]>([])
 const selectedMealType = ref<MealType>(resolveRouteMeal(route.query.meal) || 'lunch')
 const selectedDate = ref(resolveRouteDate(route.query.date) || mealStore.todayStr())
 
-const mealTabs: Array<{ value: MealType; label: string }> = [
-  { value: 'breakfast', label: '早餐' },
-  { value: 'lunch', label: '午餐' },
-  { value: 'dinner', label: '晚餐' },
-  { value: 'snack', label: '加餐' },
+const mealTabs: Array<{ value: MealType; label: string; icon: string }> = [
+  { value: 'breakfast', label: '早餐', icon: 'underway-o' },
+  { value: 'lunch', label: '午餐', icon: 'hot-o' },
+  { value: 'dinner', label: '晚餐', icon: 'notes-o' },
+  { value: 'snack', label: '加餐', icon: 'bag-o' }
 ]
 
 const mealLabelMap: Record<MealType, string> = {
@@ -177,6 +213,7 @@ const mealLabelMap: Record<MealType, string> = {
 const totalResultCal = computed(() =>
   results.value.reduce((sum, item) => sum + getItemCalories(item), 0)
 )
+const selectedMealLabel = computed(() => mealLabelMap[selectedMealType.value])
 const displaySelectedDate = computed(() => {
   const date = new Date(`${selectedDate.value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return selectedDate.value
@@ -190,8 +227,13 @@ onMounted(async () => {
   }
 })
 
-function getItemCalories(item: AiRecognitionResult) {
-  return Math.round(item.estimatedCalories * item.estimatedWeight / 100)
+function getItemCalories(item: EnrichedRecognition) {
+  const protein = Number(item.macroPer100g?.protein ?? 0)
+  const fat = Number(item.macroPer100g?.fat ?? 0)
+  const carbs = Number(item.macroPer100g?.carbs ?? 0)
+  const caloriesFromMacrosPer100 = Math.round((protein + carbs) * 4 + fat * 9)
+  const per100 = caloriesFromMacrosPer100 > 0 ? caloriesFromMacrosPer100 : (item.estimatedCalories ?? 0)
+  return Math.round(per100 * item.estimatedWeight / 100)
 }
 
 function getItemProtein(item: EnrichedRecognition) {
@@ -475,8 +517,46 @@ async function onAddAll() {
 </script>
 
 <style scoped>
-.meal-type-card {
-  margin-top: 0;
+.ai-photo-page {
+  padding: 54px 16px calc(92px + var(--safe-bottom));
+}
+
+.ai-header {
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.ai-header h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.6px;
+}
+
+.ai-header p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.ai-card {
+  margin-bottom: 10px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+.ai-card h2 {
+  margin: 0 0 10px;
+  color: var(--text-strong);
+  font-size: 18px;
+  font-weight: 740;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
 }
 
 .meal-type-switch {
@@ -486,26 +566,58 @@ async function onAddAll() {
 }
 
 .meal-type-btn {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  height: 36px;
-  background: var(--card-bg);
+  display: flex;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
   color: var(--text-secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
   font-size: 13px;
+  font-weight: 650;
+}
+
+.meal-type-btn .van-icon {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+.meal-type-btn span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meal-type-btn.active {
-  background: var(--primary-soft);
   color: var(--primary);
-  border-color: transparent;
-  font-weight: 600;
+  background: var(--primary-soft);
+  border-color: rgba(45, 106, 79, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(45, 106, 79, 0.06);
 }
 
 .target-date {
-  margin: 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0 0;
   color: var(--text-secondary);
   font-size: 12px;
-  text-align: center;
+}
+
+.target-date strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.image-card {
+  padding: 10px;
 }
 
 .image-area {
@@ -513,84 +625,176 @@ async function onAddAll() {
   flex-direction: column;
   align-items: center;
 }
+
 .preview-img {
-  max-width: 100%;
-  max-height: 260px;
-  border-radius: 8px;
-  object-fit: contain;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 240px;
+  border-radius: 12px;
+  object-fit: cover;
 }
+
+.image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ghost-action {
+  display: inline-flex;
+  min-width: 104px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.ghost-action.primary-action {
+  color: var(--primary);
+  border-color: rgba(45, 106, 79, 0.22);
+  background: var(--primary-soft);
+}
+
+.ghost-action:disabled {
+  opacity: 0.72;
+}
+
 .image-placeholder {
-  padding: 40px 16px;
+  display: flex;
+  min-height: 224px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  text-align: center;
 }
+
+.placeholder-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 14px;
+  font-size: 28px;
+}
+
+.image-placeholder p {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .img-actions {
   display: flex;
   gap: 12px;
   justify-content: center;
-}
-.result-item {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  margin-top: 14px;
 }
 
-.result-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+.capture-btn {
+  display: inline-flex;
+  height: 38px;
+  min-width: 92px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  background: var(--primary);
+  border: 0;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 650;
+  box-shadow: 0 6px 14px rgba(45, 106, 79, 0.18);
 }
 
-.result-name {
-  font-size: 15px;
-  font-weight: 500;
-  display: block;
-}
-.result-meta {
-  font-size: 12px;
-  display: block;
-}
-
-.portion-controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 10px;
-  max-width: 260px;
-}
-
-.portion-btn {
-  min-width: 0;
-  min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.2;
-}
-
-.portion-btn span,
-.portion-btn small {
-  display: block;
-}
-
-.portion-btn small {
-  margin-top: 3px;
-  font-size: 10px;
-  color: inherit;
-}
-
-.portion-btn.active {
-  border-color: transparent;
-  background: var(--primary-soft);
+.capture-btn.outline {
   color: var(--primary);
-  font-weight: 600;
+  background: var(--card-bg);
+  border: 1px solid rgba(45, 106, 79, 0.22);
+  box-shadow: none;
+}
+
+.result-card {
+  padding: 14px 12px 16px;
+}
+
+.result-item {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.result-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.result-copy {
+  min-width: 0;
+}
+
+.result-copy h3 {
+  margin: 0 0 3px;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-calorie {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 5px;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.result-calorie i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.result-calorie strong {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.result-meta {
+  margin: 3px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .match-tip,
 .estimate-tip {
-  display: inline-block;
-  margin-top: 6px;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .match-tip {
@@ -601,25 +805,143 @@ async function onAddAll() {
   color: var(--orange);
 }
 
-.result-total {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--primary);
-}
-.del-btn { color: var(--danger); font-size: 18px; margin-left: 12px; }
-.hidden-input { display: none; }
-.camera-video {
-  width: 100%;
-  max-height: 60vh;
-  object-fit: cover;
-  background: #000;
-}
-.camera-actions {
+.result-controls {
   display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-controls :deep(.van-stepper) {
+  display: grid;
+  grid-template-columns: 38px 64px 38px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.result-controls :deep(.van-stepper__minus),
+.result-controls :deep(.van-stepper__plus),
+.result-controls :deep(.van-stepper__input) {
+  height: 38px;
+  background: var(--card-bg);
+  border-radius: 0;
+}
+
+.result-controls :deep(.van-stepper__input) {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.delete-btn {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: var(--danger);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 19px;
+}
+
+.portion-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.portion-btn {
+  min-width: 0;
+  min-height: 52px;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.portion-btn span,
+.portion-btn small {
+  display: block;
+}
+
+.portion-btn span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.55;
+  vertical-align: -1px;
+}
+
+.portion-btn small {
+  margin-top: 3px;
+  color: inherit;
+  font-size: 13px;
+}
+
+.portion-btn.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-color: rgba(45, 106, 79, 0.16);
+  font-weight: 700;
+}
+
+.portion-btn.active span::before {
+  background: var(--primary);
+  box-shadow: inset 0 0 0 3px var(--primary-soft);
+  opacity: 1;
+}
+
+.result-total {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 760;
+}
+
+.total-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 50%;
+}
+
+.result-total strong {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.add-all-btn {
+  width: 100%;
+  height: 48px;
+  margin-top: 14px;
+  color: #fff;
+  background: var(--primary);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(45, 106, 79, 0.2);
+  font-size: 17px;
+  font-weight: 760;
+}
+
+.hidden-input {
+  display: none;
 }
 
 .pick-dialog {
@@ -635,5 +957,30 @@ async function onAddAll() {
 
 .pick-option:last-child {
   border-bottom: none;
+}
+
+@media (max-width: 390px) {
+  .ai-photo-page {
+    padding-inline: 14px;
+  }
+
+  .meal-type-switch {
+    gap: 8px;
+  }
+
+  .meal-type-btn {
+    height: 46px;
+    gap: 4px;
+    padding-inline: 6px;
+    font-size: 13px;
+  }
+
+  .result-top {
+    grid-template-columns: 1fr;
+  }
+
+  .result-controls {
+    justify-content: space-between;
+  }
 }
 </style>

@@ -66,6 +66,7 @@ Authorization: Bearer <access_token>
 | GET | `/api/settings` | 获取设置 |
 | PUT | `/api/settings` | 更新设置 |
 | POST | `/api/ai/recognize` | AI 食物识别 |
+| POST | `/api/ai/advice` | AI 饮食建议（基于近 7 天数据） |
 | GET | `/api/meals/templates` | 餐食模板列表 |
 | POST | `/api/meals/templates` | 创建模板 |
 | PUT | `/api/meals/templates/:id` | 修改模板 |

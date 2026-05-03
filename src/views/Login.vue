@@ -324,7 +324,7 @@ function showLegal(type: 'terms' | 'privacy') {
   top: 50%;
   width: 31%;
   height: 1px;
-  background: rgba(143, 158, 176, 0.45);
+  background: var(--border-strong);
 }
 
 .divider::after {
@@ -334,7 +334,7 @@ function showLegal(type: 'terms' | 'privacy') {
   top: 50%;
   width: 31%;
   height: 1px;
-  background: rgba(143, 158, 176, 0.45);
+  background: var(--border-strong);
 }
 
 .other-login {
@@ -352,7 +352,7 @@ function showLegal(type: 'terms' | 'privacy') {
   border: 0;
   border-radius: 12px;
   background: var(--card-bg);
-  box-shadow: 0 7px 18px rgba(72, 93, 122, 0.08);
+  box-shadow: var(--shadow);
   color: var(--text);
   font-size: 15px;
   white-space: nowrap;

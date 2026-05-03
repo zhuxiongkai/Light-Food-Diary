@@ -361,6 +361,39 @@ textarea {
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.3px;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Section Title — reusable section headings
+   ═══════════════════════════════════════════ */
+
+.section-heading {
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Chart Color Tokens — theme-responsive
+   ═══════════════════════════════════════════ */
+
+:root {
+  --chart-axis: #c4b8ac;
+  --chart-split: rgba(156, 142, 132, 0.15);
+  --chart-label: #8a8072;
+  --chart-donut-label: #2c2420;
+  --chart-item-border: #ffffff;
+}
+
+html[data-theme="dark"] {
+  --chart-axis: #4a4238;
+  --chart-split: rgba(156, 142, 132, 0.12);
+  --chart-label: #8a8072;
+  --chart-donut-label: #e8e2d8;
+  --chart-item-border: #2a2722;
 }
 
 /* ═══════════════════════════════════════════
@@ -460,13 +493,6 @@ textarea {
   align-items: center;
   justify-content: space-between;
   margin: 24px 2px 14px;
-}
-
-.section-heading {
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -0.2px;
-  color: var(--text);
 }
 
 .muted {

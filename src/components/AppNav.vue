@@ -32,6 +32,7 @@ const navItems = [
 const currentPath = computed(() => route.path)
 
 function isActive(path: string) {
+  if (path === '/log' && currentPath.value === '/ai-photo') return true
   return path === '/' ? currentPath.value === '/' : currentPath.value.startsWith(path)
 }
 </script>

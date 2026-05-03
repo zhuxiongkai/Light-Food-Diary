@@ -1,45 +1,42 @@
 <template>
-  <div class="page">
-    <div class="page-header flex-between">
-      <span>体重记录</span>
-      <van-button size="small" type="primary" @click="showAdd = true">记录</van-button>
-    </div>
+  <div class="page weight-page">
+    <header class="page-header">
+      <h1 class="page-title">体重记录</h1>
+      <van-button size="small" type="primary" round @click="showAdd = true">记录</van-button>
+    </header>
 
-    <!-- BMI Card -->
-    <div class="card">
-      <div class="flex-between">
-        <div>
-          <div class="bmi-label">当前体重</div>
-          <div class="bmi-value">{{ latestWeight }} <span class="unit">kg</span></div>
+    <section class="card bmi-card">
+      <div class="bmi-grid">
+        <div class="bmi-item">
+          <span class="bmi-label">当前体重</span>
+          <strong class="bmi-value numeric">{{ latestWeight }} <small>kg</small></strong>
         </div>
-        <div>
-          <div class="bmi-label">BMI</div>
-          <div class="bmi-value">{{ bmi }} <span class="unit">kg/m²</span></div>
+        <div class="bmi-item">
+          <span class="bmi-label">BMI</span>
+          <strong class="bmi-value numeric">{{ bmi }} <small>kg/m²</small></strong>
         </div>
-        <div>
-          <div class="bmi-label">目标体重</div>
-          <div class="bmi-value">{{ settings.weightGoal }} <span class="unit">kg</span></div>
+        <div class="bmi-item">
+          <span class="bmi-label">目标体重</span>
+          <strong class="bmi-value numeric">{{ settings.weightGoal }} <small>kg</small></strong>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Trend Chart -->
-    <div class="card" v-if="chartOption">
-      <div class="chart-title">体重趋势</div>
+    <section class="card chart-card" v-if="chartOption">
+      <h2 class="section-heading">体重趋势</h2>
       <v-chart :option="chartOption" style="height:220px" autoresize />
-    </div>
+    </section>
 
-    <!-- Records list -->
-    <div class="card" v-if="weightStore.records.length > 0">
-      <div class="section-title mb-12">历史记录</div>
-      <div v-for="r in weightStore.records" :key="r.id" class="record-row flex-between">
+    <section class="card history-card" v-if="weightStore.records.length > 0">
+      <h2 class="section-heading">历史记录</h2>
+      <div v-for="r in weightStore.records" :key="r.id" class="record-row">
         <span>{{ r.date }}</span>
-        <div class="flex-row">
+        <div class="record-right">
           <span class="weight-val numeric">{{ r.weight }} kg</span>
           <van-icon name="delete-o" class="del-btn" @click="onDelete(r.id!)" />
         </div>
       </div>
-    </div>
+    </section>
 
     <van-dialog v-model:show="showAdd" title="记录体重" show-cancel-button @confirm="onAdd">
       <div class="add-form">
@@ -91,9 +88,14 @@ const chartOption = computed(() => {
     xAxis: {
       type: 'category' as const,
       data: reversed.map(r => r.date.slice(5)),
-      axisLabel: { fontSize: 11 }
+      axisLabel: { fontSize: 11, color: 'var(--chart-label)' }
     },
-    yAxis: { type: 'value' as const, axisLabel: { fontSize: 11 }, name: 'kg' },
+    yAxis: {
+      type: 'value' as const,
+      axisLabel: { fontSize: 11, color: 'var(--chart-label)' },
+      name: 'kg',
+      splitLine: { lineStyle: { color: 'var(--chart-split)' } }
+    },
     series: [{
       type: 'line' as const,
       data: reversed.map(r => r.weight),
@@ -128,17 +130,89 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.bmi-label { font-size: 12px; color: var(--text-secondary); }
-.bmi-value { font-size: 24px; font-weight: 700; margin-top: 2px; }
-.unit { font-size: 13px; font-weight: 400; color: var(--text-secondary); }
-.chart-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.section-title { font-size: 14px; font-weight: 600; }
-.record-row {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+.weight-page {
+  padding: 54px 16px calc(92px + var(--safe-bottom));
 }
-.record-row:last-child { border-bottom: none; }
-.weight-val { font-size: 15px; font-weight: 600; margin-right: 12px; }
-.del-btn { color: var(--danger); font-size: 16px; }
-.add-form { padding: 12px 0; }
+
+.bmi-card {
+  margin-bottom: 16px;
+}
+
+.bmi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.bmi-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bmi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bmi-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.bmi-value small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
+.chart-card {
+  margin-bottom: 16px;
+}
+
+.chart-card .section-heading {
+  margin-bottom: 8px;
+}
+
+.history-card .section-heading {
+  margin-bottom: 12px;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--divider);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.record-row:last-child {
+  border-bottom: none;
+}
+
+.record-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.weight-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.del-btn {
+  color: var(--danger);
+  font-size: 18px;
+}
+
+.add-form {
+  padding: 12px 0;
+}
 </style>

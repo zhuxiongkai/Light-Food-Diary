@@ -97,11 +97,11 @@ export const MEAL_TYPE_LABELS: Record<MealType, string> = {
 }
 
 export const FOOD_CATEGORY_LABELS: Record<FoodCategory, string> = {
+  custom: '自定义',
   staple: '主食',
   meat: '肉类',
   vegetable: '蔬菜',
   fruit: '水果',
   snack: '零食',
-  drink: '饮品',
-  custom: '自定义'
+  drink: '饮品'
 }

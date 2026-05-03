@@ -1,7 +1,7 @@
 <template>
   <div class="calorie-ring">
     <svg :width="size" :height="size" viewBox="0 0 140 140">
-      <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(156, 142, 132, 0.15)" :stroke-width="strokeWidth" />
+      <circle cx="70" cy="70" r="60" fill="none" stroke="var(--divider)" :stroke-width="strokeWidth" />
       <circle
         cx="70" cy="70" r="60"
         fill="none"

@@ -265,7 +265,7 @@ const progressPercent = computed(() => {
   return Math.max(0, Math.min(100, Math.round((1 - diff / base) * 100)))
 })
 const macroSummary = computed(
-  () => `碳水${form.carbsRatio}%·蛋白质${form.proteinRatio}%·脂肪${form.fatRatio}%`
+  () => `碳${form.carbsRatio}% · 蛋${form.proteinRatio}% · 脂${form.fatRatio}%`
 )
 const macroTotal = computed(() =>
   Number(editForm.carbsRatio) + Number(editForm.proteinRatio) + Number(editForm.fatRatio)
@@ -473,7 +473,7 @@ async function onLogout() {
   gap: 16px;
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: 1px solid rgba(132, 149, 171, 0.08);
+  border-bottom: 1px solid var(--divider);
 }
 
 .avatar-large {
@@ -535,7 +535,7 @@ async function onLogout() {
 
 .progress-bar {
   height: 5px;
-  background: rgba(156, 142, 132, 0.12);
+  background: var(--divider);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -562,7 +562,7 @@ async function onLogout() {
 }
 
 .divider {
-  color: rgba(132, 149, 171, 0.3);
+  color: var(--text-secondary);
   margin: 0 4px;
 }
 
@@ -582,9 +582,9 @@ async function onLogout() {
 
 .settings-item {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   min-height: 62px;
   padding: 14px 16px;
@@ -622,15 +622,11 @@ async function onLogout() {
   font-size: 14px;
   color: var(--text-secondary);
   text-align: right;
-  flex: 1;
   min-width: 0;
   line-height: 1.35;
-  overflow-wrap: normal;
-}
-
-.settings-item:last-of-type .item-value {
-  font-size: 13px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-arrow {
@@ -741,10 +737,6 @@ async function onLogout() {
     min-width: 94px;
     gap: 8px;
     font-size: 14px;
-  }
-
-  .settings-item:last-of-type .item-value {
-    font-size: 12px;
   }
 }
 </style>

@@ -18,9 +18,9 @@
           <span class="food-meta">{{ food.caloriesPer100g }} kcal/100g</span>
         </div>
         <div class="food-macros">
-          <span class="macro">蛋白{{ food.protein }}g</span>
-          <span class="macro">脂肪{{ food.fat }}g</span>
-          <span class="macro">碳水{{ food.carbs }}g</span>
+          <span class="macro">蛋{{ food.protein }}g</span>
+          <span class="macro">脂{{ food.fat }}g</span>
+          <span class="macro">碳{{ food.carbs }}g</span>
         </div>
         <van-icon v-if="showDelete && food.category === 'custom'" name="delete-o" class="delete-icon" @click.stop="$emit('delete', food)" />
       </div>
@@ -97,9 +97,10 @@ function onCategoryChange() {}
   padding: 0 12px;
 }
 .food-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
+  column-gap: 12px;
   padding: 14px 12px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
@@ -108,10 +109,14 @@ function onCategoryChange() {}
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .food-name {
   font-size: 15px;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .food-meta {
   font-size: 12px;
@@ -119,9 +124,21 @@ function onCategoryChange() {}
 }
 .food-macros {
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 6px;
   font-size: 11px;
   color: var(--text-secondary);
+  min-width: 0;
+  max-width: 150px;
+  line-height: 1.35;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.macro {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .delete-icon {
   color: var(--danger);

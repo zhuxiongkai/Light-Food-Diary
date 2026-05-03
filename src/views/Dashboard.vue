@@ -254,7 +254,7 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard-page {
-  padding: 38px 14px calc(84px + var(--safe-bottom));
+  padding: 54px 16px calc(92px + var(--safe-bottom));
 }
 
 .dashboard-header {
@@ -299,7 +299,7 @@ onMounted(async () => {
   padding: 12px 12px;
   border-radius: 26px;
   border-color: var(--border);
-  box-shadow: 0 6px 22px rgba(38, 53, 76, 0.08);
+  box-shadow: var(--shadow);
   background:
     radial-gradient(circle at 14% 100%, var(--summary-card-shine-1), transparent 52%),
     radial-gradient(circle at 100% 0%, var(--summary-card-shine-2), transparent 40%),
@@ -452,12 +452,12 @@ onMounted(async () => {
   padding: 8px 10px;
   border: 1px solid var(--border);
   background: var(--card-bg);
-  box-shadow: 0 6px 16px rgba(41, 58, 84, 0.08);
+  box-shadow: var(--shadow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .meal-item:hover {
-  box-shadow: 0 10px 24px rgba(41, 58, 84, 0.12);
+  box-shadow: var(--shadow-lg);
 }
 
 .meal-item:active {
@@ -556,7 +556,7 @@ onMounted(async () => {
   background: linear-gradient(150deg, var(--bg-warm), var(--bg));
   font-size: 18px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(38, 46, 61, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .food-thumb + .food-thumb {
@@ -578,7 +578,7 @@ onMounted(async () => {
   margin-top: 8px;
   padding: 10px 10px 8px;
   border-color: var(--border);
-  box-shadow: 0 6px 18px rgba(41, 58, 84, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .detail-link {
@@ -633,7 +633,7 @@ onMounted(async () => {
   width: 100%;
   height: 5px;
   border-radius: 5px;
-  background: rgba(156, 142, 132, 0.15);
+  background: var(--divider);
   overflow: hidden;
 }
 

@@ -57,23 +57,31 @@ const totalCarbs = computed(() => props.items.reduce((s, i) => s + i.carbs, 0))
   box-shadow: var(--shadow);
 }
 .meal-header {
+  gap: 10px;
   margin-bottom: 6px;
 }
 .meal-type {
   font-size: 16px;
   font-weight: 600;
+  min-width: 0;
 }
 .meal-calories {
   font-size: 16px;
   font-weight: 700;
   color: var(--primary);
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .meal-macros {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   font-size: 12px;
   color: var(--text-secondary);
   margin-bottom: 8px;
+}
+.meal-macros span {
+  white-space: nowrap;
 }
 .meal-items {
   border-top: 1px solid var(--border);
@@ -84,7 +92,19 @@ const totalCarbs = computed(() => props.items.reduce((s, i) => s + i.carbs, 0))
   border-bottom: 1px solid var(--border);
 }
 .meal-item:last-child { border-bottom: none; }
-.food-title { font-size: 14px; margin-right: 8px; }
+.meal-item > div:first-child {
+  min-width: 0;
+}
+.food-title {
+  display: inline-block;
+  max-width: 100%;
+  font-size: 14px;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
 .food-weight { font-size: 12px; color: var(--text-secondary); }
 .item-cal { font-size: 14px; font-weight: 500; margin-right: 8px; }
 .del-btn { color: var(--danger); font-size: 16px; }

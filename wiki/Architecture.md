@@ -42,6 +42,7 @@ flowchart TD
 - 用户设置管理
 - 餐食模板管理
 - AI 识别代理调用
+- AI 识别结果营养匹配（foodMatcher）
 - 数据库读写
 
 ## 认证流程

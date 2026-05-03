@@ -64,6 +64,7 @@
 | GET | `/api/settings` | 获取设置 |
 | PUT | `/api/settings` | 更新设置 |
 | POST | `/api/ai/recognize` | AI 食物识别 |
+| POST | `/api/ai/advice` | AI 饮食建议 |
 | GET | `/api/meals/templates` | 餐食模板列表 |
 | POST | `/api/meals/templates` | 创建模板 |
 | PUT | `/api/meals/templates/:id` | 修改模板 |
@@ -106,8 +107,11 @@ Schema 定义见 `server/src/db/schema.ts`。
 
 - 前端 `src/utils/aiService.ts` → 调后端 `/api/ai/recognize`
 - 后端 `server/src/services/aiService.ts` → 调用 Baidu 菜品识别 API
+- 后端 `server/src/services/foodMatcher.ts` → 别名/模糊匹配 Baidu 结果到食物库，补齐每 100g 营养 (热量/蛋白质/脂肪/碳水)
+- 前端 `src/utils/servingSize.ts` → 食物特定份量默认值 (碗/个/杯/份)，AiPhoto 中提供「少量/标准/偏多」快捷调整
 - 服务端统一读取 `BAIDU_AI_API_KEY` 与 `BAIDU_AI_SECRET_KEY`
-- 支持 base64 图片传入，返回 `AiRecognitionResult[]`
+- 支持 base64 图片传入，返回 `AiRecognitionResult[]`（含 `matchedFoodId`, `protein`, `fat`, `carbs`, `nutritionSource`）
+- DeepSeek Chat API 用于 AI 饮食建议（Statistics 页），`DEEPSEEK_API_KEY` 在 `server/.env` 配置
 
 ## 内置食物库
 
@@ -131,6 +135,10 @@ Schema 定义见 `server/src/db/schema.ts`。
 | `JWT_SECRET` / `JWT_REFRESH_SECRET` | JWT 签名密钥 |
 | `ENCRYPTION_KEY` | AI API Key 加密密钥 |
 | `BAIDU_AI_API_KEY` / `BAIDU_AI_SECRET_KEY` | Baidu AI 识别服务密钥 |
+| `DEEPSEEK_API_KEY` | DeepSeek Chat API 密钥 (AI 饮食建议) |
+| `DEEPSEEK_API_BASE_URL` | DeepSeek API 地址 (默认 `https://api.deepseek.com/v1`)，可选 |
+| `DEEPSEEK_MODEL` | 模型名 (默认 `deepseek-chat`)，可选 |
+| `CORS_ORIGIN` | CORS 允许的源 (默认 `http://localhost:5173`) |
 
 ## 启动流程
 
@@ -156,3 +164,5 @@ VITE_API_URL=http://localhost:3000/api npm run dev
 - Capacitor plugin 权限提示语为中文
 - 构建输出目录 `dist/`，Capacitor `webDir` 指向它
 - Dexie 保留用于离线缓存（后续迭代），当前主存储为 MySQL
+- 服务端新增工具函数放在 `server/src/services/`，前端工具函数放在 `src/utils/`
+- 测试文件在 `tests/` 目录，使用 Node 原生 test runner (`node --test`)

@@ -1,9 +1,9 @@
 <template>
   <div class="page">
-    <div class="page-header flex-between">
-      <span>食物库</span>
-      <van-button size="small" type="primary" @click="showAdd = true">添加</van-button>
-    </div>
+    <header class="page-header">
+      <h1 class="page-title">食物库</h1>
+      <van-button size="small" type="primary" round @click="showAdd = true">添加</van-button>
+    </header>
     <FoodSearch :showDelete="true" @select="onSelect" @delete="onDelete" />
 
     <van-dialog v-model:show="showAdd" title="添加自定义食物" show-cancel-button @confirm="onAdd">

@@ -36,6 +36,9 @@ ENCRYPTION_KEY=replace_me
 
 BAIDU_AI_API_KEY=your_baidu_api_key
 BAIDU_AI_SECRET_KEY=your_baidu_secret_key
+
+# DeepSeek（AI 饮食建议，可选）
+DEEPSEEK_API_KEY=
 ```
 
 初始化数据库：

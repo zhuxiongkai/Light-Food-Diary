@@ -154,6 +154,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { useMealStore } from '@/stores/mealStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useWeightStore } from '@/stores/weightStore'
+import { useTheme } from '@/composables/useTheme'
 import { fetchNutritionAdvice } from '@/utils/aiService'
 import { renderMarkdownToHtml } from '@/utils/renderMarkdown'
 import type { MealRecord } from '@/types'
@@ -168,6 +169,8 @@ const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
 const weightStore = useWeightStore()
 const router = useRouter()
+
+const { effectiveTheme } = useTheme()
 
 const period = ref<Period>('week')
 const meals = ref<MealRecord[]>([])
@@ -341,15 +344,29 @@ const macroLegend = computed(() => {
   }))
 })
 
+const isDark = computed(() => effectiveTheme() === 'dark')
+
+const chartColors = computed(() => ({
+  primary: '#2d6a4f',
+  primaryDark: '#52b788',
+  accent: '#b7844a',
+  accentDark: '#d4a574',
+  textSecondary: isDark.value ? '#8a8072' : '#6b5e58',
+  axis: isDark.value ? '#4a4238' : '#c4b8ac',
+  split: isDark.value ? 'rgba(156,142,132,0.12)' : 'rgba(156,142,132,0.15)',
+  donutLabel: isDark.value ? '#e8e2d8' : '#2c2420',
+  itemBorder: isDark.value ? '#2a2722' : '#ffffff',
+}))
+
 const trendOption = computed(() => ({
-  color: ['#2d6a4f', '#b7844a'],
+  color: [chartColors.value.primary, chartColors.value.accent],
   tooltip: { trigger: 'axis' },
   legend: {
     top: 10,
     right: 0,
     itemWidth: 10,
     itemHeight: 10,
-    textStyle: { color: '#687283', fontSize: 11 },
+    textStyle: { color: chartColors.value.textSecondary, fontSize: 11 },
     data: ['摄入热量', '目标热量']
   },
   grid: { left: 38, right: 8, top: 54, bottom: 24 },
@@ -357,16 +374,16 @@ const trendOption = computed(() => ({
     type: 'category',
     boundaryGap: false,
     data: chartLabels.value,
-    axisLine: { lineStyle: { color: '#d7e0ea' } },
+    axisLine: { lineStyle: { color: chartColors.value.axis } },
     axisTick: { show: false },
-    axisLabel: { color: '#687283', fontSize: 11 }
+    axisLabel: { color: chartColors.value.textSecondary, fontSize: 11 }
   },
   yAxis: {
     type: 'value',
     min: 0,
     max: Math.max(2500, dailyGoal.value + 500),
-    splitLine: { lineStyle: { color: '#edf2f7' } },
-    axisLabel: { color: '#687283', fontSize: 11 }
+    splitLine: { lineStyle: { color: chartColors.value.split } },
+    axisLabel: { color: chartColors.value.textSecondary, fontSize: 11 }
   },
   series: [
     {
@@ -390,14 +407,14 @@ const trendOption = computed(() => ({
 }))
 
 const barOption = computed(() => ({
-  color: ['#2d6a4f', '#b7844a'],
+  color: [chartColors.value.primary, chartColors.value.accent],
   tooltip: { trigger: 'axis' },
   legend: {
     top: 0,
     left: 0,
     itemWidth: 9,
     itemHeight: 9,
-    textStyle: { color: '#687283', fontSize: 10 },
+    textStyle: { color: chartColors.value.textSecondary, fontSize: 10 },
     data: ['摄入热量', '目标热量']
   },
   grid: { left: 32, right: 4, top: 38, bottom: 20 },
@@ -405,13 +422,13 @@ const barOption = computed(() => ({
     type: 'category',
     data: chartLabels.value,
     axisTick: { show: false },
-    axisLine: { lineStyle: { color: '#d7e0ea' } },
-    axisLabel: { color: '#687283', fontSize: 10 }
+    axisLine: { lineStyle: { color: chartColors.value.axis } },
+    axisLabel: { color: chartColors.value.textSecondary, fontSize: 10 }
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: '#edf2f7' } },
-    axisLabel: { color: '#687283', fontSize: 10 }
+    splitLine: { lineStyle: { color: chartColors.value.split } },
+    axisLabel: { color: chartColors.value.textSecondary, fontSize: 10 }
   },
   series: [
     { name: '摄入热量', type: 'bar', barWidth: 8, data: calorieSeries.value, itemStyle: { borderRadius: [5, 5, 0, 0] } },
@@ -425,7 +442,7 @@ const donutOption = computed(() => {
     .map((item) => ({
       name: item.name,
       value: item.calories,
-      itemStyle: { color: item.color, borderColor: '#fff', borderWidth: 2 }
+      itemStyle: { color: item.color, borderColor: chartColors.value.itemBorder, borderWidth: 2 }
     }))
 
   return {
@@ -440,7 +457,7 @@ const donutOption = computed(() => {
           show: true,
           position: 'center',
           formatter: `${averageCaloriesText.value}\n千卡`,
-          color: '#121721',
+          color: chartColors.value.donutLabel,
           fontSize: 18,
           lineHeight: 25,
           fontWeight: 800
@@ -458,7 +475,7 @@ const weightOption = computed(() => {
   const maxWeight = points.length ? Math.max(...points) : 0
 
   return {
-    color: ['#2d6a4f'],
+    color: [chartColors.value.primary],
     grid: { left: 4, right: 8, top: 12, bottom: 22 },
     xAxis: {
       type: 'category',
@@ -466,14 +483,14 @@ const weightOption = computed(() => {
       data: chartLabels.value,
       axisTick: { show: false },
       axisLine: { show: false },
-      axisLabel: { color: '#8a95a7', fontSize: 10 }
+      axisLabel: { color: chartColors.value.textSecondary, fontSize: 10 }
     },
     yAxis: {
       type: 'value',
       min: Math.floor((minWeight - 1) * 10) / 10,
       max: Math.ceil((maxWeight + 1) * 10) / 10,
-      splitLine: { lineStyle: { color: '#eef2f6' } },
-      axisLabel: { color: '#8a95a7', fontSize: 10 }
+      splitLine: { lineStyle: { color: chartColors.value.split } },
+      axisLabel: { color: chartColors.value.textSecondary, fontSize: 10 }
     },
     series: [{
       type: 'line',
@@ -481,7 +498,7 @@ const weightOption = computed(() => {
       symbolSize: 6,
       data: weightSeries.value,
       lineStyle: { width: 3 },
-      areaStyle: { color: 'rgba(45, 106, 79, 0.08)' }
+      areaStyle: { color: isDark.value ? 'rgba(82, 183, 136, 0.08)' : 'rgba(45, 106, 79, 0.08)' }
     }]
   }
 })
@@ -823,7 +840,7 @@ small {
 .empty-chart {
   height: 120px;
   border-radius: 12px;
-  background: rgba(132, 149, 171, 0.08);
+  background: var(--divider);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -952,7 +969,7 @@ small {
 
 .kpi-icon.balance {
   color: var(--text-soft);
-  background: rgba(156, 142, 132, 0.12);
+  background: var(--divider);
 }
 
 .kpi-card span {
@@ -984,7 +1001,7 @@ small {
 
 .completion-track {
   height: 4px;
-  background: rgba(156, 142, 132, 0.12);
+  background: var(--divider);
   border-radius: 2px;
   overflow: hidden;
 }

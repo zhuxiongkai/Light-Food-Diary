@@ -102,6 +102,7 @@ src/assets/styles/main.css
 - 移动端优先
 - Vant 组件按需引入
 - 图表按需使用 ECharts，不进行全局注册
+- 工具函数放在 `src/utils/`，如 `aiService.ts`（AI 识别）、`servingSize.ts`（份量配置）、`exportService.ts`（数据导出）、`renderMarkdown.ts`（Markdown 渲染）
 
 ## Capacitor
 

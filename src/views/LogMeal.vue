@@ -664,8 +664,8 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   gap: 12px;
   padding: 0 16px;
   color: var(--text-secondary);
-  background: rgba(180, 160, 140, 0.12);
-  border: none;
+  background: var(--bg-warm);
+  border: 1px solid var(--border);
   border-radius: 24px;
   font-size: 14px;
   cursor: pointer;
@@ -673,7 +673,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
 }
 
 .search-shell:active {
-  background: rgba(180, 160, 140, 0.2);
+  background: var(--divider);
 }
 
 .search-shell .van-icon {
@@ -786,7 +786,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   flex-direction: column;
   gap: 14px;
   padding-left: 16px;
-  border-left: 1px solid rgba(132, 149, 171, 0.08);
+  border-left: 1px solid var(--divider);
 }
 
 .macro-row {
@@ -809,7 +809,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
 
 .macro-track {
   height: 5px;
-  background: rgba(156, 142, 132, 0.12);
+  background: var(--divider);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -1101,6 +1101,15 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
 .selected-food span:first-child {
   color: var(--text);
   font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-food span:last-child {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .calc-result {
@@ -1111,6 +1120,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   border-radius: 12px;
   font-size: 13px;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .detail-time {
