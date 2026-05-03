@@ -97,17 +97,9 @@
       </div>
     </van-dialog>
 
-    <!-- Hidden file input -->
-    <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden-input" @change="onFilePicked" />
-
-    <!-- Hidden camera stream -->
-    <van-dialog v-model:show="showCamera" title="拍照" @closed="stopCamera">
-      <video ref="videoEl" autoplay playsinline class="camera-video" />
-      <div class="camera-actions">
-        <van-button type="primary" @click="capturePhoto">拍摄</van-button>
-        <van-button plain @click="showCamera = false">取消</van-button>
-      </div>
-    </van-dialog>
+    <!-- Hidden file inputs (web fallback) -->
+    <input ref="cameraInput" type="file" accept="image/*" capture="environment" class="hidden-input" @change="onFilePicked" />
+    <input ref="galleryInput" type="file" accept="image/*" class="hidden-input" @change="onFilePicked" />
   </div>
 </template>
 
@@ -115,6 +107,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Button, Checkbox, CheckboxGroup, Dialog, Icon, Loading, Stepper, showToast } from 'vant'
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { Capacitor } from '@capacitor/core'
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
 import { analyzeFoodImage } from '@/utils/aiService'
@@ -140,15 +134,13 @@ const imageBase64 = ref('')
 const imageType = ref('image/jpeg')
 const analyzing = ref(false)
 const results = ref<EnrichedRecognition[]>([])
-const fileInput = ref<HTMLInputElement>()
-const videoEl = ref<HTMLVideoElement>()
-const showCamera = ref(false)
+const cameraInput = ref<HTMLInputElement>()
+const galleryInput = ref<HTMLInputElement>()
 const showPickDialog = ref(false)
 const candidateResults = ref<AiRecognitionResult[]>([])
 const pickedIndexes = ref<number[]>([])
 const selectedMealType = ref<MealType>(resolveRouteMeal(route.query.meal) || 'lunch')
 const selectedDate = ref(resolveRouteDate(route.query.date) || mealStore.todayStr())
-let mediaStream: MediaStream | null = null
 
 const mealTabs: Array<{ value: MealType; label: string }> = [
   { value: 'breakfast', label: '早餐' },
@@ -221,42 +213,56 @@ function clearImage() {
 }
 
 async function onTakePhoto() {
-  showCamera.value = true
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    if (videoEl.value) {
-      videoEl.value.srcObject = mediaStream
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+        quality: 80,
+      })
+      applyCapacitorPhoto(photo)
+    } catch (e: any) {
+      if (!isCancelledError(e)) {
+        showToast('无法访问摄像头，请检查权限')
+      }
     }
-  } catch {
-    showToast('无法访问摄像头，请使用相册')
-    showCamera.value = false
-  }
-}
-
-function capturePhoto() {
-  if (!videoEl.value) return
-  clearRecognitionState()
-  const canvas = document.createElement('canvas')
-  canvas.width = videoEl.value.videoWidth
-  canvas.height = videoEl.value.videoHeight
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(videoEl.value, 0, 0)
-  imageSrc.value = canvas.toDataURL('image/jpeg')
-  imageBase64.value = canvas.toDataURL('image/jpeg').split(',')[1]
-  imageType.value = 'image/jpeg'
-  showCamera.value = false
-  stopCamera()
-}
-
-function stopCamera() {
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(t => t.stop())
-    mediaStream = null
+  } else {
+    cameraInput.value?.click()
   }
 }
 
 function onPickFile() {
-  fileInput.value?.click()
+  if (Capacitor.isNativePlatform()) {
+    Camera.getPhoto({
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Photos,
+      quality: 80,
+    }).then((photo) => {
+      applyCapacitorPhoto(photo)
+    }).catch((e: any) => {
+      if (!isCancelledError(e)) {
+        showToast('无法访问相册，请检查权限')
+      }
+    })
+  } else {
+    galleryInput.value?.click()
+  }
+}
+
+function applyCapacitorPhoto(photo: Awaited<ReturnType<typeof Camera.getPhoto>>) {
+  clearRecognitionState()
+  const base64 = photo.base64String ?? ''
+  const format = photo.format ?? 'jpeg'
+  const mimeType = `image/${format}`
+  imageBase64.value = base64
+  imageType.value = mimeType
+  imageSrc.value = `data:${mimeType};base64,${base64}`
+}
+
+function isCancelledError(e: unknown): boolean {
+  if (typeof e === 'string') return e.toLowerCase().includes('cancel')
+  if (e instanceof Error) return e.message.toLowerCase().includes('cancel')
+  return false
 }
 
 function onFilePicked(e: Event) {
