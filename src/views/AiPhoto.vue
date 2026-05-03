@@ -291,9 +291,10 @@ async function onAnalyze() {
   analyzing.value = true
   try {
     const res = await analyzeFoodImage(imageBase64.value, imageType.value)
+    const filtered = res.filter((item) => item.confidence >= 0.1)
     results.value = []
-    candidateResults.value = res
-    pickedIndexes.value = res.map((_, i) => i)
+    candidateResults.value = filtered
+    pickedIndexes.value = filtered.map((_, i) => i)
     showPickDialog.value = true
   } catch (e: any) {
     showToast(e.message || '识别失败，请重试')
