@@ -22,6 +22,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    // 将 release 构建产物重命名为中文应用名 "轻卡记"
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (variant.buildType.name == 'release') {
+                def ext = ".apk"
+                if (output.outputFileName != null && output.outputFileName.endsWith('.aab')) {
+                    ext = '.aab'
+                }
+                output.outputFileName = "轻卡记${ext}"
+            }
+        }
+    }
 }
 
 repositories {
