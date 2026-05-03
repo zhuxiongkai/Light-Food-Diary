@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/api/client'
 import type { FoodItem, FoodCategory } from '@/types'
+import { getServingProfile } from '@/utils/servingSize'
 
 export interface ApiFood {
   id: number
@@ -15,14 +16,16 @@ export interface ApiFood {
 }
 
 function toFoodItem(f: ApiFood): FoodItem {
+  const category = f.category as FoodCategory
   return {
     id: f.id,
     name: f.name,
-    category: f.category as FoodCategory,
+    category,
     caloriesPer100g: f.caloriesPer100g,
     protein: f.protein,
     fat: f.fat,
     carbs: f.carbs,
+    ...getServingProfile({ name: f.name, category }),
   }
 }
 

@@ -1,3 +1,11 @@
+export type ServingUnit = '份' | '碗' | '个' | '杯' | '瓶' | '片' | '根'
+
+export interface ServingOption {
+  label: string
+  multiplier: number
+  weight: number
+}
+
 export interface FoodItem {
   id: number | string
   name: string
@@ -6,6 +14,9 @@ export interface FoodItem {
   protein: number
   fat: number
   carbs: number
+  defaultServingWeight?: number
+  servingUnit?: ServingUnit
+  servingOptions?: ServingOption[]
 }
 
 export interface MealRecord {

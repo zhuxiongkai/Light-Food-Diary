@@ -56,11 +56,25 @@
           <div>
             <span class="result-name">{{ item.foodName }}</span>
             <span class="result-meta text-secondary">{{ item.estimatedWeight }}g · {{ getItemCalories(item) }} kcal</span>
+            <span class="result-meta text-secondary">标准份量：1{{ item.servingUnit }}约 {{ item.defaultServingWeight }}g</span>
             <span class="result-meta text-secondary">
               蛋白质 {{ getItemProtein(item) }}g · 脂肪 {{ getItemFat(item) }}g · 碳水 {{ getItemCarbs(item) }}g
             </span>
             <span v-if="item.matchedFoodName" class="match-tip">已匹配食物库：{{ item.matchedFoodName }}</span>
             <span v-else class="estimate-tip">未匹配食物库，三大营养素按估算值记录</span>
+            <div class="portion-controls" aria-label="份量快捷选择">
+              <button
+                v-for="option in item.servingOptions"
+                :key="`${item.foodName}-${option.label}`"
+                type="button"
+                class="portion-btn"
+                :class="{ active: isServingOptionActive(item, option.weight) }"
+                @click="applyServingOption(i, option.weight)"
+              >
+                <span>{{ option.label }}</span>
+                <small>{{ option.weight }}g</small>
+              </button>
+            </div>
           </div>
           <div class="flex-row">
             <van-stepper v-model="results[i].estimatedWeight" :min="10" :max="2000" :step="10" input-width="60px" />
@@ -112,12 +126,16 @@ import { Capacitor } from '@capacitor/core'
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
 import { analyzeFoodImage } from '@/utils/aiService'
+import { getServingProfile, type ServingOption, type ServingUnit } from '@/utils/servingSize'
 import type { AiRecognitionResult, MealType } from '@/types'
 
 interface EnrichedRecognition extends AiRecognitionResult {
   matchedFoodId: number
   matchedFoodName: string
   estimated: boolean
+  defaultServingWeight: number
+  servingUnit: ServingUnit
+  servingOptions: ServingOption[]
   macroPer100g: {
     protein: number
     fat: number
@@ -186,6 +204,15 @@ function getItemFat(item: EnrichedRecognition) {
 
 function getItemCarbs(item: EnrichedRecognition) {
   return Math.round(item.macroPer100g.carbs * item.estimatedWeight) / 100
+}
+
+function isServingOptionActive(item: EnrichedRecognition, weight: number) {
+  return Math.round(item.estimatedWeight) === weight
+}
+
+function applyServingOption(index: number, weight: number) {
+  if (!results.value[index]) return
+  results.value[index].estimatedWeight = weight
 }
 
 function resolveRouteMeal(value: unknown): MealType | null {
@@ -291,9 +318,10 @@ async function onAnalyze() {
   analyzing.value = true
   try {
     const res = await analyzeFoodImage(imageBase64.value, imageType.value)
+    const filtered = res.filter((item) => item.confidence >= 0.1)
     results.value = []
-    candidateResults.value = res
-    pickedIndexes.value = res.map((_, i) => i)
+    candidateResults.value = filtered
+    pickedIndexes.value = filtered.map((_, i) => i)
     showPickDialog.value = true
   } catch (e: any) {
     showToast(e.message || '识别失败，请重试')
@@ -331,11 +359,14 @@ function onConfirmPick() {
 function enrichRecognition(item: AiRecognitionResult): EnrichedRecognition {
   const matched = findFoodMatch(item.foodName)
   if (matched) {
+    const servingProfile = getServingProfile(matched)
     return {
       ...item,
+      estimatedWeight: servingProfile.defaultServingWeight,
       matchedFoodId: Number(matched.id) || 0,
       matchedFoodName: matched.name,
       estimated: false,
+      ...servingProfile,
       macroPer100g: {
         protein: matched.protein,
         fat: matched.fat,
@@ -345,11 +376,14 @@ function enrichRecognition(item: AiRecognitionResult): EnrichedRecognition {
     }
   }
 
+  const servingProfile = getServingProfile({ name: item.foodName, category: 'custom' })
   return {
     ...item,
+    estimatedWeight: servingProfile.defaultServingWeight,
     matchedFoodId: 0,
     matchedFoodName: '',
     estimated: true,
+    ...servingProfile,
     macroPer100g: {
       protein: 0,
       fat: 0,
@@ -472,6 +506,43 @@ async function onAddAll() {
 .result-meta {
   font-size: 12px;
   display: block;
+}
+
+.portion-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+  max-width: 260px;
+}
+
+.portion-btn {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.portion-btn span,
+.portion-btn small {
+  display: block;
+}
+
+.portion-btn small {
+  margin-top: 3px;
+  font-size: 10px;
+  color: inherit;
+}
+
+.portion-btn.active {
+  border-color: transparent;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .match-tip,
