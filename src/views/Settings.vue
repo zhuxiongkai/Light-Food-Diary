@@ -86,6 +86,18 @@
       </div>
     </section>
 
+    <section class="settings-section">
+      <h3 class="section-title">新功能发现</h3>
+      <button class="settings-item" type="button" @click="reopenOnboarding">
+        <div class="item-label">
+          <van-icon name="guide-o" />
+          <span>新手引导</span>
+        </div>
+        <div class="item-value">重看目标设置与第一餐流程</div>
+        <van-icon name="arrow" class="item-arrow" />
+      </button>
+    </section>
+
     <section class="settings-section logout-section">
       <van-button
         round
@@ -180,6 +192,7 @@ import { useWeightStore } from '@/stores/weightStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useTheme } from '@/composables/useTheme'
 import type { ThemeMode } from '@/composables/useTheme'
+import { ONBOARDING_REOPEN_EVENT, resetOnboarding } from '@/utils/onboarding'
 
 const { currentMode: themeMode, setTheme } = useTheme()
 
@@ -397,6 +410,21 @@ async function saveEdit() {
   } finally {
     savingEdit.value = false
   }
+}
+
+async function reopenOnboarding() {
+  if (!authStore.user?.id) {
+    await authStore.fetchMe().catch(() => undefined)
+  }
+
+  const userId = authStore.user?.id
+  if (!userId) {
+    showToast('用户信息加载中，请稍后再试')
+    return
+  }
+
+  resetOnboarding(userId)
+  window.dispatchEvent(new Event(ONBOARDING_REOPEN_EVENT))
 }
 
 async function onLogout() {

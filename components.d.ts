@@ -16,6 +16,7 @@ declare module 'vue' {
     FoodSearch: typeof import('./src/components/FoodSearch.vue')['default']
     MacroBar: typeof import('./src/components/MacroBar.vue')['default']
     MealCard: typeof import('./src/components/MealCard.vue')['default']
+    OnboardingGuide: typeof import('./src/components/OnboardingGuide.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VanButton: typeof import('vant/es')['Button']

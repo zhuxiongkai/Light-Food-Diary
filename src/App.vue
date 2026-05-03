@@ -2,16 +2,32 @@
   <div class="app-shell">
     <AppNav v-if="showNav" />
     <router-view />
+    <OnboardingGuide v-if="showNav" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppNav from '@/components/AppNav.vue'
+import OnboardingGuide from '@/components/OnboardingGuide.vue'
+import { useAuthStore } from '@/stores/authStore'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const showNav = computed(() => !route.meta.guest)
+
+onMounted(() => {
+  if (showNav.value) {
+    void authStore.init()
+  }
+})
+
+watch(showNav, (visible) => {
+  if (visible) {
+    void authStore.init()
+  }
+})
 </script>
 
 <style>
