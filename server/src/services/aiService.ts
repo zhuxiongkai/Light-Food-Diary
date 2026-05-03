@@ -2,18 +2,17 @@ import { AppError } from '../middleware/errorHandler.js'
 import { config } from '../config.js'
 import { getMealsByDateRange } from './mealService.js'
 import { getSettings } from './settingsService.js'
+import { getFoodsForNutritionMatching } from './foodService.js'
+import {
+  enrichRecognitionWithNutrition,
+  type EnrichedAiRecognitionResult,
+  type RecognitionCandidate,
+} from './foodMatcher.js'
 
 const BAIDU_TOKEN_API_URL = 'https://aip.baidubce.com/oauth/2.0/token'
 const BAIDU_DISH_API_URL = 'https://aip.baidubce.com/rest/2.0/image-classify/v2/dish'
 const DEFAULT_WEIGHT_GRAMS = 100
 const TOKEN_REFRESH_BUFFER_MS = 60 * 1000
-
-interface AiRecognitionResult {
-  foodName: string
-  estimatedWeight: number
-  estimatedCalories: number
-  confidence: number
-}
 
 interface BaiduAccessTokenResponse {
   access_token?: string
@@ -62,7 +61,7 @@ function normalizeConfidence(raw: unknown): number {
   return numeric
 }
 
-function toAiResultArray(items: BaiduDishItem[]): AiRecognitionResult[] {
+function toAiResultArray(items: BaiduDishItem[]): RecognitionCandidate[] {
   return items
     .map((item) => {
       const foodName = String(item.name || '').trim()
@@ -122,10 +121,10 @@ async function getBaiduAccessToken(): Promise<string> {
 }
 
 export async function recognizeFood(
-  _userId: number,
+  userId: number,
   imageBase64: string,
   _mediaType: string
-): Promise<AiRecognitionResult[]> {
+): Promise<EnrichedAiRecognitionResult[]> {
   const accessToken = await getBaiduAccessToken()
 
   const requestBody = new URLSearchParams({
@@ -159,7 +158,8 @@ export async function recognizeFood(
     throw new AppError('未识别到有效菜品，请换个角度再试', 500)
   }
 
-  return normalized
+  const foods = await getFoodsForNutritionMatching(userId)
+  return normalized.map((item) => enrichRecognitionWithNutrition(item, foods))
 }
 
 const DEEPSEEK_CHAT_PATH = '/chat/completions'

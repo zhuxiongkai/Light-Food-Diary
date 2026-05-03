@@ -590,29 +590,53 @@
       "AiResult": {
         "type": "object",
         "properties": {
-          "name": {
+          "foodName": {
             "type": "string",
             "example": "番茄炒蛋"
+          },
+          "estimatedWeight": {
+            "type": "number",
+            "example": 100
+          },
+          "estimatedCalories": {
+            "type": "number",
+            "example": 83
           },
           "confidence": {
             "type": "number",
             "example": 0.92
           },
-          "caloriesPer100g": {
+          "matchedFoodId": {
             "type": "number",
-            "example": 125
+            "example": 213
+          },
+          "matchedFoodName": {
+            "type": "string",
+            "example": "西红柿炒鸡蛋"
           },
           "protein": {
             "type": "number",
-            "example": 6.4
+            "description": "每 100g 蛋白质",
+            "example": 4.2
           },
           "fat": {
             "type": "number",
-            "example": 7.2
+            "description": "每 100g 脂肪",
+            "example": 5.8
           },
           "carbs": {
             "type": "number",
-            "example": 8.5
+            "description": "每 100g 碳水化合物",
+            "example": 3.8
+          },
+          "nutritionSource": {
+            "type": "string",
+            "enum": [
+              "food-db",
+              "alias",
+              "unknown"
+            ],
+            "example": "alias"
           }
         }
       }
@@ -1894,6 +1918,36 @@
         }
       }
     },
+    "/ai/advice": {
+      "post": {
+        "tags": [
+          "AI识别"
+        ],
+        "summary": "AI 营养建议",
+        "description": "基于用户近 7 天饮食记录与设置中的目标，调用 DeepSeek Chat API 生成中文营养解读。需在服务端配置 DEEPSEEK_API_KEY。",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 0,
+                  "data": {
+                    "advice": "..."
+                  },
+                  "message": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ai/recognize": {
       "post": {
         "tags": [
@@ -1940,20 +1994,28 @@
                   "code": 0,
                   "data": [
                     {
-                      "name": "番茄炒蛋",
+                      "foodName": "番茄炒蛋",
+                      "estimatedWeight": 100,
+                      "estimatedCalories": 83,
                       "confidence": 0.92,
-                      "caloriesPer100g": 125,
-                      "protein": 6.4,
-                      "fat": 7.2,
-                      "carbs": 8.5
+                      "matchedFoodId": 213,
+                      "matchedFoodName": "西红柿炒鸡蛋",
+                      "protein": 4.2,
+                      "fat": 5.8,
+                      "carbs": 3.8,
+                      "nutritionSource": "alias"
                     },
                     {
-                      "name": "米饭",
+                      "foodName": "米饭",
+                      "estimatedWeight": 100,
+                      "estimatedCalories": 116,
                       "confidence": 0.88,
-                      "caloriesPer100g": 116,
+                      "matchedFoodId": 1,
+                      "matchedFoodName": "米饭",
                       "protein": 2.6,
                       "fat": 0.3,
-                      "carbs": 25.9
+                      "carbs": 25.9,
+                      "nutritionSource": "food-db"
                     }
                   ],
                   "message": "ok"

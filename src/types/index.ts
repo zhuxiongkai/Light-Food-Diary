@@ -6,6 +6,8 @@ export interface ServingOption {
   weight: number
 }
 
+export type NutritionSource = 'food-db' | 'alias' | 'unknown'
+
 export interface FoodItem {
   id: number | string
   name: string
@@ -58,6 +60,12 @@ export interface AiRecognitionResult {
   estimatedWeight: number
   estimatedCalories: number
   confidence: number
+  matchedFoodId?: number
+  matchedFoodName?: string
+  protein?: number
+  fat?: number
+  carbs?: number
+  nutritionSource?: NutritionSource
 }
 
 export interface TemplateFoodItem {

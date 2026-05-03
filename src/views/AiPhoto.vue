@@ -60,8 +60,8 @@
             <span class="result-meta text-secondary">
               蛋白质 {{ getItemProtein(item) }}g · 脂肪 {{ getItemFat(item) }}g · 碳水 {{ getItemCarbs(item) }}g
             </span>
-            <span v-if="item.matchedFoodName" class="match-tip">已匹配食物库：{{ item.matchedFoodName }}</span>
-            <span v-else class="estimate-tip">未匹配食物库，三大营养素按估算值记录</span>
+            <span v-if="item.matchedFoodName" class="match-tip">{{ getMatchTip(item) }}</span>
+            <span v-else class="estimate-tip">未匹配食物库，请手动确认营养数据</span>
             <div class="portion-controls" aria-label="份量快捷选择">
               <button
                 v-for="option in item.servingOptions"
@@ -215,6 +215,11 @@ function applyServingOption(index: number, weight: number) {
   results.value[index].estimatedWeight = weight
 }
 
+function getMatchTip(item: EnrichedRecognition) {
+  const prefix = item.nutritionSource === 'alias' ? '已通过别名匹配食物库' : '已匹配食物库'
+  return `${prefix}：${item.matchedFoodName}`
+}
+
 function resolveRouteMeal(value: unknown): MealType | null {
   if (typeof value !== 'string') return null
   return ['breakfast', 'lunch', 'dinner', 'snack'].includes(value) ? (value as MealType) : null
@@ -357,6 +362,27 @@ function onConfirmPick() {
 }
 
 function enrichRecognition(item: AiRecognitionResult): EnrichedRecognition {
+  if (hasServerNutrition(item)) {
+    const matched = findFoodById(item.matchedFoodId) || findFoodMatch(item.matchedFoodName || item.foodName)
+    const servingProfile = getServingProfile(
+      matched || { name: item.matchedFoodName || item.foodName, category: 'custom' }
+    )
+
+    return {
+      ...item,
+      estimatedWeight: servingProfile.defaultServingWeight,
+      matchedFoodId: Number(item.matchedFoodId) || 0,
+      matchedFoodName: item.matchedFoodName || matched?.name || item.foodName,
+      estimated: false,
+      ...servingProfile,
+      macroPer100g: {
+        protein: item.protein || 0,
+        fat: item.fat || 0,
+        carbs: item.carbs || 0,
+      },
+    }
+  }
+
   const matched = findFoodMatch(item.foodName)
   if (matched) {
     const servingProfile = getServingProfile(matched)
@@ -390,6 +416,21 @@ function enrichRecognition(item: AiRecognitionResult): EnrichedRecognition {
       carbs: 0,
     }
   }
+}
+
+function hasServerNutrition(item: AiRecognitionResult) {
+  return (
+    Number(item.matchedFoodId) > 0 &&
+    !!item.matchedFoodName &&
+    Number.isFinite(item.protein) &&
+    Number.isFinite(item.fat) &&
+    Number.isFinite(item.carbs)
+  )
+}
+
+function findFoodById(foodId: number | string | undefined) {
+  if (foodId === undefined) return null
+  return foodStore.allFoods.find((food) => String(food.id) === String(foodId)) || null
 }
 
 function findFoodMatch(foodName: string) {

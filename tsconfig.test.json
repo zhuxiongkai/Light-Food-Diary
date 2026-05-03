@@ -15,5 +15,11 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["tests/**/*.ts", "src/utils/onboarding.ts", "src/utils/servingSize.ts", "src/types/index.ts"]
+  "include": [
+    "tests/**/*.ts",
+    "src/utils/onboarding.ts",
+    "src/utils/servingSize.ts",
+    "src/types/index.ts",
+    "server/src/services/foodMatcher.ts"
+  ]
 }

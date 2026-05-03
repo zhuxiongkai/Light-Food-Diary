@@ -19,6 +19,19 @@ export interface FoodResult {
   isBuiltin: boolean
 }
 
+function toFoodResult(f: typeof foods.$inferSelect): FoodResult {
+  return {
+    id: f.id,
+    name: f.name,
+    category: f.category,
+    caloriesPer100g: f.caloriesPer100g,
+    protein: f.protein,
+    fat: f.fat,
+    carbs: f.carbs,
+    isBuiltin: f.userId === null,
+  }
+}
+
 export async function searchFoods(userId: number, keyword?: string, category?: string) {
   const conditions = [
     or(
@@ -42,16 +55,22 @@ export async function searchFoods(userId: number, keyword?: string, category?: s
     .orderBy(foods.name)
     .limit(100)
 
-  return results.map(f => ({
-    id: f.id,
-    name: f.name,
-    category: f.category,
-    caloriesPer100g: f.caloriesPer100g,
-    protein: f.protein,
-    fat: f.fat,
-    carbs: f.carbs,
-    isBuiltin: f.userId === null,
-  }))
+  return results.map(toFoodResult)
+}
+
+export async function getFoodsForNutritionMatching(userId: number): Promise<FoodResult[]> {
+  const results = await db
+    .select()
+    .from(foods)
+    .where(
+      or(
+        isNull(foods.userId),
+        eq(foods.userId, userId)
+      )
+    )
+    .orderBy(foods.name)
+
+  return results.map(toFoodResult)
 }
 
 function isValidCategory(c: string): c is FoodCategory {
