@@ -86,6 +86,19 @@
       </div>
     </section>
 
+    <section v-if="showInstallHint" class="settings-section">
+      <h3 class="section-title">安装体验</h3>
+      <div class="pwa-install-panel">
+        <div class="pwa-install-icon">
+          <van-icon name="wap-home-o" />
+        </div>
+        <div class="pwa-install-copy">
+          <h4>添加到 iPhone 主屏幕</h4>
+          <p>在 Safari 中点底部分享按钮，选择“添加到主屏幕”，下次就能像 App 一样打开轻卡记。</p>
+        </div>
+      </div>
+    </section>
+
     <section class="settings-section">
       <h3 class="section-title">新功能发现</h3>
       <button class="settings-item" type="button" @click="reopenOnboarding">
@@ -193,6 +206,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useTheme } from '@/composables/useTheme'
 import type { ThemeMode } from '@/composables/useTheme'
 import { ONBOARDING_REOPEN_EVENT, resetOnboarding } from '@/utils/onboarding'
+import { shouldShowIosInstallHint } from '@/utils/pwa'
 
 const { currentMode: themeMode, setTheme } = useTheme()
 
@@ -224,6 +238,7 @@ const form = reactive({
 type EditSection = 'calorie' | 'weight' | 'macro' | 'body'
 
 const showEdit = ref(false)
+const showInstallHint = ref(false)
 const editSection = ref<EditSection>('calorie')
 const savingEdit = ref(false)
 const editForm = reactive({
@@ -282,6 +297,7 @@ watch(() => route.query.edit, (value) => {
 })
 
 onMounted(async () => {
+  showInstallHint.value = shouldShowIosInstallHint()
   await Promise.all([
     settingsStore.loadSettings(),
     mealStore.loadMeals().catch(() => undefined),
@@ -713,6 +729,50 @@ async function onLogout() {
   color: var(--primary);
   border-color: var(--primary);
   background: var(--primary-soft);
+}
+
+.pwa-install-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(216, 243, 220, 0.92), rgba(254, 243, 228, 0.9));
+  border: 1px solid rgba(45, 106, 79, 0.14);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.pwa-install-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  border-radius: 14px;
+  font-size: 22px;
+  box-shadow: 0 8px 18px rgba(45, 106, 79, 0.18);
+}
+
+.pwa-install-copy {
+  min-width: 0;
+}
+
+.pwa-install-copy h4 {
+  margin: 0 0 4px;
+  color: var(--text-strong);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.pwa-install-copy p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .logout-section {

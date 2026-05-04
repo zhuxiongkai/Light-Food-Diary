@@ -54,6 +54,16 @@
       </van-form>
     </div>
 
+    <section v-if="showInstallHint" class="pwa-install-card" aria-label="添加到主屏幕说明">
+      <div class="install-icon">
+        <van-icon name="wap-home-o" />
+      </div>
+      <div class="install-copy">
+        <p class="install-title">把轻卡记放到桌面</p>
+        <p class="install-steps">点 Safari 底部分享按钮，再选择“添加到主屏幕”。</p>
+      </div>
+    </section>
+
     <div class="other-login-block">
       <div class="divider">或使用以下方式登录</div>
       <div class="other-login">
@@ -82,10 +92,11 @@
 
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showDialog, showToast } from 'vant'
 import { useAuthStore } from '@/stores/authStore'
+import { shouldShowIosInstallHint } from '@/utils/pwa'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -94,6 +105,11 @@ const username = ref('')
 const password = ref('')
 const agreeTerms = ref(false)
 const showPassword = ref(false)
+const showInstallHint = ref(false)
+
+onMounted(() => {
+  showInstallHint.value = shouldShowIosInstallHint()
+})
 
 async function onLogin() {
   if (!agreeTerms.value) {
@@ -134,7 +150,9 @@ function showLegal(type: 'terms' | 'privacy') {
   justify-content: center;
   align-items: center;
   gap: 12px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: calc(env(safe-area-inset-top, 0px) + 20px) 24px
     calc(env(safe-area-inset-bottom, 0px) + 20px);
   background:
@@ -279,6 +297,53 @@ function showLegal(type: 'terms' | 'privacy') {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.pwa-install-card {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  padding: 12px 14px;
+  background:
+    linear-gradient(135deg, rgba(216, 243, 220, 0.92), rgba(254, 243, 228, 0.9));
+  border: 1px solid rgba(45, 106, 79, 0.14);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
+
+.install-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  border-radius: 13px;
+  font-size: 20px;
+  box-shadow: 0 8px 18px rgba(45, 106, 79, 0.18);
+}
+
+.install-copy {
+  min-width: 0;
+}
+
+.install-title {
+  margin: 0 0 2px;
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.install-steps {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .login-btn {

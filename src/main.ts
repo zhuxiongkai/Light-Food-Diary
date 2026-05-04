@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { installFocusReinput } from './utils/focusReinput'
+import { registerServiceWorker } from './utils/pwa'
 import 'vant/lib/index.css'
 import 'vant/lib/toast/style'
 import 'vant/lib/dialog/style'
@@ -22,3 +23,4 @@ app.use(createPinia())
 app.use(router)
 installFocusReinput()
 app.mount('#app')
+registerServiceWorker()
