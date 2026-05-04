@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/mysql2'
 import { pool } from '../db/connection.js'
 import { foods } from '../db/schema.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { resolveFoodSearchLimit } from './foodSearchPolicy.js'
 
 const db = drizzle(pool)
 
@@ -48,12 +49,14 @@ export async function searchFoods(userId: number, keyword?: string, category?: s
     conditions.push(like(foods.name, `%${keyword.trim()}%`))
   }
 
-  const results = await db
+  const query = db
     .select()
     .from(foods)
     .where(and(...conditions))
     .orderBy(foods.name)
-    .limit(100)
+
+  const limit = resolveFoodSearchLimit(keyword)
+  const results = limit === undefined ? await query : await query.limit(limit)
 
   return results.map(toFoodResult)
 }
