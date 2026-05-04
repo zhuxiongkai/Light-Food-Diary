@@ -12,33 +12,37 @@ async function seed() {
     database: config.db.database,
   })
 
-  // Check if foods already seeded
-  const [rows] = await connection.execute('SELECT COUNT(*) as count FROM foods')
-  const count = (rows as any[])[0]?.count || 0
-  if (count > 0) {
-    console.log(`Foods table already has ${count} rows, skipping seed.`)
+  const [rows] = await connection.execute('SELECT name FROM foods WHERE user_id IS NULL')
+  const existingNames = new Set((rows as Array<{ name: string }>).map((row) => row.name))
+  const missingFoods = seedFoods.filter((food) => !existingNames.has(food.name))
+
+  if (missingFoods.length === 0) {
+    console.log(`Built-in foods already up to date (${existingNames.size} rows).`)
     await connection.end()
     return
   }
 
-  // Bulk insert using raw SQL for efficiency
-  const values: string[] = []
-  for (const food of seedFoods) {
-    values.push(
-      `(NULL, '${food.name.replace(/'/g, "\\'")}', '${food.category}', ${food.caloriesPer100g}, ${food.protein}, ${food.fat}, ${food.carbs})`
-    )
-  }
-
   // Batch in groups of 50 to avoid SQL too large
   const batchSize = 50
-  for (let i = 0; i < values.length; i += batchSize) {
-    const batch = values.slice(i, i + batchSize)
+  for (let i = 0; i < missingFoods.length; i += batchSize) {
+    const batch = missingFoods.slice(i, i + batchSize)
+    const placeholders = batch.map(() => '(NULL, ?, ?, ?, ?, ?, ?)').join(', ')
+    const params = batch.flatMap((food) => [
+      food.name,
+      food.category,
+      food.caloriesPer100g,
+      food.protein,
+      food.fat,
+      food.carbs,
+    ])
+
     await connection.execute(
-      `INSERT INTO foods (user_id, name, category, calories_per_100g, protein, fat, carbs) VALUES ${batch.join(', ')}`
+      `INSERT INTO foods (user_id, name, category, calories_per_100g, protein, fat, carbs) VALUES ${placeholders}`,
+      params
     )
   }
 
-  console.log(`Seeded ${seedFoods.length} built-in foods.`)
+  console.log(`Seeded ${missingFoods.length} missing built-in foods. Total built-in foods: ${existingNames.size + missingFoods.length}.`)
   await connection.end()
 }
 
