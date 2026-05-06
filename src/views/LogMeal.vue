@@ -106,7 +106,7 @@
         </div>
         <div class="food-calorie">
           <div>
-            <strong class="numeric">{{ item.calories }}</strong>
+            <strong class="numeric">{{ item.displayCalories }}</strong>
             <span>千卡</span>
           </div>
           <small>{{ item.time }}</small>
@@ -153,7 +153,7 @@
         </div>
         <van-stepper v-model="weight" :min="1" :max="2000" :step="10" input-width="86px" />
         <div class="calc-result" v-if="selectedFood">
-          预计 {{ calcCalories }} 千卡 · 蛋白质 {{ calcProtein }}g · 脂肪 {{ calcFat }}g · 碳水 {{ calcCarbs }}g
+          预计吸收 {{ displayCalcCalories }} 千卡 · 蛋白质 {{ calcProtein }}g · 脂肪 {{ calcFat }}g · 碳水 {{ calcCarbs }}g
         </div>
         <van-button type="primary" block round class="mt-16" @click="onConfirmAdd">
           添加到{{ activeMealLabel }}
@@ -241,6 +241,7 @@ type DisplayMeal = MealRecord & {
   tone: Tone
   thumb: string
   time: string
+  displayCalories: number
 }
 
 const mealStore = useMealStore()
@@ -310,13 +311,14 @@ const realMeals = computed<DisplayMeal[]>(() =>
     tag: tagForMeal(meal),
     tone: toneForMeal(meal),
     thumb: 'custom',
-    time: timeForMeal(meal)
+    time: timeForMeal(meal),
+    displayCalories: mealStore.adjustedCalories(meal.calories)
   }))
 )
 
 const displayMeals = computed(() => realMeals.value)
 
-const summaryCalories = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.calories, 0)))
+const summaryCalories = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.displayCalories, 0)))
 const summaryProtein = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.protein, 0)))
 const summaryFat = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.fat, 0)))
 const summaryCarbs = computed(() => Math.round(displayMeals.value.reduce((sum, meal) => sum + meal.carbs, 0)))
@@ -341,6 +343,7 @@ const macroRows = computed(() => {
 const calcCalories = computed(() =>
   selectedFood.value ? Math.round((selectedFood.value.caloriesPer100g * weight.value) / 100) : 0
 )
+const displayCalcCalories = computed(() => mealStore.adjustedCalories(calcCalories.value))
 const calcProtein = computed(() =>
   selectedFood.value ? Math.round(selectedFood.value.protein * weight.value) / 100 : 0
 )

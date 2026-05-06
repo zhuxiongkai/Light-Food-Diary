@@ -32,6 +32,8 @@ export const userSettings = mysqlTable('user_settings', {
   age: int('age').notNull().default(25),
   gender: mysqlEnum('gender', ['male', 'female']).notNull().default('male'),
   weightGoal: float('weight_goal').notNull().default(60),
+  activityLevel: mysqlEnum('activity_level', ['sedentary', 'light', 'moderate', 'high']).notNull().default('sedentary'),
+  calorieGoalMode: mysqlEnum('calorie_goal_mode', ['maintain', 'fat_loss', 'muscle_gain']).notNull().default('maintain'),
   aiApiKey: varchar('ai_api_key', { length: 255 }),
 })
 

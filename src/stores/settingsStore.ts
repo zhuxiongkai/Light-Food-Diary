@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { api } from '@/api/client'
 import type { UserSettings } from '@/types'
+import {
+  calculateAbsorptionCoefficient,
+  calculateBmi,
+  calculateDailyCalorieTarget,
+  calculateTdee,
+  type CalorieTargetProfile,
+} from '@/utils/personalizedCalories'
 
 const DEFAULT_SETTINGS: UserSettings = {
   dailyCalorieGoal: 2000,
@@ -13,11 +20,27 @@ const DEFAULT_SETTINGS: UserSettings = {
   age: 25,
   gender: 'male',
   weightGoal: 60,
+  activityLevel: 'sedentary',
+  calorieGoalMode: 'maintain',
 }
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS })
   const loaded = ref(false)
+
+  const calorieProfile = computed<CalorieTargetProfile>(() => ({
+    gender: settings.value.gender,
+    weight: settings.value.weight,
+    height: settings.value.height,
+    age: settings.value.age,
+    activityLevel: settings.value.activityLevel,
+    calorieGoalMode: settings.value.calorieGoalMode,
+  }))
+
+  const recommendedDailyCalorieGoal = computed(() => calculateDailyCalorieTarget(calorieProfile.value))
+  const tdee = computed(() => calculateTdee(calorieProfile.value))
+  const bmi = computed(() => calculateBmi(settings.value))
+  const absorptionCoefficient = computed(() => calculateAbsorptionCoefficient(settings.value))
 
   async function loadSettings() {
     const res = await api<UserSettings>('/settings')
@@ -31,17 +54,42 @@ export const useSettingsStore = defineStore('settings', () => {
       age: res.data.age ?? DEFAULT_SETTINGS.age,
       gender: res.data.gender ?? DEFAULT_SETTINGS.gender,
       weightGoal: res.data.weightGoal ?? DEFAULT_SETTINGS.weightGoal,
+      activityLevel: res.data.activityLevel ?? DEFAULT_SETTINGS.activityLevel,
+      calorieGoalMode: res.data.calorieGoalMode ?? DEFAULT_SETTINGS.calorieGoalMode,
     })
     loaded.value = true
   }
 
   async function saveSettings(data: Partial<UserSettings>) {
+    const nextSettings = { ...settings.value, ...data }
+    const shouldRecalculateGoal = [
+      'height',
+      'weight',
+      'age',
+      'gender',
+      'activityLevel',
+      'calorieGoalMode',
+    ].some((key) => key in data)
+    const payload = {
+      ...data,
+      ...(shouldRecalculateGoal ? { dailyCalorieGoal: calculateDailyCalorieTarget(nextSettings) } : {}),
+    }
+
     await api('/settings', {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     })
-    Object.assign(settings.value, data)
+    Object.assign(settings.value, payload)
   }
 
-  return { settings, loaded, loadSettings, saveSettings }
+  return {
+    settings,
+    loaded,
+    recommendedDailyCalorieGoal,
+    tdee,
+    bmi,
+    absorptionCoefficient,
+    loadSettings,
+    saveSettings,
+  }
 })

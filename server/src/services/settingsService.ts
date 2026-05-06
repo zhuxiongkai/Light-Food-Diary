@@ -34,6 +34,7 @@ export async function updateSettings(userId: number, data: Record<string, any>) 
   const allowedFields = [
     'dailyCalorieGoal', 'proteinRatio', 'fatRatio', 'carbsRatio',
     'height', 'weight', 'age', 'gender', 'weightGoal',
+    'activityLevel', 'calorieGoalMode',
   ]
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
@@ -65,6 +66,8 @@ function defaultSettings() {
     age: 25,
     gender: 'male' as const,
     weightGoal: 60,
+    activityLevel: 'sedentary' as const,
+    calorieGoalMode: 'maintain' as const,
   }
 }
 
@@ -79,5 +82,7 @@ function toPublicSettings(settings: Record<string, any>) {
     age: settings.age,
     gender: settings.gender,
     weightGoal: settings.weightGoal,
+    activityLevel: settings.activityLevel,
+    calorieGoalMode: settings.calorieGoalMode,
   }
 }

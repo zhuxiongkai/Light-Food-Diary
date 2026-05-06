@@ -2,10 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/api/client'
 import type { MealRecord, MealType } from '@/types'
+import { useSettingsStore } from '@/stores/settingsStore'
+import { personalizeCalories } from '@/utils/personalizedCalories'
 
 export const useMealStore = defineStore('meal', () => {
   const meals = ref<MealRecord[]>([])
   const loading = ref(false)
+  const settingsStore = useSettingsStore()
 
   function todayStr() {
     const date = new Date()
@@ -26,7 +29,11 @@ export const useMealStore = defineStore('meal', () => {
     }
   }
 
-  const dailyCalories = computed(() => meals.value.reduce((sum, m) => sum + m.calories, 0))
+  function adjustedCalories(calories: number): number {
+    return personalizeCalories(calories, settingsStore.settings)
+  }
+
+  const dailyCalories = computed(() => meals.value.reduce((sum, m) => sum + adjustedCalories(m.calories), 0))
   const dailyProtein = computed(() => meals.value.reduce((sum, m) => sum + m.protein, 0))
   const dailyFat = computed(() => meals.value.reduce((sum, m) => sum + m.fat, 0))
   const dailyCarbs = computed(() => meals.value.reduce((sum, m) => sum + m.carbs, 0))
@@ -36,7 +43,7 @@ export const useMealStore = defineStore('meal', () => {
   }
 
   function caloriesByType(type: MealType): number {
-    return getMealsByType(type).reduce((sum, m) => sum + m.calories, 0)
+    return getMealsByType(type).reduce((sum, m) => sum + adjustedCalories(m.calories), 0)
   }
 
   async function addMeal(meal: Omit<MealRecord, 'id' | 'createdAt'>) {
@@ -72,6 +79,6 @@ export const useMealStore = defineStore('meal', () => {
   return {
     meals, loading, dailyCalories, dailyProtein, dailyFat, dailyCarbs,
     loadMeals, getMealsByType, caloriesByType, addMeal, deleteMeal, updateMeal,
-    getMealsByDateRange, todayStr
+    getMealsByDateRange, todayStr, adjustedCalories
   }
 })

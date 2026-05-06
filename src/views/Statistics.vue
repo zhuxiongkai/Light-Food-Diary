@@ -156,6 +156,7 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { useWeightStore } from '@/stores/weightStore'
 import { useTheme } from '@/composables/useTheme'
 import { fetchNutritionAdvice } from '@/utils/aiService'
+import { personalizeCalories } from '@/utils/personalizedCalories'
 import { renderMarkdownToHtml } from '@/utils/renderMarkdown'
 import type { MealRecord } from '@/types'
 
@@ -598,7 +599,7 @@ function aggregateMacroSeries(sourceMeals: MealRecord[], labelList: string[], ke
     const label = dateLabelForPeriod(meal.date)
     const bucket = map.get(label)
     if (!bucket) continue
-    bucket.calories += meal.calories
+    bucket.calories += personalizeCalories(meal.calories, settingsStore.settings)
     bucket.protein += meal.protein
     bucket.fat += meal.fat
     bucket.carbs += meal.carbs

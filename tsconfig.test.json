@@ -17,6 +17,7 @@
   },
   "include": [
     "tests/**/*.ts",
+    "src/utils/personalizedCalories.ts",
     "src/utils/onboarding.ts",
     "src/utils/servingSize.ts",
     "src/types/index.ts",

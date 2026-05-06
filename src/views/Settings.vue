@@ -32,6 +32,21 @@
           <span class="highlight">{{ targetWeight }} 公斤</span>
         </div>
       </div>
+
+      <div class="calorie-insights">
+        <div>
+          <span>BMI</span>
+          <strong class="numeric">{{ bmiText }}</strong>
+        </div>
+        <div>
+          <span>日消耗</span>
+          <strong class="numeric">{{ tdeeText }} <small>千卡</small></strong>
+        </div>
+        <div>
+          <span>吸收系数</span>
+          <strong class="numeric">×{{ absorptionText }}</strong>
+        </div>
+      </div>
     </div>
 
     <section class="settings-section">
@@ -41,7 +56,7 @@
           <van-icon name="fire-o" />
           <span>每日热量目标</span>
         </div>
-        <div class="item-value">{{ Number(form.dailyCalorieGoal).toLocaleString() }} 千卡</div>
+        <div class="item-value">{{ Number(form.dailyCalorieGoal).toLocaleString() }} 千卡 · {{ activityLabelMap[form.activityLevel] }} · {{ goalModeLabelMap[form.calorieGoalMode] }}</div>
         <van-icon name="arrow" class="item-arrow" />
       </button>
       <button class="settings-item" type="button" @click="openEdit('weight')">
@@ -129,14 +144,45 @@
 
         <template v-if="editSection === 'calorie'">
           <van-field
-            v-model="editForm.dailyCalorieGoal"
+            :model-value="editRecommendedGoal"
             type="number"
-            label="每日目标"
-            placeholder="请输入每日热量目标"
+            label="建议目标"
+            readonly
             input-align="right"
           >
             <template #extra>千卡</template>
           </van-field>
+          <div class="option-block">
+            <span class="option-title">活动水平</span>
+            <div class="option-grid">
+              <button
+                v-for="option in activityOptions"
+                :key="option.value"
+                type="button"
+                class="option-pill"
+                :class="{ active: editForm.activityLevel === option.value }"
+                @click="editForm.activityLevel = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+          <div class="option-block">
+            <span class="option-title">目标方向</span>
+            <div class="option-grid goal-grid">
+              <button
+                v-for="option in goalModeOptions"
+                :key="option.value"
+                type="button"
+                class="option-pill"
+                :class="{ active: editForm.calorieGoalMode === option.value }"
+                @click="editForm.calorieGoalMode = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+          </div>
+          <p class="calorie-form-note">基于身体数据使用 BMR × 活动系数计算，再按目标方向修正。</p>
         </template>
 
         <template v-else-if="editSection === 'weight'">
@@ -196,7 +242,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted, computed, ref, watch } from 'vue'
-import type { MealRecord, UserSettings } from '@/types'
+import type { ActivityLevel, CalorieGoalMode, MealRecord, UserSettings } from '@/types'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, Field, Icon, Popup, Radio, RadioGroup, showConfirmDialog, showToast } from 'vant'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -207,6 +253,7 @@ import { useTheme } from '@/composables/useTheme'
 import type { ThemeMode } from '@/composables/useTheme'
 import { ONBOARDING_REOPEN_EVENT, resetOnboarding } from '@/utils/onboarding'
 import { shouldShowIosInstallHint } from '@/utils/pwa'
+import { calculateDailyCalorieTarget } from '@/utils/personalizedCalories'
 
 const { currentMode: themeMode, setTheme } = useTheme()
 
@@ -232,7 +279,9 @@ const form = reactive({
   weight: 65,
   age: 25,
   gender: 'male' as string,
-  weightGoal: 60
+  weightGoal: 60,
+  activityLevel: 'sedentary' as ActivityLevel,
+  calorieGoalMode: 'maintain' as CalorieGoalMode
 })
 
 type EditSection = 'calorie' | 'weight' | 'macro' | 'body'
@@ -250,8 +299,26 @@ const editForm = reactive({
   height: 170,
   weight: 65,
   age: 25,
-  gender: 'male' as string
+  gender: 'male' as string,
+  activityLevel: 'sedentary' as ActivityLevel,
+  calorieGoalMode: 'maintain' as CalorieGoalMode
 })
+
+const activityOptions: { value: ActivityLevel; label: string }[] = [
+  { value: 'sedentary', label: '久坐' },
+  { value: 'light', label: '轻度' },
+  { value: 'moderate', label: '中度' },
+  { value: 'high', label: '高强度' },
+]
+
+const goalModeOptions: { value: CalorieGoalMode; label: string }[] = [
+  { value: 'maintain', label: '维持' },
+  { value: 'fat_loss', label: '减脂' },
+  { value: 'muscle_gain', label: '增肌' },
+]
+
+const activityLabelMap = Object.fromEntries(activityOptions.map((item) => [item.value, item.label])) as Record<ActivityLevel, string>
+const goalModeLabelMap = Object.fromEntries(goalModeOptions.map((item) => [item.value, item.label])) as Record<CalorieGoalMode, string>
 
 const profileName = computed(() => authStore.user?.username || '用户')
 const profileId = computed(() => authStore.user?.id ?? '----')
@@ -274,6 +341,9 @@ const recordDays = computed(() => {
 })
 const currentWeight = computed(() => Number(form.weight).toFixed(1))
 const targetWeight = computed(() => Number(form.weightGoal).toFixed(1))
+const bmiText = computed(() => settingsStore.bmi.toFixed(1))
+const tdeeText = computed(() => settingsStore.tdee.toLocaleString())
+const absorptionText = computed(() => settingsStore.absorptionCoefficient.toFixed(2))
 const progressPercent = computed(() => {
   const base = Math.max(Number(form.weightGoal), 1)
   const diff = Math.abs(Number(form.weight) - Number(form.weightGoal))
@@ -285,6 +355,14 @@ const macroSummary = computed(
 const macroTotal = computed(() =>
   Number(editForm.carbsRatio) + Number(editForm.proteinRatio) + Number(editForm.fatRatio)
 )
+const editRecommendedGoal = computed(() => calculateDailyCalorieTarget({
+  gender: editForm.gender as 'male' | 'female',
+  weight: Number(editForm.weight),
+  height: Number(editForm.height),
+  age: Number(editForm.age),
+  activityLevel: editForm.activityLevel,
+  calorieGoalMode: editForm.calorieGoalMode,
+}))
 const editTitle = computed(() => {
   if (editSection.value === 'calorie') return '编辑每日热量目标'
   if (editSection.value === 'weight') return '编辑体重目标'
@@ -333,6 +411,8 @@ function openEdit(section: EditSection) {
   editForm.weight = Number(form.weight)
   editForm.age = Number(form.age)
   editForm.gender = form.gender
+  editForm.activityLevel = form.activityLevel
+  editForm.calorieGoalMode = form.calorieGoalMode
   showEdit.value = true
 }
 
@@ -357,12 +437,9 @@ async function saveEdit() {
   const payload: Partial<UserSettings> = {}
 
   if (editSection.value === 'calorie') {
-    const dailyCalorieGoal = Math.round(Number(editForm.dailyCalorieGoal))
-    if (!Number.isFinite(dailyCalorieGoal) || dailyCalorieGoal <= 0) {
-      showToast('请输入有效热量目标')
-      return
-    }
-    payload.dailyCalorieGoal = dailyCalorieGoal
+    payload.dailyCalorieGoal = editRecommendedGoal.value
+    payload.activityLevel = editForm.activityLevel
+    payload.calorieGoalMode = editForm.calorieGoalMode
   }
 
   if (editSection.value === 'weight') {
@@ -537,6 +614,39 @@ async function onLogout() {
   gap: 12px;
 }
 
+.calorie-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.calorie-insights div {
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: var(--bg-warm);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.calorie-insights span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.calorie-insights strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.calorie-insights small {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
 .progress-label {
   display: flex;
   justify-content: space-between;
@@ -675,6 +785,51 @@ async function onLogout() {
 
 .macro-total.invalid {
   color: var(--danger);
+}
+
+.option-block {
+  padding: 14px 16px 0;
+}
+
+.option-title {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.goal-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.option-pill {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-warm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-pill.active {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 700;
+}
+
+.calorie-form-note {
+  margin: 12px 16px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .gender-row {

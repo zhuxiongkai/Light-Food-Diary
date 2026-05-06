@@ -42,6 +42,9 @@ export interface WeightRecord {
   createdAt?: number
 }
 
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'high'
+export type CalorieGoalMode = 'maintain' | 'fat_loss' | 'muscle_gain'
+
 export interface UserSettings {
   id?: number
   dailyCalorieGoal: number
@@ -53,6 +56,8 @@ export interface UserSettings {
   age: number
   gender: 'male' | 'female'
   weightGoal: number
+  activityLevel: ActivityLevel
+  calorieGoalMode: CalorieGoalMode
 }
 
 export interface AiRecognitionResult {
