@@ -1,3 +1,5 @@
+import { shouldRefreshAfterUnauthorized } from './authRefresh'
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 interface ApiResponse<T = any> {
@@ -93,7 +95,7 @@ export async function api<T = any>(
   let headers = buildHeaders(options, accessToken || undefined)
   let res = await fetchWithTimeout(`${BASE_URL}${path}`, { ...options, headers })
 
-  if (res.status === 401 && !path.includes('/auth/')) {
+  if (res.status === 401 && shouldRefreshAfterUnauthorized(path)) {
     try {
       if (!isRefreshing) {
         isRefreshing = true
