@@ -289,6 +289,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ═══════════════════════════════════════════
+   iOS Safari viewport fix
+   Safari 的底部地址栏会占用可视区域，导致 app-shell 延伸到浏览器
+   工具栏后方，底部 TabBar 和 FAB 被遮挡。
+   -webkit-fill-available 适配旧版 iOS Safari（< 15.4），
+   100dvh（动态视口高度）适配现代浏览器，可实时响应工具栏的
+   显示 / 隐藏，确保布局始终限定在可见区域内。
+   ═══════════════════════════════════════════ */
+html {
+  /* 让 body 的 -webkit-fill-available 能正确继承可见视口高度 */
+  height: -webkit-fill-available;
+}
+
+body {
+  /* 旧版 iOS Safari (< 15.4)：填充可见视口，排除浏览器工具栏 */
+  height: -webkit-fill-available;
+  /* 现代浏览器（iOS Safari 15.4+，Chrome 108+）：动态视口高度 */
+  height: 100dvh;
+}
+
 /* Subtle paper grain overlay */
 body::after {
   content: '';
@@ -554,8 +574,8 @@ html[data-theme="dark"] {
 
 @media (min-width: 720px) {
   .app-shell {
-    height: min(100vh, 960px);
-    margin-top: max(0px, calc((100vh - 960px) / 2));
+    height: min(100dvh, 960px);
+    margin-top: max(0px, calc((100dvh - 960px) / 2));
     border-radius: 32px;
   }
 }
