@@ -96,7 +96,7 @@
             :class="{ active: form.mealType === meal.value }"
             @click="form.mealType = meal.value"
           >
-            <van-icon :name="meal.icon" />
+            <InlineSvgIcon :name="meal.icon" />
             <span>{{ meal.label }}</span>
             <small>{{ meal.note }}</small>
           </button>
@@ -142,6 +142,8 @@ import { showToast } from 'vant'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import type { MealType, UserSettings } from '@/types'
+import InlineSvgIcon from '@/components/InlineSvgIcon.vue'
+import type { InlineSvgIconName } from '@/utils/inlineSvgIcons'
 import {
   markOnboardingCompleted,
   ONBOARDING_REOPEN_EVENT,
@@ -158,11 +160,11 @@ const steps: { id: StepId; title: string }[] = [
 ]
 
 const caloriePresets = [1600, 1800, 2000, 2200]
-const mealOptions: { value: MealType; label: string; icon: string; note: string }[] = [
-  { value: 'breakfast', label: '早餐', icon: 'underway-o', note: '开启一天' },
-  { value: 'lunch', label: '午餐', icon: 'hot-o', note: '补足能量' },
-  { value: 'dinner', label: '晚餐', icon: 'notes-o', note: '收住节奏' },
-  { value: 'snack', label: '加餐', icon: 'bag-o', note: '少量记录' },
+const mealOptions: { value: MealType; label: string; icon: InlineSvgIconName; note: string }[] = [
+  { value: 'breakfast', label: '早餐', icon: 'meal-breakfast', note: '开启一天' },
+  { value: 'lunch', label: '午餐', icon: 'meal-lunch', note: '补足能量' },
+  { value: 'dinner', label: '晚餐', icon: 'meal-dinner', note: '收住节奏' },
+  { value: 'snack', label: '加餐', icon: 'meal-snack', note: '少量记录' },
 ]
 
 const authStore = useAuthStore()
@@ -468,7 +470,7 @@ function goAddFirstMeal() {
   cursor: pointer;
 }
 
-.meal-choice .van-icon {
+.meal-choice .inline-svg-icon {
   grid-row: 1 / 3;
   color: var(--primary);
   font-size: 22px;

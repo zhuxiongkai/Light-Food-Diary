@@ -16,7 +16,7 @@
           :class="{ active: selectedMealType === tab.value }"
           @click="selectedMealType = tab.value"
         >
-          <van-icon :name="tab.icon" />
+          <InlineSvgIcon :name="tab.icon" />
           <span>{{ tab.label }}</span>
         </button>
       </div>
@@ -164,6 +164,8 @@ import { useFoodStore } from '@/stores/foodStore'
 import { analyzeFoodImage } from '@/utils/aiService'
 import { getServingProfile, type ServingOption, type ServingUnit } from '@/utils/servingSize'
 import type { AiRecognitionResult, MealType } from '@/types'
+import InlineSvgIcon from '@/components/InlineSvgIcon.vue'
+import type { InlineSvgIconName } from '@/utils/inlineSvgIcons'
 
 interface EnrichedRecognition extends AiRecognitionResult {
   matchedFoodId: number
@@ -196,11 +198,11 @@ const pickedIndexes = ref<number[]>([])
 const selectedMealType = ref<MealType>(resolveRouteMeal(route.query.meal) || 'lunch')
 const selectedDate = ref(resolveRouteDate(route.query.date) || mealStore.todayStr())
 
-const mealTabs: Array<{ value: MealType; label: string; icon: string }> = [
-  { value: 'breakfast', label: '早餐', icon: 'underway-o' },
-  { value: 'lunch', label: '午餐', icon: 'hot-o' },
-  { value: 'dinner', label: '晚餐', icon: 'notes-o' },
-  { value: 'snack', label: '加餐', icon: 'bag-o' }
+const mealTabs: Array<{ value: MealType; label: string; icon: InlineSvgIconName }> = [
+  { value: 'breakfast', label: '早餐', icon: 'meal-breakfast' },
+  { value: 'lunch', label: '午餐', icon: 'meal-lunch' },
+  { value: 'dinner', label: '晚餐', icon: 'meal-dinner' },
+  { value: 'snack', label: '加餐', icon: 'meal-snack' }
 ]
 
 const mealLabelMap: Record<MealType, string> = {
@@ -582,7 +584,7 @@ async function onAddAll() {
   font-weight: 650;
 }
 
-.meal-type-btn .van-icon {
+.meal-type-btn .inline-svg-icon {
   flex: 0 0 auto;
   font-size: 18px;
 }

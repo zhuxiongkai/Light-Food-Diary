@@ -25,7 +25,7 @@
         type="button"
         @click="activeMeal = tab.value"
       >
-        <van-icon :name="tab.icon" />
+        <InlineSvgIcon :name="tab.icon" />
         <span>{{ tab.label }}</span>
       </button>
     </div>
@@ -233,6 +233,8 @@ import { useTemplateStore } from '@/stores/templateStore'
 import { getMealTypeForTime } from '@/utils/mealTime'
 import type { FoodItem, MealRecord, MealType, MealTemplate } from '@/types'
 import FoodSearch from '@/components/FoodSearch.vue'
+import InlineSvgIcon from '@/components/InlineSvgIcon.vue'
+import type { InlineSvgIconName } from '@/utils/inlineSvgIcons'
 
 type Tone = 'green' | 'blue' | 'purple'
 type DisplayMeal = MealRecord & {
@@ -279,11 +281,11 @@ const bottomPopupOpen = computed(
     showSaveTemplate.value
 )
 
-const mealTabs: { value: MealType; label: string; icon: string }[] = [
-  { value: 'breakfast', label: '早餐', icon: 'underway-o' },
-  { value: 'lunch', label: '午餐', icon: 'hot-o' },
-  { value: 'dinner', label: '晚餐', icon: 'notes-o' },
-  { value: 'snack', label: '加餐', icon: 'bag-o' }
+const mealTabs: { value: MealType; label: string; icon: InlineSvgIconName }[] = [
+  { value: 'breakfast', label: '早餐', icon: 'meal-breakfast' },
+  { value: 'lunch', label: '午餐', icon: 'meal-lunch' },
+  { value: 'dinner', label: '晚餐', icon: 'meal-dinner' },
+  { value: 'snack', label: '加餐', icon: 'meal-snack' }
 ]
 
 const targetByMeal: Record<MealType, { min: number; max: number; protein: number; carbs: number; fat: number }> = {
@@ -734,7 +736,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   transition: all 0.2s ease;
 }
 
-.meal-tab .van-icon {
+.meal-tab .inline-svg-icon {
   font-size: 18px;
 }
 
@@ -743,7 +745,7 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   background: var(--primary-soft);
 }
 
-.meal-tab.active .van-icon {
+.meal-tab.active .inline-svg-icon {
   color: var(--primary);
 }
 

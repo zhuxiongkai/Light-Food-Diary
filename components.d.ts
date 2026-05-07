@@ -14,6 +14,7 @@ declare module 'vue' {
     AppNav: typeof import('./src/components/AppNav.vue')['default']
     CalorieRing: typeof import('./src/components/CalorieRing.vue')['default']
     FoodSearch: typeof import('./src/components/FoodSearch.vue')['default']
+    InlineSvgIcon: typeof import('./src/components/InlineSvgIcon.vue')['default']
     MacroBar: typeof import('./src/components/MacroBar.vue')['default']
     MealCard: typeof import('./src/components/MealCard.vue')['default']
     OnboardingGuide: typeof import('./src/components/OnboardingGuide.vue')['default']

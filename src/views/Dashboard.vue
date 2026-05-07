@@ -59,7 +59,9 @@
           @click="goToMealLog(meal.type)"
         >
           <div class="meal-item-left">
-            <div class="meal-icon" :class="`meal-icon-${meal.type}`">{{ meal.emoji }}</div>
+            <div class="meal-icon" :class="`meal-icon-${meal.type}`">
+              <InlineSvgIcon :name="meal.icon" />
+            </div>
             <div class="meal-main">
               <p class="meal-name">{{ meal.label }}</p>
               <p class="meal-calories numeric">{{ meal.calories }} <span>千卡</span></p>
@@ -95,21 +97,21 @@
 
       <div class="macro-grid">
         <div class="macro-col protein-col">
-          <p class="macro-label"><van-icon name="fire-o" /> 蛋白质</p>
+          <p class="macro-label"><InlineSvgIcon name="macro-protein" /> 蛋白质</p>
           <p class="macro-value numeric">{{ formatTwo(mealStore.dailyProtein) }} <span>/ {{ macroGoals.protein }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(proteinPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ proteinPercent }}%</p>
         </div>
 
         <div class="macro-col carbs-col">
-          <p class="macro-label"><van-icon name="bar-chart-o" /> 碳水化合物</p>
+          <p class="macro-label"><InlineSvgIcon name="macro-carbs" /> 碳水化合物</p>
           <p class="macro-value numeric">{{ formatTwo(mealStore.dailyCarbs) }} <span>/ {{ macroGoals.carbs }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(carbsPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ carbsPercent }}%</p>
         </div>
 
         <div class="macro-col fat-col">
-          <p class="macro-label"><van-icon name="flower-o" /> 脂肪</p>
+          <p class="macro-label"><InlineSvgIcon name="macro-fat" /> 脂肪</p>
           <p class="macro-value numeric">{{ formatTwo(mealStore.dailyFat) }} <span>/ {{ macroGoals.fat }} g</span></p>
           <div class="mini-progress"><span :style="{ width: boundedPercent(fatPercent) + '%' }"></span></div>
           <p class="macro-rate numeric">{{ fatPercent }}%</p>
@@ -134,6 +136,8 @@ import { useMealStore } from '@/stores/mealStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { MEAL_TYPE_LABELS, type MealType } from '@/types'
 import CalorieRing from '@/components/CalorieRing.vue'
+import InlineSvgIcon from '@/components/InlineSvgIcon.vue'
+import type { InlineSvgIconName } from '@/utils/inlineSvgIcons'
 
 const mealStore = useMealStore()
 const settingsStore = useSettingsStore()
@@ -198,11 +202,11 @@ const mealDistribution = computed(() => {
     dinner: '500-600 千卡',
     snack: '100-200 千卡'
   }
-  const emojis: Record<MealType, string> = {
-    breakfast: '☀️',
-    lunch: '🌿',
-    dinner: '🌙',
-    snack: '🧁'
+  const icons: Record<MealType, InlineSvgIconName> = {
+    breakfast: 'meal-breakfast',
+    lunch: 'meal-lunch',
+    dinner: 'meal-dinner',
+    snack: 'meal-snack'
   }
 
   return types.map(type => {
@@ -214,7 +218,7 @@ const mealDistribution = computed(() => {
       label: MEAL_TYPE_LABELS[type],
       calories: Math.round(mealStore.caloriesByType(type)),
       hint: hints[type],
-      emoji: emojis[type],
+      icon: icons[type],
       previewFoods: previewSource.map(name => ({
         name,
         emoji: foodToEmoji(name)
