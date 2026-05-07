@@ -28,8 +28,31 @@
             v-model="email"
             name="email"
             label="邮箱"
-            placeholder="选填"
+            placeholder="选填，填写后需验证"
+            :rules="[{ validator: checkEmail, message: '邮箱格式不正确' }]"
           />
+          <van-field
+            v-if="email.trim()"
+            v-model="emailCode"
+            name="emailCode"
+            label="验证码"
+            placeholder="请输入邮箱验证码"
+            maxlength="6"
+            :rules="[{ validator: checkEmailCode, message: '请输入6位验证码' }]"
+          >
+            <template #button>
+              <van-button
+                size="small"
+                type="primary"
+                native-type="button"
+                :disabled="!canSendEmailCode || countdown > 0"
+                :loading="sendingCode"
+                @click="onSendEmailCode"
+              >
+                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+              </van-button>
+            </template>
+          </van-field>
         </van-cell-group>
 
         <div class="auth-actions">
@@ -53,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useAuthStore } from '@/stores/authStore'
@@ -64,19 +87,80 @@ const authStore = useAuthStore()
 const username = ref('')
 const password = ref('')
 const email = ref('')
+const emailCode = ref('')
+const sendingCode = ref(false)
+const countdown = ref(0)
+let countdownTimer: number | undefined
+
+const canSendEmailCode = computed(() => checkEmail(email.value))
 
 function checkPassword(val: string) {
   return val.length >= 6
 }
 
+function checkEmail(val: string) {
+  const trimmed = val.trim()
+  if (!trimmed) return true
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
+}
+
+function checkEmailCode(val: string) {
+  if (!email.value.trim()) return true
+  return /^\d{6}$/.test(val.trim())
+}
+
+function startCountdown(seconds: number) {
+  countdown.value = seconds
+  if (countdownTimer) {
+    window.clearInterval(countdownTimer)
+  }
+  countdownTimer = window.setInterval(() => {
+    countdown.value -= 1
+    if (countdown.value <= 0 && countdownTimer) {
+      window.clearInterval(countdownTimer)
+      countdownTimer = undefined
+    }
+  }, 1000)
+}
+
+async function onSendEmailCode() {
+  if (!checkEmail(email.value)) {
+    showToast('邮箱格式不正确')
+    return
+  }
+
+  sendingCode.value = true
+  try {
+    await authStore.sendEmailCode(email.value.trim())
+    showToast('验证码已发送')
+    startCountdown(30)
+  } catch (e: any) {
+    showToast(e.message || '验证码发送失败')
+  } finally {
+    sendingCode.value = false
+  }
+}
+
 async function onRegister() {
   try {
-    await authStore.register(username.value, password.value, email.value || undefined)
+    const trimmedEmail = email.value.trim()
+    await authStore.register(
+      username.value,
+      password.value,
+      trimmedEmail || undefined,
+      trimmedEmail ? emailCode.value.trim() : undefined
+    )
     router.replace('/')
   } catch (e: any) {
     showToast(e.message || '注册失败')
   }
 }
+
+onUnmounted(() => {
+  if (countdownTimer) {
+    window.clearInterval(countdownTimer)
+  }
+})
 </script>
 
 <style scoped>

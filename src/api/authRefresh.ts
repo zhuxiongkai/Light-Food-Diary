@@ -1,4 +1,9 @@
-const TOKEN_ISSUING_PATHS = new Set(['/auth/login', '/auth/register', '/auth/refresh'])
+const TOKEN_ISSUING_PATHS = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/send-email-code',
+])
 
 export function shouldRefreshAfterUnauthorized(path: string): boolean {
   const [pathname] = path.split('?')

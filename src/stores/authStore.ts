@@ -46,14 +46,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(username: string, password: string, email?: string) {
+  async function sendEmailCode(email: string) {
+    await api<{ email: string; expiresIn: number }>('/auth/send-email-code', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  }
+
+  async function register(username: string, password: string, email?: string, emailCode?: string) {
     loading.value = true
     try {
       const res = await api<{ user: User; accessToken: string; refreshToken: string }>(
         '/auth/register',
         {
           method: 'POST',
-          body: JSON.stringify({ username, password, email }),
+          body: JSON.stringify({ username, password, email, emailCode }),
         }
       )
       setAuth(res.data.accessToken, res.data.refreshToken)
@@ -73,5 +80,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = res.data
   }
 
-  return { user, loading, loggedIn, initialized, init, login, register, logout, fetchMe }
+  return { user, loading, loggedIn, initialized, init, login, register, sendEmailCode, logout, fetchMe }
 })

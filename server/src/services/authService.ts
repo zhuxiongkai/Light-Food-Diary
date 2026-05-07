@@ -5,6 +5,8 @@ import { users, userSettings, refreshTokens } from '../db/schema.js'
 import { hashPassword, comparePassword } from '../utils/password.js'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { normalizeEmail } from '../utils/emailVerification.js'
+import { verifyRegisterEmailCode } from './emailVerificationService.js'
 
 const db = drizzle(pool)
 
@@ -15,13 +17,30 @@ const USER_SELECT = {
   createdAt: users.createdAt,
 } as const
 
-export async function register(username: string, password: string, email?: string) {
+export async function register(username: string, password: string, email?: string, emailCode?: string) {
   const passwordHash = await hashPassword(password)
   try {
     return await db.transaction(async (tx) => {
+      let verifiedEmail: string | null = null
+      const normalizedEmail = email ? normalizeEmail(email) : ''
+
+      if (normalizedEmail) {
+        verifiedEmail = await verifyRegisterEmailCode(tx, normalizedEmail, emailCode)
+
+        const [existingEmailUser] = await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, verifiedEmail))
+          .limit(1)
+
+        if (existingEmailUser) {
+          throw new AppError('邮箱已被注册', 409)
+        }
+      }
+
       const result = await tx.insert(users).values({
         username,
-        email: email || null,
+        email: verifiedEmail,
         passwordHash,
       })
       const userId = Number(result[0].insertId)
@@ -36,7 +55,7 @@ export async function register(username: string, password: string, email?: strin
       await tx.insert(refreshTokens).values({ userId, token: refreshToken, expiresAt } as any)
 
       return {
-        user: { id: userId, username, email: email || null },
+        user: { id: userId, username, email: verifiedEmail },
         accessToken,
         refreshToken,
       }
@@ -44,6 +63,9 @@ export async function register(username: string, password: string, email?: strin
   } catch (error: any) {
     const message = String(error?.message || '')
     if (message.includes('Duplicate entry') || message.includes('for key') || error?.code === 'ER_DUP_ENTRY') {
+      if (message.includes('idx_users_email_unique') || message.includes('email')) {
+        throw new AppError('邮箱已被注册', 409)
+      }
       throw new AppError('用户名已存在', 409)
     }
     throw error

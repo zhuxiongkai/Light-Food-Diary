@@ -10,4 +10,5 @@ test('does not refresh access token for token issuing endpoints', () => {
   assert.equal(shouldRefreshAfterUnauthorized('/auth/login'), false)
   assert.equal(shouldRefreshAfterUnauthorized('/auth/register'), false)
   assert.equal(shouldRefreshAfterUnauthorized('/auth/refresh'), false)
+  assert.equal(shouldRefreshAfterUnauthorized('/auth/send-email-code'), false)
 })

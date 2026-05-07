@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import { register, login, refreshAccessToken, getUserById } from '../services/authService.js'
+import { sendRegisterEmailCode } from '../services/emailVerificationService.js'
 import { authMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 
 router.post('/register', async (req, res, next) => {
   try {
-    const { username, password, email } = req.body
+    const { username, password, email, emailCode } = req.body
 
     if (!username || !password) {
       res.status(400).json({ code: -1, message: '用户名和密码不能为空' })
@@ -17,8 +18,23 @@ router.post('/register', async (req, res, next) => {
       return
     }
 
-    const result = await register(username, password, email)
+    const result = await register(username, password, email, emailCode)
     res.status(201).json({ code: 0, data: result, message: '注册成功' })
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.post('/send-email-code', async (req, res, next) => {
+  try {
+    const { email } = req.body
+    if (!email) {
+      res.status(400).json({ code: -1, message: '请输入邮箱' })
+      return
+    }
+
+    const result = await sendRegisterEmailCode(email)
+    res.json({ code: 0, data: result, message: '验证码已发送' })
   } catch (err) {
     next(err)
   }

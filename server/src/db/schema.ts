@@ -18,7 +18,9 @@ export const users = mysqlTable('users', {
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
-})
+}, (table) => [
+  uniqueIndex('idx_users_email_unique').on(table.email),
+])
 
 export const userSettings = mysqlTable('user_settings', {
   id: int('id').autoincrement().primaryKey(),
@@ -100,4 +102,17 @@ export const refreshTokens = mysqlTable('refresh_tokens', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_refresh_user').on(table.userId),
+])
+
+export const emailVerificationCodes = mysqlTable('email_verification_codes', {
+  id: int('id').autoincrement().primaryKey(),
+  email: varchar('email', { length: 100 }).notNull(),
+  codeHash: varchar('code_hash', { length: 64 }).notNull(),
+  purpose: mysqlEnum('purpose', ['register']).notNull().default('register'),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  attemptCount: int('attempt_count').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_email_code_lookup').on(table.email, table.purpose, table.createdAt),
 ])
