@@ -144,7 +144,7 @@
       </div>
     </van-popup>
 
-    <van-popup v-model:show="showWeight" position="bottom" round>
+    <van-popup v-model:show="showWeight" position="bottom" round class="weight-popup-panel" :z-index="120">
       <div class="weight-popup">
         <h3>输入重量</h3>
         <div class="selected-food" v-if="selectedFood">
@@ -155,7 +155,7 @@
         <div class="calc-result" v-if="selectedFood">
           预计吸收 {{ displayCalcCalories }} 千卡 · 蛋白质 {{ calcProtein }}g · 脂肪 {{ calcFat }}g · 碳水 {{ calcCarbs }}g
         </div>
-        <van-button type="primary" block round class="mt-16" @click="onConfirmAdd">
+        <van-button type="primary" block round class="mt-16 weight-submit-button" @click="onConfirmAdd">
           添加到{{ activeMealLabel }}
         </van-button>
       </div>
@@ -224,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Button, DatePicker, Empty, Icon, Popup, Stepper, showConfirmDialog, showToast } from 'vant'
 import { useMealStore } from '@/stores/mealStore'
@@ -268,6 +268,15 @@ const customForm = ref({ name: '', caloriesPer100g: 0, protein: 0, fat: 0, carbs
 const showTemplates = ref(false)
 const showSaveTemplate = ref(false)
 const templateName = ref('')
+const bottomPopupOpen = computed(
+  () =>
+    showSearch.value ||
+    showWeight.value ||
+    showDatePicker.value ||
+    showDetail.value ||
+    showTemplates.value ||
+    showSaveTemplate.value
+)
 
 const mealTabs: { value: MealType; label: string; icon: string }[] = [
   { value: 'breakfast', label: '早餐', icon: 'underway-o' },
@@ -373,6 +382,14 @@ watch(currentDate, async (date) => {
   await mealStore.loadMeals(date)
 })
 
+watch(
+  bottomPopupOpen,
+  (open) => {
+    document.documentElement.classList.toggle('bottom-popup-open', open)
+  },
+  { immediate: true }
+)
+
 onMounted(async () => {
   const routeMeal = resolveRouteMeal(route.query.meal)
   if (routeMeal) {
@@ -384,6 +401,10 @@ onMounted(async () => {
   }
 
   await Promise.all([mealStore.loadMeals(currentDate.value), foodStore.loadAllFoods(), templateStore.loadTemplates()])
+})
+
+onUnmounted(() => {
+  document.documentElement.classList.remove('bottom-popup-open')
 })
 
 function resolveRouteMeal(value: unknown): MealType | null {
@@ -1080,7 +1101,14 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
 
 .weight-popup,
 .detail-popup {
-  padding: 24px 20px 28px;
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 24px 20px calc(28px + var(--safe-bottom));
+}
+
+.weight-popup {
+  overscroll-behavior: contain;
 }
 
 .weight-popup h3,
@@ -1124,6 +1152,13 @@ async function deleteTemplateConfirm(tmpl: MealTemplate) {
   font-size: 13px;
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+.weight-submit-button {
+  position: sticky;
+  bottom: calc(8px + var(--safe-bottom));
+  z-index: 1;
+  box-shadow: 0 10px 24px rgba(45, 106, 79, 0.22);
 }
 
 .detail-time {

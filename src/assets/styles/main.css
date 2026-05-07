@@ -348,6 +348,13 @@ textarea {
   box-shadow: 0 0 0 1px var(--border-strong), var(--shadow-lg);
 }
 
+html.bottom-popup-open .app-nav {
+  transform: translateY(calc(100% + var(--safe-bottom)));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.18s ease;
+}
+
 /* ═══════════════════════════════════════════
    Page Layout
    ═══════════════════════════════════════════ */
