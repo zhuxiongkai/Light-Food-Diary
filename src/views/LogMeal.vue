@@ -230,6 +230,7 @@ import { Button, DatePicker, Empty, Icon, Popup, Stepper, showConfirmDialog, sho
 import { useMealStore } from '@/stores/mealStore'
 import { useFoodStore } from '@/stores/foodStore'
 import { useTemplateStore } from '@/stores/templateStore'
+import { getMealTypeForTime } from '@/utils/mealTime'
 import type { FoodItem, MealRecord, MealType, MealTemplate } from '@/types'
 import FoodSearch from '@/components/FoodSearch.vue'
 
@@ -250,7 +251,7 @@ const templateStore = useTemplateStore()
 const route = useRoute()
 const router = useRouter()
 
-const activeMeal = ref<MealType>('breakfast')
+const activeMeal = ref<MealType>(resolveRouteMeal(route.query.meal) || getMealTypeForTime())
 const showSearch = ref(false)
 const showWeight = ref(false)
 const showDatePicker = ref(false)
