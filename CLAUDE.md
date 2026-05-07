@@ -43,7 +43,8 @@
 
 | Method | Path | 说明 |
 |--------|------|------|
-| POST | `/api/auth/register` | 注册 |
+| POST | `/api/auth/register` | 注册（需邮箱验证码） |
+| POST | `/api/auth/send-email-code` | 发送邮箱验证码 |
 | POST | `/api/auth/login` | 登录 |
 | POST | `/api/auth/refresh` | 刷新 Token |
 | GET | `/api/auth/me` | 当前用户 |
@@ -75,12 +76,13 @@
 
 ## 数据模型 (MySQL, Drizzle ORM)
 
-7 张表：`users`, `user_settings`, `foods`, `meal_records`, `meal_templates`, `weight_records`, `refresh_tokens`。
+8 张表：`users`, `user_settings`, `foods`, `meal_records`, `meal_templates`, `weight_records`, `refresh_tokens`, `email_verification_codes`。
 
 - 内置食物 `user_id = NULL`（所有用户共享）；自定义食物 `user_id` 指向创建者
 - 所有业务表按 `user_id` 隔离
 - `meal_templates.foods` 存 JSON 字符串，含完整营养数据（apply 时无需查库）
 - `user_settings.ai_api_key` 字段仅保留兼容，当前 AI 识别不再依赖用户侧密钥
+- `users.email` 用于邮箱验证码注册，唯一约束
 
 Schema 定义见 `server/src/db/schema.ts`。
 
@@ -138,6 +140,7 @@ Schema 定义见 `server/src/db/schema.ts`。
 | `DEEPSEEK_API_KEY` | DeepSeek Chat API 密钥 (AI 饮食建议) |
 | `DEEPSEEK_API_BASE_URL` | DeepSeek API 地址 (默认 `https://api.deepseek.com/v1`)，可选 |
 | `DEEPSEEK_MODEL` | 模型名 (默认 `deepseek-chat`)，可选 |
+| `SMTP_HOST/PORT/SECURE/USER/PASS/FROM` | SMTP 邮件发送 (邮箱验证码) |
 | `CORS_ORIGIN` | CORS 允许的源 (默认 `http://localhost:5173`) |
 
 ## 启动流程

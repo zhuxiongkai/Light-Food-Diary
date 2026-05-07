@@ -10,7 +10,7 @@ server/src/db/schema.ts
 
 ## 数据表
 
-系统共有 7 张表：
+系统共有 8 张表：
 
 | 表名 | 说明 |
 |------|------|
@@ -21,6 +21,7 @@ server/src/db/schema.ts
 | `meal_templates` | 餐食模板 |
 | `weight_records` | 体重记录 |
 | `refresh_tokens` | 刷新令牌 |
+| `email_verification_codes` | 邮箱验证码 |
 
 ## foods
 
@@ -89,6 +90,16 @@ server/src/db/schema.ts
 - 支持 access token 过期后的自动刷新
 - 支持登录状态续期
 - 支持登出或失效控制
+
+## email_verification_codes
+
+存储邮箱验证码。
+
+用途：
+
+- 注册时发送邮箱验证码
+- 验证码哈希存储，带过期时间和尝试次数限制
+- 支持按邮箱 + 用途查询最新验证码
 
 ## 内置食物库
 

@@ -39,6 +39,14 @@ BAIDU_AI_SECRET_KEY=your_baidu_secret_key
 
 # DeepSeek（AI 饮食建议，可选）
 DEEPSEEK_API_KEY=
+
+# SMTP（邮箱验证码，开发环境不配则打印到日志）
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 ```
 
 初始化数据库：

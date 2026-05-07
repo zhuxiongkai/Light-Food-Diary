@@ -45,7 +45,8 @@ Authorization: Bearer <access_token>
 
 | Method | Path | 说明 |
 |------|------|------|
-| POST | `/api/auth/register` | 注册 |
+| POST | `/api/auth/register` | 注册（需邮箱验证码） |
+| POST | `/api/auth/send-email-code` | 发送邮箱验证码 |
 | POST | `/api/auth/login` | 登录 |
 | POST | `/api/auth/refresh` | 刷新 Token |
 | GET | `/api/auth/me` | 当前用户 |

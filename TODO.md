@@ -12,9 +12,10 @@
 
   2. 忘记密码流程
 
-  问题: Login.vue:36 按钮 disabled，标签"暂不可用"。后端无对应 API。
+  问题: Login.vue:36 按钮 disabled，标签"暂不可用"。
+  已有基础: email_verification_codes 表 + mailService + SMTP 配置已就绪（来自邮箱验证注册功能），可直接复用。
   方案:
-  - POST /api/auth/forgot-password — 接收邮箱，生成 reset token(有效期15min)，用 nodemailer 发送重置链接
+  - POST /api/auth/forgot-password — 接收邮箱，生成 reset token(有效期15min)，用已有 mailService 发送重置链接
   - POST /api/auth/reset-password — 验证 token + 新密码，完成重置
   - 前端新增 ForgotPassword.vue、ResetPassword.vue 两个页面
 

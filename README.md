@@ -4,7 +4,7 @@
 
 ## 功能
 
-- **多用户** — 注册/登录，数据按用户隔离
+- **多用户** — 注册/登录（邮箱验证码注册），数据按用户隔离
 - **饮食记录** — 按早/午/晚/加餐记录每餐食物，自动计算热量和营养素
 - **AI 拍照识别** — 基于 Baidu AI 菜品识别，自动匹配食物库营养数据，提供份量快捷调整（少量/标准/偏多）
 - **食物库** — 内置 230+ 种常见中国食物和菜品，支持自定义添加
@@ -72,7 +72,7 @@ root/
       index.ts                # Express 入口
       config.ts               # 环境变量配置
       db/
-        schema.ts             # Drizzle schema (6 张表)
+        schema.ts             # Drizzle schema (8 张表)
         connection.ts         # MySQL 连接池
         migrate.ts            # 数据库迁移
         seed.ts               # 内置食物种子数据
@@ -149,7 +149,7 @@ npm run cap:open:android   # 在 Android Studio 中打开
 
 | 模块 | 端点 |
 |------|------|
-| Auth | POST `/api/auth/register` `/login` `/refresh`, GET `/me` |
+| Auth | POST `/api/auth/register` `/login` `/refresh` `/send-email-code`, GET `/me` |
 | 食物 | GET `/api/foods`, POST/PUT/DELETE `/api/foods/custom[/:id]` |
 | 餐食 | GET `/api/meals[/range][/stats]`, POST/PUT/DELETE `/api/meals[/:id]` |
 | 体重 | GET `/api/weight[/range]`, POST `/api/weight`, DELETE `/api/weight/:id` |
